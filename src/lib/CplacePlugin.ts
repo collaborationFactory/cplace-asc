@@ -8,7 +8,7 @@ import * as gts from 'gulp-typescript';
 /**
  * Represents a cplace plugin that needs to be compiled
  */
-export default class Project {
+export default class CplacePlugin {
     readonly assets: string;
     readonly dependencies: Array<string>;
     readonly dependents: Array<string>;

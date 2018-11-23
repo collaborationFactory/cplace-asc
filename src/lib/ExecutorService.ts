@@ -5,7 +5,7 @@
 import {createPool, Factory, Pool} from 'generic-pool';
 import * as path from 'path';
 import {ChildProcess, fork} from 'child_process';
-import Project from './Project';
+import CplacePlugin from './CplacePlugin';
 import {ICompileRequest} from '../types';
 
 const _fileName = path.resolve(path.dirname(__filename), '../compiler/index.js');
@@ -41,7 +41,7 @@ export class ExecutorService {
         });
     }
 
-    runCb(project: Project, ack: (pluginName: string) => void) {
+    runCb(project: CplacePlugin, ack: (pluginName: string) => void) {
         this._pool.acquire().then((process) => {
             process.send(project.pluginName);
             process.once('message', (message) => {

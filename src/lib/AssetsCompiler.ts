@@ -5,12 +5,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import {IRunConfig} from '../types';
-import Project from './Project';
+import CplacePlugin from './CplacePlugin';
 import {StringMap} from './StringMap';
 import {getAvailableStats} from './utils';
 import {ExecutorService} from './ExecutorService';
 import {Scheduler} from './Scheduler';
-import {StringSet} from './StringSet';
 import {TsConfigGenerator} from './TsConfigGenerator';
 
 /**
@@ -19,7 +18,7 @@ import {TsConfigGenerator} from './TsConfigGenerator';
 export default class AssetsCompiler {
     private readonly isSubRepo: boolean;
     private readonly mainRepoPath: string;
-    private readonly projects = new StringMap<Project>();
+    private readonly projects = new StringMap<CplacePlugin>();
     private readonly projectGroups: Array<Array<string>>;
     private readonly executor: ExecutorService;
 
@@ -81,8 +80,8 @@ export default class AssetsCompiler {
         return groups;
     }
 
-    static setupProjects(plugins: string[], repoPath: string): StringMap<Project> {
-        const projects = new StringMap<Project>();
+    static setupProjects(plugins: string[], repoPath: string): StringMap<CplacePlugin> {
+        const projects = new StringMap<CplacePlugin>();
         let files = fs.readdirSync(repoPath);
 
         if (plugins.length) {
@@ -103,7 +102,7 @@ export default class AssetsCompiler {
                 false // @todo: this needs to be fixed
             );
             const tsConfigObj = tsConfigGenerator.getConfigAndSave();
-            const project = new Project(pluginName, filePath);
+            const project = new CplacePlugin(pluginName, filePath);
             projects.set(pluginName, project);
 
             if (project.tsProject.projectReferences) {
@@ -133,11 +132,11 @@ export default class AssetsCompiler {
         return projects;
     }
 
-    static setDependentsAndGroup(projects: StringMap<Project>) {
+    static setDependentsAndGroup(projects: StringMap<CplacePlugin>) {
         let pluginNames = AssetsCompiler.topologicalSort(projects);
 
         pluginNames.forEach((p) => {
-            let project = <Project>projects.get(p);
+            let project = <CplacePlugin>projects.get(p);
             project.dependencies.forEach((dep) => {
                 const depProject = projects.get(dep);
                 if (depProject) {
@@ -148,14 +147,14 @@ export default class AssetsCompiler {
         });
     }
 
-    static topologicalSort(projects: StringMap<Project>): string[] {
+    static topologicalSort(projects: StringMap<CplacePlugin>): string[] {
         const sorted: string[] = [];
-        const visited = new StringSet();
+        const visited = new Set<string>();
         const pluginNames = projects.keys();
 
         function visit(pluginName: string) {
             visited.add(pluginName);
-            const project = projects.get(pluginName) as Project;
+            const project = projects.get(pluginName) as CplacePlugin;
             project.dependencies.forEach((dep) => {
                 if (!visited.has(dep)) {
                     visit(dep);
