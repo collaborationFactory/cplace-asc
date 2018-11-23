@@ -3,10 +3,10 @@
  */
 
 import Project from './Project';
-import { StringMap } from './StringMap';
-import { ExecutorService } from './ExecutorService';
-import { StringSet } from './StringSet';
-import { ICompileRequest } from '../types';
+import {StringMap} from './StringMap';
+import {ExecutorService} from './ExecutorService';
+import {StringSet} from './StringSet';
+import {ICompileRequest} from '../types';
 
 export class Scheduler {
     compiled: StringSet;

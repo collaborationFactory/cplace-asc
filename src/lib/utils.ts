@@ -2,8 +2,12 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 import * as os from 'os';
-import { StringObj } from '../types';
+import {StringObj} from '../types';
 
+/**
+ * Returns a human readable info line with the number of cpus/cores
+ * and the current memory details
+ */
 export function getAvailableStats() {
     let op: string[] = [];
     op.push(`Available cpus/cores: ${os.cpus().length}`);

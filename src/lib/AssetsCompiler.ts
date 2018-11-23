@@ -4,25 +4,26 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { IRunConfig } from '../types';
+import {IRunConfig} from '../types';
 import Project from './Project';
-import { StringMap } from './StringMap';
-import { getAvailableStats } from './utils';
-import { ExecutorService } from './ExecutorService';
-import { Scheduler } from './Scheduler';
-import { StringSet } from './StringSet';
-import { TsConfigGenerator } from './TsConfigGenerator';
+import {StringMap} from './StringMap';
+import {getAvailableStats} from './utils';
+import {ExecutorService} from './ExecutorService';
+import {Scheduler} from './Scheduler';
+import {StringSet} from './StringSet';
+import {TsConfigGenerator} from './TsConfigGenerator';
 
-
+/**
+ * This represents the main execution logic for the whole compilation process
+ */
 export default class AssetsCompiler {
-    isSubRepo: boolean;
-    mainRepoPath: string;
-    projects = new StringMap<Project>();
-    projectGroups: Array<Array<string>>;
-    private executor: ExecutorService;
+    private readonly isSubRepo: boolean;
+    private readonly mainRepoPath: string;
+    private readonly projects = new StringMap<Project>();
+    private readonly projectGroups: Array<Array<string>>;
+    private readonly executor: ExecutorService;
 
     constructor(private readonly runConfig: IRunConfig) {
-        console.log(getAvailableStats());
         this.isSubRepo = false;
         this.mainRepoPath = AssetsCompiler.getMainRepoPath();
         this.projects = AssetsCompiler.setupProjects(runConfig.plugins, this.mainRepoPath);
@@ -31,27 +32,26 @@ export default class AssetsCompiler {
     }
 
     start() {
-        const groups: Array<Array<string>> = JSON.parse(JSON.stringify(this.projectGroups));
-        let finished = new Scheduler(this.executor, this.projects, groups).start();
+        console.log(getAvailableStats());
 
-        finished.then(() => {
+        const groups: string[][] = this.projectGroups.map(it => [...it]);
+        const scheduler = new Scheduler(this.executor, this.projects, groups);
+        scheduler.start().then(() => {
             console.log('all done');
             this.executor.destroy();
         });
-
-        console.log(getAvailableStats());
     }
 
-    getCompileTaskForPlugins(plugins: string[]) {
-
-    }
-
-    getCompileTaskForAllPlugins() {
-        console.log(this.projectGroups);
-        this.projectGroups.forEach((group) => {
-            console.log(group);
-        });
-    }
+    // getCompileTaskForPlugins(plugins: string[]) {
+    //
+    // }
+    //
+    // getCompileTaskForAllPlugins() {
+    //     console.log(this.projectGroups);
+    //     this.projectGroups.forEach((group) => {
+    //         console.log(group);
+    //     });
+    // }
 
     static getMainRepoPath() {
         const cwd = process.cwd();
@@ -95,6 +95,7 @@ export default class AssetsCompiler {
             if (projects.has(pluginName)) {
                 return;
             }
+
             // @todo: define option not to generate tsconfig each time (or to do it) and check existence
             const tsConfigGenerator = new TsConfigGenerator(
                 pluginName,

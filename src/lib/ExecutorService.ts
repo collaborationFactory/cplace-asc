@@ -2,12 +2,11 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 
-import { createPool, Factory, Pool } from 'generic-pool';
+import {createPool, Factory, Pool} from 'generic-pool';
 import * as path from 'path';
-import { ChildProcess, fork } from 'child_process';
-import { cpus } from 'os';
+import {ChildProcess, fork} from 'child_process';
 import Project from './Project';
-import { ICompileRequest } from '../types';
+import {ICompileRequest} from '../types';
 
 const _fileName = path.resolve(path.dirname(__filename), '../compiler/index.js');
 

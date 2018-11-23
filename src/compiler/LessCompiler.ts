@@ -1,9 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { promisify } from 'util';
+import {promisify} from 'util';
 import * as less from 'less';
 
-import { ICompiler, LessEntryFile } from '../types';
+import {ICompiler, LessEntryFile} from '../types';
 
 
 export class LessCompiler implements ICompiler {
