@@ -6,7 +6,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {IRunConfig} from '../types';
 import CplacePlugin from './CplacePlugin';
-import {StringMap} from './StringMap';
 import {getAvailableStats} from './utils';
 import {ExecutorService} from './ExecutorService';
 import {Scheduler} from './Scheduler';
@@ -18,7 +17,7 @@ import {TsConfigGenerator} from './TsConfigGenerator';
 export default class AssetsCompiler {
     private readonly isSubRepo: boolean;
     private readonly mainRepoPath: string;
-    private readonly projects = new StringMap<CplacePlugin>();
+    private readonly projects = new Map<string, CplacePlugin>();
     private readonly projectGroups: Array<Array<string>>;
     private readonly executor: ExecutorService;
 
@@ -80,8 +79,8 @@ export default class AssetsCompiler {
         return groups;
     }
 
-    static setupProjects(plugins: string[], repoPath: string): StringMap<CplacePlugin> {
-        const projects = new StringMap<CplacePlugin>();
+    static setupProjects(plugins: string[], repoPath: string): Map<string, CplacePlugin> {
+        const projects = new Map<string, CplacePlugin>();
         let files = fs.readdirSync(repoPath);
 
         if (plugins.length) {
@@ -132,7 +131,7 @@ export default class AssetsCompiler {
         return projects;
     }
 
-    static setDependentsAndGroup(projects: StringMap<CplacePlugin>) {
+    static setDependentsAndGroup(projects: Map<string, CplacePlugin>) {
         let pluginNames = AssetsCompiler.topologicalSort(projects);
 
         pluginNames.forEach((p) => {
@@ -147,10 +146,9 @@ export default class AssetsCompiler {
         });
     }
 
-    static topologicalSort(projects: StringMap<CplacePlugin>): string[] {
+    static topologicalSort(projects: Map<string, CplacePlugin>): string[] {
         const sorted: string[] = [];
         const visited = new Set<string>();
-        const pluginNames = projects.keys();
 
         function visit(pluginName: string) {
             visited.add(pluginName);
@@ -163,11 +161,11 @@ export default class AssetsCompiler {
             sorted.push(pluginName);
         }
 
-        for (let i = 0; i < pluginNames.length; i++) {
-            if (!visited.has(pluginNames[i])) {
-                visit(pluginNames[i]);
+        projects.forEach((plugin, pluginName) => {
+            if (!visited.has(pluginName)) {
+                visit(pluginName);
             }
-        }
+        });
 
         return sorted;
     }

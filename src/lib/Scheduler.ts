@@ -3,7 +3,6 @@
  */
 
 import CplacePlugin from './CplacePlugin';
-import {StringMap} from './StringMap';
 import {ExecutorService} from './ExecutorService';
 import {ICompileRequest} from '../types';
 
@@ -11,7 +10,7 @@ export class Scheduler {
     private readonly compiled: Set<string>;
     private finishedResolver: any;
 
-    constructor(private executor: ExecutorService, private projects: StringMap<CplacePlugin>, private groups: Array<Array<string>>) {
+    constructor(private executor: ExecutorService, private projects: Map<string, CplacePlugin>, private groups: Array<Array<string>>) {
         this.compiled = new Set<string>();
     }
 
@@ -33,8 +32,12 @@ export class Scheduler {
             for (let i = len; i >= 0; i--) {
                 let pluginName = nextGroup[i];
                 if (pluginName && this.projects.has(pluginName)) {
-                    const project = <CplacePlugin>this.projects.get(pluginName);
-                    let compileRequest: ICompileRequest = {
+                    const project = this.projects.get(pluginName);
+                    if (!project) {
+                        continue;
+                    }
+
+                    const compileRequest: ICompileRequest = {
                         pluginName: project.pluginName,
                         assetsPath: project.assets,
                         ts: true
@@ -46,7 +49,7 @@ export class Scheduler {
                             this.scheduleNext(completedPluginName);
                             // everything is compiled
                             // console.log(this.compiled.asArray().sort(), this.projects.keys().sort());
-                            if (this.compiled.size === this.projects.size()) {
+                            if (this.compiled.size === this.projects.size) {
                                 this.finishedResolver();
                             }
                         });
