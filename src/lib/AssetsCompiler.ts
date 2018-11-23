@@ -6,10 +6,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {IRunConfig} from '../types';
 import CplacePlugin from './CplacePlugin';
-import {getAvailableStats} from './utils';
 import {ExecutorService} from './ExecutorService';
 import {Scheduler} from './Scheduler';
-import {TsConfigGenerator} from './TsConfigGenerator';
 
 /**
  * This represents the main execution logic for the whole compilation process
@@ -29,9 +27,7 @@ export default class AssetsCompiler {
         this.executor = new ExecutorService(3);
     }
 
-    start() {
-        console.log(getAvailableStats());
-
+    public start(): void {
         const groups: string[][] = this.projectGroups.map(it => [...it]);
         const scheduler = new Scheduler(this.executor, this.projects, groups);
         scheduler.start().then(() => {
@@ -39,17 +35,6 @@ export default class AssetsCompiler {
             this.executor.destroy();
         });
     }
-
-    // getCompileTaskForPlugins(plugins: string[]) {
-    //
-    // }
-    //
-    // getCompileTaskForAllPlugins() {
-    //     console.log(this.projectGroups);
-    //     this.projectGroups.forEach((group) => {
-    //         console.log(group);
-    //     });
-    // }
 
     static getMainRepoPath() {
         const cwd = process.cwd();
@@ -64,24 +49,10 @@ export default class AssetsCompiler {
         return mainPath;
     }
 
-    private groupProjects() {
-        let groups: Array<Array<string>> = [];
-
-
-        this.projects.forEach((project) => {
-            let group = groups[project.group];
-            if (Array.isArray(group)) {
-                group.push(project.pluginName);
-            } else {
-                groups[project.group] = [project.pluginName];
-            }
-        });
-        return groups;
-    }
-
-    static setupProjects(plugins: string[], repoPath: string): Map<string, CplacePlugin> {
+    static setupProjects(plugins: string[], mainRepoPath: string): Map<string, CplacePlugin> {
         const projects = new Map<string, CplacePlugin>();
-        let files = fs.readdirSync(repoPath);
+        // TODO: this does not yet work for sub repos...?
+        let files = fs.readdirSync(mainRepoPath);
 
         if (plugins.length) {
             files = files.filter((file) => {
@@ -94,31 +65,27 @@ export default class AssetsCompiler {
                 return;
             }
 
-            // @todo: define option not to generate tsconfig each time (or to do it) and check existence
-            const tsConfigGenerator = new TsConfigGenerator(
-                pluginName,
-                AssetsCompiler.getMainRepoPath(),
-                false // @todo: this needs to be fixed
-            );
-            const tsConfigObj = tsConfigGenerator.getConfigAndSave();
-            const project = new CplacePlugin(pluginName, filePath);
+            const project = new CplacePlugin(pluginName, filePath, mainRepoPath);
             projects.set(pluginName, project);
 
-            if (project.tsProject.projectReferences) {
-                project.tsProject.projectReferences.forEach((ref) => {
-                    let refPath = ref.path;
-                    if (refPath.indexOf(repoPath) > -1) {
-                        const depName = refPath.substring(repoPath.length + 1, refPath.indexOf('/', repoPath.length + 1));
-                        if (!projects.has(depName)) {
-                            addProjectsRecursively(depName, path.join(repoPath, depName));
+            if (project.hasTypeScriptAssets) {
+                const tsProject = project.generateTsConfigAndGetTsProject();
+                if (tsProject.projectReferences) {
+                    tsProject.projectReferences.forEach((ref) => {
+                        let refPath = ref.path;
+                        if (refPath.indexOf(mainRepoPath) > -1) {
+                            const depName = refPath.substring(mainRepoPath.length + 1, refPath.indexOf('/', mainRepoPath.length + 1));
+                            if (!projects.has(depName)) {
+                                addProjectsRecursively(depName, path.join(mainRepoPath, depName));
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
         }
 
         files.forEach(file => {
-            const filePath = path.join(repoPath, file);
+            const filePath = path.join(mainRepoPath, file);
             if (fs.lstatSync(filePath).isDirectory()) {
                 const potentialPluginName = path.basename(file);
                 if (fs.existsSync(path.join(filePath, `${potentialPluginName}.iml`)) && fs.existsSync(path.join(filePath, 'assets', 'ts', 'tsconfig.json'))) {
@@ -168,6 +135,32 @@ export default class AssetsCompiler {
         });
 
         return sorted;
+    }
+
+    // getCompileTaskForPlugins(plugins: string[]) {
+    //
+    // }
+    //
+    // getCompileTaskForAllPlugins() {
+    //     console.log(this.projectGroups);
+    //     this.projectGroups.forEach((group) => {
+    //         console.log(group);
+    //     });
+    // }
+
+    private groupProjects() {
+        let groups: Array<Array<string>> = [];
+
+
+        this.projects.forEach((project) => {
+            let group = groups[project.group];
+            if (Array.isArray(group)) {
+                group.push(project.pluginName);
+            } else {
+                groups[project.group] = [project.pluginName];
+            }
+        });
+        return groups;
     }
 
 }

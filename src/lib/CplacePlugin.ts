@@ -4,28 +4,81 @@
 
 import * as path from 'path';
 import * as gts from 'gulp-typescript';
+import * as fs from 'fs';
+import {TsConfigGenerator} from './TsConfigGenerator';
 
 /**
  * Represents a cplace plugin that needs to be compiled
  */
 export default class CplacePlugin {
-    readonly assets: string;
+
+    /**
+     * Path to the plugin's `/assets` directory
+     */
+    readonly assetsDir: string;
+
+    readonly hasTypeScriptAssets: boolean;
+    readonly hasLessAssets: boolean;
+
+    /**
+     * TypeScript plugin dependencies
+     */
     readonly dependencies: Array<string>;
+    /**
+     * TypeScript plugins that depend on me
+     */
     readonly dependents: Array<string>;
-    readonly tsProject: gts.Project;
-    // this is the depth/level in the graph based on topology
+
+    /**
+     * gulp-typescript project instance
+     */
+    private tsProject?: gts.Project;
+
+    /**
+     * depth/level in the graph based on topology
+     */
     group: number = 0;
 
-    constructor(public readonly  pluginName: string, public readonly directory: string) {
+    constructor(public readonly pluginName: string,
+                public readonly pluginDir: string,
+                public readonly mainRepoDir: string) {
         this.dependencies = [];
         this.dependents = [];
-        this.assets = path.resolve(directory, 'assets');
-        const tsconfigPtah = path.resolve(this.assets, 'ts', 'tsconfig.json');
-        this.tsProject = gts.createProject(tsconfigPtah);
-        this.parseDependencies();
+
+        this.assetsDir = path.resolve(pluginDir, 'assets');
+        this.hasTypeScriptAssets = fs.existsSync(path.resolve(this.assetsDir, 'ts'));
+        this.hasLessAssets = fs.existsSync(path.resolve(this.assetsDir, 'less'));
     }
 
-    parseDependencies() {
+    public generateTsConfigAndGetTsProject(): gts.Project {
+        if (!this.hasTypeScriptAssets) {
+            throw Error('plugin does not have TypeScript assets');
+        }
+
+        // @todo: define option not to generate tsconfig each time (or to do it) and check existence
+        const tsConfigGenerator = new TsConfigGenerator(
+            this.pluginName,
+            this.mainRepoDir,
+            false // @todo: this needs to be fixed
+        );
+        tsConfigGenerator.getConfigAndSave();
+
+        const tsconfigPath = path.resolve(this.assetsDir, 'ts', 'tsconfig.json');
+        if (!fs.existsSync(tsconfigPath)) {
+            console.error(`Could not generate tsconfig file for ${this.pluginName}...`);
+            throw Error('tsconfig generation failed');
+        }
+
+        this.tsProject = gts.createProject(tsconfigPath);
+        this.parseDependencies();
+        return this.tsProject;
+    }
+
+    private parseDependencies(): void {
+        if (!this.tsProject) {
+            return;
+        }
+
         let paths = this.tsProject.options.paths;
         if (paths) {
             Object.keys(paths).forEach((path) => {

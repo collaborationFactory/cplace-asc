@@ -3,10 +3,9 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 
-import { IRunConfig } from './types';
-import * as minimist from 'minimist';
+import {IRunConfig} from './types';
 import AssetsCompiler from './lib/AssetsCompiler';
-import { cliOptions } from './lib/cli-options';
+import {getAvailableStats} from './lib/utils';
 
 function checkNodeVersion(): void {
     let major = Number.MAX_VALUE;
@@ -24,6 +23,8 @@ function checkNodeVersion(): void {
 
 (() => {
     checkNodeVersion();
+    console.log(getAvailableStats());
+
     const config: IRunConfig = {
         plugins: []
     };

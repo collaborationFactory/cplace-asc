@@ -27,35 +27,44 @@ export class Scheduler {
      */
     scheduleNext(pluginName?: string) {
         const nextGroup = this.getNextBatch(pluginName);
-        if (Array.isArray(nextGroup)) {
-            const len = nextGroup.length - 1;
-            for (let i = len; i >= 0; i--) {
-                let pluginName = nextGroup[i];
-                if (pluginName && this.projects.has(pluginName)) {
-                    const project = this.projects.get(pluginName);
-                    if (!project) {
-                        continue;
-                    }
-
-                    const compileRequest: ICompileRequest = {
-                        pluginName: project.pluginName,
-                        assetsPath: project.assets,
-                        ts: true
-                    };
-                    this.executor.run(compileRequest)
-                        .then((completedPluginName: string) => {
-                            console.log('done', completedPluginName);
-                            this.compiled.add(completedPluginName);
-                            this.scheduleNext(completedPluginName);
-                            // everything is compiled
-                            // console.log(this.compiled.asArray().sort(), this.projects.keys().sort());
-                            if (this.compiled.size === this.projects.size) {
-                                this.finishedResolver();
-                            }
-                        });
-                }
-            }
+        if (!Array.isArray(nextGroup)) {
+            return;
         }
+        nextGroup.forEach(pluginName => {
+            if (!pluginName || !this.projects.has(pluginName)) {
+                return;
+            }
+
+            const plugin = this.projects.get(pluginName);
+            if (!plugin) {
+                return;
+            }
+
+            // TODO: we need to separate between TS and LESS!
+            if (!plugin.hasTypeScriptAssets) {
+                this.compiled.add(plugin.pluginName); // we fake completion
+                return;
+            }
+
+            const compileRequest: ICompileRequest = {
+                pluginName: plugin.pluginName,
+                assetsPath: plugin.assetsDir,
+                ts: true
+            };
+            this.executor
+                .run(compileRequest)
+                .then((completedPluginName: string) => {
+                    console.log('done', completedPluginName);
+                    this.compiled.add(completedPluginName);
+                    this.scheduleNext(completedPluginName);
+                    // everything is compiled
+                    // console.log(this.compiled.asArray().sort(), this.projects.keys().sort());
+                    if (this.compiled.size === this.projects.size) {
+                        this.finishedResolver();
+                    }
+                });
+
+        });
     }
 
     getNextBatch(pluginName?: string): string[] | null {
@@ -63,8 +72,10 @@ export class Scheduler {
         let groupIdx = 0;
         let group: string[];
         if (pluginName) {
-            const p = this.projects.get(pluginName) as CplacePlugin;
-            groupIdx = p.group + 1;
+            const p = this.projects.get(pluginName);
+            if (p) {
+                groupIdx = p.group + 1;
+            }
         }
         if (groupIdx >= this.groups.length) {
             return null;
@@ -72,7 +83,11 @@ export class Scheduler {
         group = this.groups[groupIdx];
         const len = group.length - 1;
         for (let i = len; i >= 0; i--) {
-            const project = this.projects.get(group[i]) as CplacePlugin;
+            const project = this.projects.get(group[i]);
+            if (!project) {
+                continue;
+            }
+
             const allDependenciesCompiled = project.dependencies
                 .filter(dep => !this.compiled.has(dep))
                 .length === 0;
