@@ -8,6 +8,7 @@ import {spawnSync} from 'child_process';
 import * as webpack from 'webpack';
 import {ICompiler} from './interfaces';
 import {isFromLibrary} from '../model/utils';
+import {cgreen, GREEN_CHECK} from '../utils';
 
 export class TypescriptCompiler implements ICompiler {
     private static readonly ENTRY = 'app.js';
@@ -30,39 +31,38 @@ export class TypescriptCompiler implements ICompiler {
     }
 
     async compile() {
-        console.log('starting...', this.pluginName);
+        console.log(`⟲ [${this.pluginName}] starting TypeScript compilation...`);
         this.runTsc();
-        // await this.runWebpack();
-        // console.log('finished bundling');
-        return 'done';
+        console.log(cgreen`⇢`, `[${this.pluginName}] TypeScript compiled, starting bundling...`);
+        await this.runWebpack();
+        console.log(GREEN_CHECK, `[${this.pluginName}] TypeScript finished`);
     }
 
     private runTsc() {
-        // console.log('Compiling typescript...');
         const result = spawnSync('npx', ['tsc'], {
             cwd: path.resolve(this.assetsPath, 'ts'),
             stdio: [process.stdin, process.stdout, process.stderr]
         });
 
         if (result.status !== 0) {
-            throw Error('TypeScript compilation failed...');
+            throw Error(`[${this.pluginName}] TypeScript compilation failed...`);
         }
     }
 
     private runWebpack() {
-        return new Promise((resolve) => {
-            console.log('bundling');
+        return new Promise((resolve, reject) => {
             // @ts-ignore
             webpack(this.getWebpackConfig(), (err, stats) => {
                 if (err || stats.hasErrors()) {
-                    console.log('Webpack error...', this.pluginName, err, stats.toString({
-                        chunks: true,
-                        error: true,
-                        warnings: true
-                    }));
-                    // console.log('webpack error', this.pluginName);
+                    // console.log('Webpack error...', this.pluginName, err, stats.toString({
+                    //     chunks: true,
+                    //     error: true,
+                    //     warnings: true
+                    // }));
+                    reject(err);
+                } else {
+                    resolve();
                 }
-                resolve();
             });
         });
     }

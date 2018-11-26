@@ -31,10 +31,14 @@ export default class AssetsCompiler {
         const groups: string[][] = this.projectGroups.map(it => [...it]);
         const scheduler = new Scheduler(this.executor, this.projects, groups);
         scheduler.start().then(() => {
+            console.log();
             console.log(csucc`Assets compiled successfully`);
+            console.log();
             this.executor.destroy();
         }, (e) => {
+            console.log();
             console.error(cerr`COMPILATION FAILED - please check errors in output above`);
+            console.log();
             this.executor.destroy();
         });
     }
@@ -71,20 +75,11 @@ export default class AssetsCompiler {
             const project = new CplacePlugin(pluginName, filePath, mainRepoPath);
             projects.set(pluginName, project);
 
-            if (project.hasTypeScriptAssets) {
-                const tsProject = project.generateTsConfigAndGetTsProject();
-                if (tsProject.projectReferences) {
-                    tsProject.projectReferences.forEach((ref) => {
-                        let refPath = ref.path;
-                        if (refPath.indexOf(mainRepoPath) > -1) {
-                            const depName = refPath.substring(mainRepoPath.length + 1, refPath.indexOf('/', mainRepoPath.length + 1));
-                            if (!projects.has(depName)) {
-                                addProjectsRecursively(depName, path.join(mainRepoPath, depName));
-                            }
-                        }
-                    });
+            project.dependencies.forEach(depName => {
+                if (!projects.has(depName)) {
+                    addProjectsRecursively(depName, path.join(mainRepoPath, depName));
                 }
-            }
+            });
         }
 
         files.forEach(file => {
@@ -94,6 +89,12 @@ export default class AssetsCompiler {
                 if (fs.existsSync(path.join(filePath, `${potentialPluginName}.iml`)) && fs.existsSync(path.join(filePath, 'assets', 'ts', 'tsconfig.json'))) {
                     addProjectsRecursively(potentialPluginName, filePath);
                 }
+            }
+        });
+
+        projects.forEach(project => {
+            if (project.hasTypeScriptAssets) {
+                project.generateTsConfigAndGetTsProject(p => projects.get(p));
             }
         });
 

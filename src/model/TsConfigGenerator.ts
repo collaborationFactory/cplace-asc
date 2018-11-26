@@ -2,10 +2,10 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 
-import {ImlParser} from './ImlParser';
 import * as path from 'path';
 import * as fs from 'fs';
 import {getPathDependency, getRelPath} from './utils';
+import CplacePlugin from './CplacePlugin';
 
 const PLATFORM_PLUGIN = 'cf.cplace.platform';
 
@@ -13,15 +13,13 @@ export class TsConfigGenerator {
     // @todo: maybe define a ts config interface
     private tsConfig: any;
 
-    constructor(
-        private readonly moduleName: string,
-        private readonly mainPath: string,
-        private readonly isSubRepo: boolean
-    ) {
+    constructor(private readonly moduleName: string,
+                private readonly mainPath: string,
+                private readonly isSubRepo: boolean,
+                private readonly dependencies: CplacePlugin[]) {
     }
 
     public createConfigAndGetPath(): string {
-        const dependencies = this.findDependenciesWithTs();
         const platformRelPath = getRelPath(`${PLATFORM_PLUGIN}/assets/ts`, this.isSubRepo);
         const defaultPathsAndRefs = {
             paths: getPathDependency(PLATFORM_PLUGIN, platformRelPath),
@@ -29,27 +27,26 @@ export class TsConfigGenerator {
                 path: platformRelPath
             }]
         };
-        const {paths, refs} = dependencies.reduce((acc, dependency) => {
+        const {paths, refs} = this.dependencies.reduce((acc, dependency) => {
             // we do not add platform paths and references here as some modules might not have direct dependency on platform
-            if (dependency !== PLATFORM_PLUGIN) {
-                const relPath = getRelPath(`${dependency}/assets/ts`, this.isSubRepo);
-                const newPath = getPathDependency(dependency, relPath);
-                const newRef = {path: relPath};
-
-                return {
-                    paths: {
-                        ...acc.paths,
-                        ...newPath
-                    },
-                    refs: [
-                        ...acc.refs,
-                        newRef
-                    ]
-                };
+            if (dependency.pluginName === PLATFORM_PLUGIN) {
+                return acc;
             }
 
-            return acc;
+            const relPath = getRelPath(`${dependency.pluginName}/assets/ts`, this.isSubRepo);
+            const newPath = getPathDependency(dependency.pluginName, relPath);
+            const newRef = {path: relPath};
 
+            return {
+                paths: {
+                    ...acc.paths,
+                    ...newPath
+                },
+                refs: [
+                    ...acc.refs,
+                    newRef
+                ]
+            };
         }, defaultPathsAndRefs);
 
         this.tsConfig = {
@@ -84,12 +81,5 @@ export class TsConfigGenerator {
             JSON.stringify(this.tsConfig, null, 4),
             {encoding: 'utf8'}
         );
-    }
-
-    private findDependenciesWithTs(): any[] {
-        let imlPath = path.join(this.mainPath, this.moduleName, `${this.moduleName}.iml`);
-        let referencedModules = new ImlParser(imlPath).getReferencedModules();
-        return referencedModules;
-        // return referencedModules.filter((module) => config.plugins.indexOf(module) > -1);
     }
 }

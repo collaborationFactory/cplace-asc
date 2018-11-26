@@ -7,6 +7,8 @@ import {ICompileRequest} from '../types';
 import {TypescriptCompiler} from './TypescriptCompiler';
 import {ICompilerConstructor} from './interfaces';
 
+export const MESSAGE_PROCESS_COMPLETED = 'done';
+
 /* ==================
  *      This file will be called as main process by `ExecutorService` as specified by
  *      `ExecutorService#COMPILER_ENTRY_POINT`.
@@ -14,11 +16,11 @@ import {ICompilerConstructor} from './interfaces';
 
 if (require.main === module) {
     process.on('message', (request: ICompileRequest) => {
-        handleRequest(request).then((response) => {
+        handleRequest(request).then(() => {
             if (!process.send) {
                 throw Error('must be called as a worker');
             }
-            process.send(response);
+            process.send(MESSAGE_PROCESS_COMPLETED);
         }, () => {
             process.exit(1);
         });

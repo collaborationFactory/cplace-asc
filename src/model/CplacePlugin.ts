@@ -7,6 +7,11 @@ import * as gts from 'gulp-typescript';
 import * as fs from 'fs';
 import {TsConfigGenerator} from './TsConfigGenerator';
 import {cerr, GREEN_CHECK} from '../utils';
+import {ImlParser} from './ImlParser';
+
+export interface ICplacePluginResolver {
+    (pluginName: string): CplacePlugin | undefined
+}
 
 /**
  * Represents a cplace plugin that needs to be compiled
@@ -16,19 +21,19 @@ export default class CplacePlugin {
     /**
      * Path to the plugin's `/assets` directory
      */
-    readonly assetsDir: string;
+    public readonly assetsDir: string;
 
-    readonly hasTypeScriptAssets: boolean;
-    readonly hasLessAssets: boolean;
+    public readonly hasTypeScriptAssets: boolean;
+    public readonly hasLessAssets: boolean;
 
     /**
-     * TypeScript plugin dependencies
+     * Plugin dependencies (parsed from IML)
      */
-    readonly dependencies: Array<string>;
+    public readonly dependencies: string[];
     /**
      * TypeScript plugins that depend on me
      */
-    readonly dependents: Array<string>;
+    public readonly dependents: Array<string>;
 
     /**
      * gulp-typescript project instance
@@ -49,44 +54,54 @@ export default class CplacePlugin {
         this.assetsDir = path.resolve(pluginDir, 'assets');
         this.hasTypeScriptAssets = fs.existsSync(path.resolve(this.assetsDir, 'ts'));
         this.hasLessAssets = fs.existsSync(path.resolve(this.assetsDir, 'less'));
+
+        this.parseDependencies();
     }
 
-    public generateTsConfigAndGetTsProject(): gts.Project {
+    public generateTsConfigAndGetTsProject(pluginResolver: ICplacePluginResolver): gts.Project {
         if (!this.hasTypeScriptAssets) {
-            throw Error('plugin does not have TypeScript assets');
+            throw Error(`[${this.pluginName}] plugin does not have TypeScript assets`);
         }
+
+        const dependenciesWithTypeScript = this.dependencies
+            .map(pluginName => {
+                const plugin = pluginResolver(pluginName);
+                if (!plugin) {
+                    throw Error(`[${this.pluginName}] could not resolve dependency ${this.pluginName}`);
+                }
+                return plugin;
+            })
+            .filter(p => p.hasTypeScriptAssets);
 
         // @todo: define option not to generate tsconfig each time (or to do it) and check existence
         const tsConfigGenerator = new TsConfigGenerator(
             this.pluginName,
             this.mainRepoDir,
-            false // @todo: this needs to be fixed
+            false, // @todo: this needs to be fixed
+            dependenciesWithTypeScript
         );
         const tsconfigPath = tsConfigGenerator.createConfigAndGetPath();
+
         if (!fs.existsSync(tsconfigPath)) {
-            console.error(cerr`Could not generate tsconfig file for ${this.pluginName}...`);
-            throw Error('tsconfig generation failed');
+            console.error(cerr`[${this.pluginName}] Could not generate tsconfig file...`);
+            throw Error(`[${this.pluginName}] tsconfig generation failed`);
         } else {
-            console.log(`${GREEN_CHECK} wrote tsconfig for ${this.pluginName}...`);
+            console.log(`${GREEN_CHECK} [${this.pluginName}] wrote tsconfig...`);
         }
 
         this.tsProject = gts.createProject(tsconfigPath);
-        this.parseDependencies();
         return this.tsProject;
     }
 
     private parseDependencies(): void {
-        if (!this.tsProject) {
-            return;
+        const imlPath = path.join(this.pluginDir, `${this.pluginName}.iml`);
+        if (!fs.existsSync(imlPath)) {
+            throw Error(`[${this.pluginName}] failed to find plugin IML`);
         }
 
-        let paths = this.tsProject.options.paths;
-        if (paths) {
-            Object.keys(paths).forEach((path) => {
-                // dependencies are listed in references.
-                this.dependencies.push(path.substring(1, path.indexOf('/')));
-            });
-        }
+        new ImlParser(imlPath).getReferencedModules().forEach(p => {
+            return this.dependencies.push(p);
+        });
     }
 
     // TODO: do we need this?

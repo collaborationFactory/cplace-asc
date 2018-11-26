@@ -6,6 +6,7 @@ import {createPool, Factory, Pool} from 'generic-pool';
 import * as path from 'path';
 import {ChildProcess, fork} from 'child_process';
 import {ICompileRequest} from '../types';
+import {MESSAGE_PROCESS_COMPLETED} from '../compiler';
 
 const COMPILER_ENTRY_POINT = path.resolve(path.dirname(__filename), '../compiler/index.js');
 
@@ -34,10 +35,13 @@ export class ExecutorService {
                 process.send(compileRequest);
 
                 process.once('message', (message) => {
-                    this._pool.release(process);
-                    console.log(`XXX message: ${message}`);
                     resolved = true;
-                    resolve(compileRequest.pluginName);
+                    if (message === MESSAGE_PROCESS_COMPLETED) {
+                        resolve(compileRequest.pluginName);
+                    } else {
+                        reject(2);
+                    }
+                    this._pool.release(process);
                 });
                 process.on('exit', (code) => {
                     if (!resolved) {
