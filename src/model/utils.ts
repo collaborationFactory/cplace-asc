@@ -20,7 +20,7 @@ export function getAvailableStats() {
     return op.join(', ');
 }
 
-let LIB_TEST_RE = /@cf\.cplace\.platform\/.+/;
+const LIB_TEST_RE = /@cf\.cplace\.platform\/.+/;
 
 export function isFromLibrary(file: string) {
     return LIB_TEST_RE.test(file);

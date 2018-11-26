@@ -5,14 +5,13 @@
 import {createPool, Factory, Pool} from 'generic-pool';
 import * as path from 'path';
 import {ChildProcess, fork} from 'child_process';
-import CplacePlugin from './CplacePlugin';
 import {ICompileRequest} from '../types';
 
-const _fileName = path.resolve(path.dirname(__filename), '../compiler/index.js');
+const COMPILER_ENTRY_POINT = path.resolve(path.dirname(__filename), '../compiler/index.js');
 
 const Processfactory: Factory<ChildProcess> = {
     create: async () => {
-        return fork(_fileName);
+        return fork(COMPILER_ENTRY_POINT);
     },
     destroy: async (_process: ChildProcess) => {
         return _process.kill();
@@ -29,24 +28,22 @@ export class ExecutorService {
     }
 
     run(compileRequest: ICompileRequest) {
-        return new Promise<string>((resolve) => {
+        return new Promise<string>((resolve, reject) => {
             this._pool.acquire().then((process) => {
+                let resolved = false;
                 process.send(compileRequest);
+
                 process.once('message', (message) => {
                     this._pool.release(process);
-                    console.log(message);
+                    console.log(`XXX message: ${message}`);
+                    resolved = true;
                     resolve(compileRequest.pluginName);
                 });
-            });
-        });
-    }
-
-    runCb(project: CplacePlugin, ack: (pluginName: string) => void) {
-        this._pool.acquire().then((process) => {
-            process.send(project.pluginName);
-            process.once('message', (message) => {
-                this._pool.release(process);
-                ack(project.pluginName);
+                process.on('exit', (code) => {
+                    if (!resolved) {
+                        reject(code);
+                    }
+                });
             });
         });
     }

@@ -2,22 +2,25 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 
-import CplacePlugin from './CplacePlugin';
 import {ExecutorService} from './ExecutorService';
 import {ICompileRequest} from '../types';
+import CplacePlugin from '../model/CplacePlugin';
 
 export class Scheduler {
     private readonly compiled: Set<string>;
-    private finishedResolver: any;
+
+    private finishedResolver?: () => void;
+    private finishedRejecter?: (reason: any) => void;
 
     constructor(private executor: ExecutorService, private projects: Map<string, CplacePlugin>, private groups: Array<Array<string>>) {
         this.compiled = new Set<string>();
     }
 
-    start() {
+    start(): Promise<void> {
         this.scheduleNext();
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             this.finishedResolver = resolve;
+            this.finishedRejecter = reject;
         });
     }
 
@@ -60,8 +63,10 @@ export class Scheduler {
                     // everything is compiled
                     // console.log(this.compiled.asArray().sort(), this.projects.keys().sort());
                     if (this.compiled.size === this.projects.size) {
-                        this.finishedResolver();
+                        this.finishedResolver && this.finishedResolver();
                     }
+                }, (e) => {
+                    this.finishedRejecter && this.finishedRejecter(e);
                 });
 
         });

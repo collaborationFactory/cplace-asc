@@ -6,8 +6,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {IRunConfig} from '../types';
 import CplacePlugin from './CplacePlugin';
-import {ExecutorService} from './ExecutorService';
-import {Scheduler} from './Scheduler';
+import {ExecutorService, Scheduler} from '../executor';
+import {cerr, csucc} from '../utils';
 
 /**
  * This represents the main execution logic for the whole compilation process
@@ -31,7 +31,10 @@ export default class AssetsCompiler {
         const groups: string[][] = this.projectGroups.map(it => [...it]);
         const scheduler = new Scheduler(this.executor, this.projects, groups);
         scheduler.start().then(() => {
-            console.log('all done');
+            console.log(csucc`Assets compiled successfully`);
+            this.executor.destroy();
+        }, (e) => {
+            console.error(cerr`COMPILATION FAILED - please check errors in output above`);
             this.executor.destroy();
         });
     }

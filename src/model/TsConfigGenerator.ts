@@ -2,10 +2,10 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 
-import { ImlParser } from './ImlParser';
+import {ImlParser} from './ImlParser';
 import * as path from 'path';
 import * as fs from 'fs';
-import { getPathDependency, getRelPath } from './utils';
+import {getPathDependency, getRelPath} from './utils';
 
 const PLATFORM_PLUGIN = 'cf.cplace.platform';
 
@@ -20,7 +20,7 @@ export class TsConfigGenerator {
     ) {
     }
 
-    getConfigAndSave(): string {
+    public createConfigAndGetPath(): string {
         const dependencies = this.findDependenciesWithTs();
         const platformRelPath = getRelPath(`${PLATFORM_PLUGIN}/assets/ts`, this.isSubRepo);
         const defaultPathsAndRefs = {
@@ -29,12 +29,12 @@ export class TsConfigGenerator {
                 path: platformRelPath
             }]
         };
-        const { paths, refs } = dependencies.reduce((acc, dependency) => {
+        const {paths, refs} = dependencies.reduce((acc, dependency) => {
             // we do not add platform paths and references here as some modules might not have direct dependency on platform
             if (dependency !== PLATFORM_PLUGIN) {
                 const relPath = getRelPath(`${dependency}/assets/ts`, this.isSubRepo);
                 const newPath = getPathDependency(dependency, relPath);
-                const newRef = { path: relPath };
+                const newRef = {path: relPath};
 
                 return {
                     paths: {
@@ -68,7 +68,22 @@ export class TsConfigGenerator {
         }
 
         this.saveConfig();
-        return this.tsConfig;
+        return this.getConfigPath();
+    }
+
+    public getConfigPath(): string {
+        return path.join(this.mainPath, this.moduleName, 'assets', 'ts', 'tsconfig.json');
+    }
+
+    private saveConfig(): void {
+        /* this is done sync for now, 'cause when a error occurs later in the execution
+           and is not caught, it will fail the file generation
+         */
+        fs.writeFileSync(
+            this.getConfigPath(),
+            JSON.stringify(this.tsConfig, null, 4),
+            {encoding: 'utf8'}
+        );
     }
 
     private findDependenciesWithTs(): any[] {
@@ -76,20 +91,5 @@ export class TsConfigGenerator {
         let referencedModules = new ImlParser(imlPath).getReferencedModules();
         return referencedModules;
         // return referencedModules.filter((module) => config.plugins.indexOf(module) > -1);
-    }
-
-    saveConfig(): string {
-        const saveTsConfigPath = path.join(this.mainPath, this.moduleName, 'assets', 'ts', 'tsconfig.json');
-        /* this is done sync for now, 'cause when a error occurs later in the execution
-           and is not caught, it will fail the file generation
-         */
-        fs.writeFileSync(
-            saveTsConfigPath,
-            JSON.stringify(this.tsConfig, null, 4),
-            { encoding: 'utf8' }
-        );
-
-        console.log(`wrote tsConfig for ${this.moduleName}...`);
-        return saveTsConfigPath;
     }
 }

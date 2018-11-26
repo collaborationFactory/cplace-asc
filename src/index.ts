@@ -4,8 +4,8 @@
  */
 
 import {IRunConfig} from './types';
-import AssetsCompiler from './lib/AssetsCompiler';
-import {getAvailableStats} from './lib/utils';
+import {getAvailableStats} from './model/utils';
+import AssetsCompiler from './model/AssetsCompiler';
 
 function checkNodeVersion(): void {
     let major = Number.MAX_VALUE;

@@ -17,14 +17,6 @@ export interface ICompileResponse {
     lessStats?: any;
 }
 
-export interface ICompiler {
-    compile(): Promise<any>;
-}
-
-export interface ICompilerConstructor {
-    new(pluginName: string, path: string): ICompiler;
-}
-
 
 export interface StringObj<T> {
     [key: string]: T

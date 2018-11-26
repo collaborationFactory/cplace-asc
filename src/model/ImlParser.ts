@@ -13,14 +13,14 @@ export class ImlParser {
         this.parseFile();
     }
 
-    getReferencedModules(): string[] {
+    public getReferencedModules(): string[] {
         const components = this._module.component as any[];
         let result: string[] = [];
 
         if (components) {
             components.forEach(component => {
                 if (component.$.name === 'NewModuleRootManager') {
-                    result = this.getReferencedModulesFromManager(component);
+                    result = ImlParser.getReferencedModulesFromManager(component);
                 }
             });
         }
@@ -28,7 +28,18 @@ export class ImlParser {
         return result;
     }
 
-    private getReferencedModulesFromManager(component: any): string[] {
+    private parseFile(): void {
+        if (this._module) {
+            return;
+        }
+
+        const imlContent = fs.readFileSync(this.pathToIml, 'utf8');
+        parseString(imlContent, (err: any, result: any) => {
+            this._module = result.module;
+        });
+    }
+
+    private static getReferencedModulesFromManager(component: any): string[] {
         const entries = component.orderEntry as any[];
         if (!entries) {
             return [];
@@ -41,16 +52,5 @@ export class ImlParser {
             .filter(name => {
                 return !!name;
             });
-    }
-
-    private parseFile(): void {
-        if (this._module) {
-            return;
-        }
-
-        const imlContent = fs.readFileSync(this.pathToIml, 'utf8');
-        parseString(imlContent, (err: any, result: any) => {
-            this._module = result.module;
-        });
     }
 }

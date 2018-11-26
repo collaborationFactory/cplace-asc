@@ -2,21 +2,23 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 
-import { ICompiler } from '../types';
 import * as path from 'path';
-import { CReplacePlugin } from './CReplacePlugin';
-import { isFromLibrary } from '../lib/utils';
-import { ChildProcess, spawnSync } from 'child_process';
+import {CReplacePlugin} from './CReplacePlugin';
+import {spawnSync} from 'child_process';
 import * as webpack from 'webpack';
+import {ICompiler} from './interfaces';
+import {isFromLibrary} from '../model/utils';
 
 export class TypescriptCompiler implements ICompiler {
-    private static readonly entry = 'app.js';
-    private static readonly destDir = 'generated_js';
+    private static readonly ENTRY = 'app.js';
+    private static readonly DEST_DIR = 'generated_js';
+
     private readonly externals = [{
         d3: 'd3',
         moment: 'moment',
         underscore: '_'
     }, (context: string, request: string, callback: Function) => {
+        // TODO: resolution needs to be configured differently and resolve all known plugin paths
         if (isFromLibrary(request)) {
             const newRequest = request.substr(1).replace('cf.cplace.', '');
             return callback(null, newRequest);
@@ -24,30 +26,30 @@ export class TypescriptCompiler implements ICompiler {
         callback();
     }];
 
-    constructor(public readonly  pluginName: string, private readonly assetsPath: string) {
+    constructor(public readonly pluginName: string, private readonly assetsPath: string) {
     }
 
     async compile() {
-        try {
-            console.log('starting...', this.pluginName);
-            this._compile();
-            await this._bundle();
-            // console.log('finished bundling');
-        } catch (e) {
-            console.log(e);
-        }
+        console.log('starting...', this.pluginName);
+        this.runTsc();
+        // await this.runWebpack();
+        // console.log('finished bundling');
         return 'done';
     }
 
-    private _compile() {
+    private runTsc() {
         // console.log('Compiling typescript...');
-        spawnSync('npx', ['tsc'], {
+        const result = spawnSync('npx', ['tsc'], {
             cwd: path.resolve(this.assetsPath, 'ts'),
             stdio: [process.stdin, process.stdout, process.stderr]
         });
+
+        if (result.status !== 0) {
+            throw Error('TypeScript compilation failed...');
+        }
     }
 
-    private _bundle() {
+    private runWebpack() {
         return new Promise((resolve) => {
             console.log('bundling');
             // @ts-ignore
@@ -67,10 +69,10 @@ export class TypescriptCompiler implements ICompiler {
 
     private getWebpackConfig() {
         return {
-            context: path.resolve(this.assetsPath, TypescriptCompiler.destDir),
+            context: path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR),
             devtool: 'source-map',
             entry: {
-                tsc: './' + TypescriptCompiler.entry
+                tsc: './' + TypescriptCompiler.ENTRY
             },
             externals: this.externals,
             mode: 'development',
@@ -81,14 +83,14 @@ export class TypescriptCompiler implements ICompiler {
                     use: [{
                         loader: path.resolve(__filename, '../contextInjectorLoader.js'),
                         options: {
-                            entry: TypescriptCompiler.entry
+                            entry: TypescriptCompiler.ENTRY
                         }
                     }]
                 }]
             },
             output: {
                 filename: '[name].js',
-                path: path.resolve(this.assetsPath, TypescriptCompiler.destDir),
+                path: path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR),
                 pathinfo: true,
                 /**
                  * The plugin will be exported as a webpackContext with exported name in the app.ts.

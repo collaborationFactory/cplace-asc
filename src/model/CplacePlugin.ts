@@ -6,6 +6,7 @@ import * as path from 'path';
 import * as gts from 'gulp-typescript';
 import * as fs from 'fs';
 import {TsConfigGenerator} from './TsConfigGenerator';
+import {cerr, GREEN_CHECK} from '../utils';
 
 /**
  * Represents a cplace plugin that needs to be compiled
@@ -61,12 +62,12 @@ export default class CplacePlugin {
             this.mainRepoDir,
             false // @todo: this needs to be fixed
         );
-        tsConfigGenerator.getConfigAndSave();
-
-        const tsconfigPath = path.resolve(this.assetsDir, 'ts', 'tsconfig.json');
+        const tsconfigPath = tsConfigGenerator.createConfigAndGetPath();
         if (!fs.existsSync(tsconfigPath)) {
-            console.error(`Could not generate tsconfig file for ${this.pluginName}...`);
+            console.error(cerr`Could not generate tsconfig file for ${this.pluginName}...`);
             throw Error('tsconfig generation failed');
+        } else {
+            console.log(`${GREEN_CHECK} wrote tsconfig for ${this.pluginName}...`);
         }
 
         this.tsProject = gts.createProject(tsconfigPath);

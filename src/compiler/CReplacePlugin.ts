@@ -2,8 +2,8 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 
-import { Compiler, Plugin } from 'webpack';
-import { isFromLibrary } from '../lib/utils';
+import {Compiler, Plugin} from 'webpack';
+import {isFromLibrary} from '../model/utils';
 
 export class CReplacePlugin implements Plugin {
     constructor() {

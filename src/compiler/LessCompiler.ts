@@ -3,7 +3,8 @@ import * as path from 'path';
 import {promisify} from 'util';
 import * as less from 'less';
 
-import {ICompiler, LessEntryFile} from '../types';
+import {LessEntryFile} from '../types';
+import {ICompiler} from './interfaces';
 
 
 export class LessCompiler implements ICompiler {
@@ -12,7 +13,7 @@ export class LessCompiler implements ICompiler {
 
     private readonly entry: LessEntryFile;
 
-    constructor(public readonly  pluginName: string, private readonly assetsPath: string) {
+    constructor(public readonly pluginName: string, private readonly assetsPath: string) {
         if (fs.existsSync(path.join(this.assetsPath, LessCompiler.srcDir, 'plugin.less'))) {
             this.entry = 'plugin';
         } else {
