@@ -8,6 +8,7 @@ import {TypescriptCompiler} from './TypescriptCompiler';
 import {ICompilerConstructor} from './interfaces';
 
 export const MESSAGE_PROCESS_COMPLETED = 'done';
+export const MESSAGE_PROCESS_FAILED = 'failed';
 
 /* ==================
  *      This file will be called as main process by `ExecutorService` as specified by
@@ -22,7 +23,9 @@ if (require.main === module) {
             }
             process.send(MESSAGE_PROCESS_COMPLETED);
         }, () => {
-            process.exit(1);
+            if (process.send) {
+                process.send(MESSAGE_PROCESS_FAILED);
+            }
         });
     });
 

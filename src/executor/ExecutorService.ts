@@ -20,42 +20,59 @@ const Processfactory: Factory<ChildProcess> = {
 };
 
 export class ExecutorService {
-    private readonly _pool: Pool<ChildProcess>;
+    private readonly pool: Pool<ChildProcess>;
+    private running = 0;
 
-    constructor(maxParallism: number) {
-        this._pool = createPool(Processfactory, {
-            max: maxParallism
+    constructor(private readonly maxParallelism: number) {
+        this.pool = createPool(Processfactory, {
+            max: maxParallelism
         });
     }
 
-    run(compileRequest: ICompileRequest) {
-        return new Promise<string>((resolve, reject) => {
-            this._pool.acquire().then((process) => {
+    public hasCapacity(): boolean {
+        return this.running < this.maxParallelism;
+    }
+
+    public run(compileRequest: ICompileRequest): Promise<void> {
+        console.log(`===> running compile request ${compileRequest.pluginName} - ${compileRequest.ts ? 'TS' : 'LESS'}`);
+        this.running++;
+        return new Promise<void>((resolve, reject) => {
+            this.pool.acquire().then((process) => {
                 let resolved = false;
                 process.send(compileRequest);
 
                 process.once('message', (message) => {
+                    this.pool.release(process);
                     resolved = true;
                     if (message === MESSAGE_PROCESS_COMPLETED) {
-                        resolve(compileRequest.pluginName);
+                        this.running--;
+                        resolve();
                     } else {
+                        this.running--;
                         reject(2);
                     }
-                    this._pool.release(process);
                 });
                 process.on('exit', (code) => {
                     if (!resolved) {
+                        this.pool.release(process);
+                        this.running--;
                         reject(code);
                     }
                 });
+            }, (e) => {
+                this.running--;
+                throw Error(`failed to acquire process: ${e}`);
             });
         });
     }
 
-    destroy() {
-        this._pool.drain().then(() => {
-            this._pool.clear();
-        });
+    public destroy(): PromiseLike<void> {
+        let drainPromise = this.pool.drain();
+        drainPromise.then(
+            () => this.pool.clear(),
+            () => this.pool.clear()
+        );
+        return drainPromise;
     }
 
 

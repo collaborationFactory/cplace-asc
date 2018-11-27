@@ -1,0 +1,95 @@
+export class JobDetails {
+    public readonly before: string[];
+    public readonly after: string[];
+
+    constructor(public readonly key: string,
+                before: string[],
+                after: string[]) {
+        this.before = [...before];
+        this.after = [...after];
+    }
+}
+
+export class JobTracker {
+    private readonly keyToDetails: Map<string, JobDetails> = new Map<string, JobDetails>();
+    private readonly dirtyKeys = new Set<string>();
+    private readonly pendingKeys = new Set<string>();
+
+    constructor(public readonly jobs: JobDetails[]) {
+        jobs.forEach(j => {
+            this.keyToDetails.set(j.key, j);
+            this.dirtyKeys.add(j.key);
+        });
+    }
+
+    /**
+     * Marks the given `key` as dirty resulting in all `JobDetails.after` keys to be marked
+     * as dirty recursively, too.
+     */
+    public markDirty(key: string): void {
+        if (!this.keyToDetails.has(key)) {
+            throw Error(`unknown job key: ${key}`);
+        }
+        this.dirtyKeys.add(key);
+        this.getDetails(key)
+            .after
+            .forEach(after => this.markDirty(after));
+    }
+
+    /**
+     * Marks the given `key` as currently being processed
+     */
+    public markProcessing(key: string): void {
+        if (!this.keyToDetails.has(key)) {
+            throw Error(`unknown job key: ${key}`);
+        }
+        this.dirtyKeys.delete(key);
+        this.pendingKeys.add(key);
+    }
+
+    /**
+     * Marks the given `key` as processed.
+     */
+    public markCompleted(key: string): void {
+        if (!this.keyToDetails.has(key)) {
+            throw Error(`unknown job key: ${key}`);
+        }
+        this.pendingKeys.delete(key);
+    }
+
+    /**
+     * Get the next key ready for processing.
+     *
+     * The return value of this method will be as follows:
+     * - a `string` if there is a key to be processed
+     * - `null` if all keys have been processed completely
+     * - `undefined` if there is not yet a key available due to pending processing operations
+     */
+    public getNextKey(): string | null | undefined {
+        if (this.dirtyKeys.size === 0 && this.pendingKeys.size === 0) {
+            return null;
+        }
+
+        const ready = [...this.dirtyKeys.values()]
+            .map(key => this.getDetails(key))
+            .filter(details => details
+                .before
+                .filter(beforeKey => this.isDirtyOrPending(beforeKey))
+                .length === 0
+            )
+            .map(details => details.key);
+        return ready.length > 0 ? ready[0] : undefined;
+    }
+
+    private getDetails(key: string): JobDetails {
+        const details = this.keyToDetails.get(key);
+        if (!details) {
+            throw Error(`unexpectly missing key ${key}`);
+        }
+        return details;
+    }
+
+    private isDirtyOrPending(key: string): boolean {
+        return this.dirtyKeys.has(key) || this.pendingKeys.has(key);
+    }
+}

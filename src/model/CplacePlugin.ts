@@ -27,13 +27,13 @@ export default class CplacePlugin {
     public readonly hasLessAssets: boolean;
 
     /**
-     * Plugin dependencies (parsed from IML)
+     * Plugin dependencies this plugin depends on (parsed from IML), i.e. outgoing dependencies
      */
     public readonly dependencies: string[];
     /**
-     * TypeScript plugins that depend on me
+     * Plugins that depend on this plugin (set explicitly afterwards), i.e. incoming dependencies
      */
-    public readonly dependents: Array<string>;
+    public readonly dependents: string[];
 
     /**
      * gulp-typescript project instance

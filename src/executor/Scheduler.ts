@@ -5,15 +5,19 @@
 import {ExecutorService} from './ExecutorService';
 import {ICompileRequest} from '../types';
 import CplacePlugin from '../model/CplacePlugin';
+import {JobDetails, JobTracker} from './JobTracker';
 
 export class Scheduler {
-    private readonly compiled: Set<string>;
+    private readonly tsJobs: JobTracker;
+    private readonly lessJobs: JobTracker;
 
+    private completed: boolean = false;
     private finishedResolver?: () => void;
     private finishedRejecter?: (reason: any) => void;
 
-    constructor(private executor: ExecutorService, private projects: Map<string, CplacePlugin>, private groups: Array<Array<string>>) {
-        this.compiled = new Set<string>();
+    constructor(private executor: ExecutorService, private plugins: Map<string, CplacePlugin>) {
+        this.tsJobs = this.createTsJobTracker();
+        this.lessJobs = this.createLessJobTracker();
     }
 
     start(): Promise<void> {
@@ -24,84 +28,120 @@ export class Scheduler {
         });
     }
 
-    /**
-     *
-     * @param pluginName plugin that has finished compiling
-     */
-    scheduleNext(pluginName?: string) {
-        const nextGroup = this.getNextBatch(pluginName);
-        if (!Array.isArray(nextGroup)) {
+    private scheduleNext(): void {
+        if (this.completed) {
             return;
         }
-        nextGroup.forEach(pluginName => {
-            if (!pluginName || !this.projects.has(pluginName)) {
-                return;
-            }
 
-            const plugin = this.projects.get(pluginName);
-            if (!plugin) {
-                return;
-            }
-
-            // TODO: we need to separate between TS and LESS!
-            if (!plugin.hasTypeScriptAssets) {
-                this.compiled.add(plugin.pluginName); // we fake completion
-                return;
-            }
-
+        const nextTsPlugin = this.tsJobs.getNextKey();
+        if (nextTsPlugin) {
+            const plugin = this.getPlugin(nextTsPlugin);
             const compileRequest: ICompileRequest = {
                 pluginName: plugin.pluginName,
                 assetsPath: plugin.assetsDir,
                 ts: true
             };
+            this.tsJobs.markProcessing(nextTsPlugin);
             this.executor
                 .run(compileRequest)
-                .then((completedPluginName: string) => {
-                    console.log('done', completedPluginName);
-                    this.compiled.add(completedPluginName);
-                    this.scheduleNext(completedPluginName);
-                    // everything is compiled
-                    // console.log(this.compiled.asArray().sort(), this.projects.keys().sort());
-                    if (this.compiled.size === this.projects.size) {
-                        this.finishedResolver && this.finishedResolver();
-                    }
+                .then(() => {
+                    this.tsJobs.markCompleted(nextTsPlugin);
+                    this.scheduleNext();
                 }, (e) => {
+                    this.completed = true;
                     this.finishedRejecter && this.finishedRejecter(e);
                 });
 
-        });
+            if (!this.executor.hasCapacity()) {
+                console.log('no capacity');
+                return;
+            }
+        }
+
+        /*const nextLessPlugin = this.lessJobs.getNextKey();
+        if (nextLessPlugin) {
+            const plugin = this.getPlugin(nextLessPlugin);
+            const compileRequest: ICompileRequest = {
+                pluginName: plugin.pluginName,
+                assetsPath: plugin.assetsDir,
+                less: true
+            };
+            this.lessJobs.markProcessing(nextLessPlugin);
+            this.executor
+                .run(compileRequest)
+                .then(() => {
+                    this.lessJobs.markCompleted(nextLessPlugin);
+                    this.scheduleNext();
+                }, (e) => {
+                    this.completed = true;
+                    this.finishedRejecter && this.finishedRejecter(e);
+                });
+
+            if (!this.executor.hasCapacity()) {
+                console.log('no capacity');
+                return;
+            }
+        }*/
+
+        if (nextTsPlugin === null /*&& nextLessPlugin === null*/) {
+            this.completed = true;
+            this.finishedResolver && this.finishedResolver();
+        } else if (nextTsPlugin !== undefined) {
+            this.scheduleNext();
+        }
     }
 
-    getNextBatch(pluginName?: string): string[] | null {
-        let nextTasks: string[] = [];
-        let groupIdx = 0;
-        let group: string[];
-        if (pluginName) {
-            const p = this.projects.get(pluginName);
-            if (p) {
-                groupIdx = p.group + 1;
+    private createTsJobTracker(): JobTracker {
+        const tsPlugins: CplacePlugin[] = [];
+        this.plugins.forEach(plugin => {
+            if (plugin.hasTypeScriptAssets) {
+                tsPlugins.push(plugin);
             }
-        }
-        if (groupIdx >= this.groups.length) {
-            return null;
-        }
-        group = this.groups[groupIdx];
-        const len = group.length - 1;
-        for (let i = len; i >= 0; i--) {
-            const project = this.projects.get(group[i]);
-            if (!project) {
-                continue;
-            }
+        });
 
-            const allDependenciesCompiled = project.dependencies
-                .filter(dep => !this.compiled.has(dep))
-                .length === 0;
+        const jobs: JobDetails[] = tsPlugins.map(plugin => new JobDetails(
+            plugin.pluginName,
+            this.filterTypeScriptPlugins(plugin.dependencies),
+            this.filterTypeScriptPlugins(plugin.dependents)
+        ));
+        return new JobTracker(jobs);
+    }
 
-            if (allDependenciesCompiled) {
-                nextTasks.push(project.pluginName);
-                group.splice(i, 1);
+    private createLessJobTracker(): JobTracker {
+        const lessPlugins: CplacePlugin[] = [];
+        this.plugins.forEach(plugin => {
+            if (plugin.hasLessAssets) {
+                lessPlugins.push(plugin);
             }
+        });
+
+        const jobs: JobDetails[] = lessPlugins.map(plugin => new JobDetails(
+            plugin.pluginName,
+            this.filterLessPlugins(plugin.dependencies),
+            this.filterLessPlugins(plugin.dependents)
+        ));
+        return new JobTracker(jobs);
+    }
+
+    private filterTypeScriptPlugins(plugins: string[]): string[] {
+        return plugins
+            .map(p => this.getPlugin(p))
+            .filter(p => p.hasTypeScriptAssets)
+            .map(p => p.pluginName);
+    }
+
+    private filterLessPlugins(plugins: string[]): string[] {
+        return plugins
+            .map(p => this.getPlugin(p))
+            .filter(p => p.hasLessAssets)
+            .map(p => p.pluginName);
+    }
+
+    private getPlugin(pluginName: string): CplacePlugin {
+        const plugin = this.plugins.get(pluginName);
+        if (!plugin) {
+            throw Error(`unknown plugin: ${plugin}`);
         }
-        return nextTasks;
+        return plugin;
     }
 }

@@ -45,7 +45,11 @@ function checkNodeVersion(): void {
     config.plugins = ['cf.cplace.training.extended'];
     // config.plugins = ['cf.cplace.pptexport'];
 
-    new AssetsCompiler(config).start();
+    new AssetsCompiler(config).start().then(() => {
+        // success
+    }, () => {
+        // failed
+    });
 
     // new AssetsCompiler(config).start();
 })();
