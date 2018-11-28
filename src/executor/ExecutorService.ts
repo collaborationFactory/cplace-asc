@@ -34,7 +34,6 @@ export class ExecutorService {
     }
 
     public run(compileRequest: ICompileRequest): Promise<void> {
-        console.log(`===> running compile request ${compileRequest.pluginName} - ${compileRequest.ts ? 'TS' : 'LESS'}`);
         this.running++;
         return new Promise<void>((resolve, reject) => {
             this.pool.acquire().then((process) => {

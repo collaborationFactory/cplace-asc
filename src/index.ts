@@ -3,9 +3,49 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 
-import {IRunConfig} from './types';
 import {getAvailableStats} from './model/utils';
-import AssetsCompiler from './model/AssetsCompiler';
+import {AssetsCompiler, IAssetsCompilerConfiguration} from './model/AssetsCompiler';
+import {cerr} from './utils';
+import meow = require('meow');
+
+
+checkNodeVersion();
+
+
+const cli = meow(`
+    Usage:
+        $ cplace-asc
+
+    Options:
+        --plugin, -p <plugin>   Run for specified plugin (and dependencies)
+`, {
+    flags: {
+        plugin: {
+            type: 'string',
+            alias: 'p',
+            default: null
+        }
+    }
+});
+
+if (cli.flags.plugin !== null && !cli.flags.plugin) {
+    console.error(cerr`Missing value for --plugin|-p argument`);
+    process.exit(1);
+}
+
+const config: IAssetsCompilerConfiguration = {
+    rootPlugins: cli.flags.plugin ? [cli.flags.plugin] : []
+};
+
+console.log(getAvailableStats());
+new AssetsCompiler(config).start().then(() => {
+    // success
+}, () => {
+    // failed
+});
+
+// new AssetsCompiler(config).start();
+
 
 function checkNodeVersion(): void {
     let major = Number.MAX_VALUE;
@@ -20,36 +60,3 @@ function checkNodeVersion(): void {
         process.exit(1);
     }
 }
-
-(() => {
-    checkNodeVersion();
-    console.log(getAvailableStats());
-
-    const config: IRunConfig = {
-        plugins: []
-    };
-    // let parser = yargs.usage('\nUsage: $0 [options]')
-    //     .command('', 'Compiler and bundler for Typescript and Less used in cplace.')
-    //     .options(cliOptions)
-    //     .demand(0);
-
-    // const opts = parser.argv;
-    //
-    // console.log('opts');
-    // console.log(opts);
-    // if(opts.help) {
-    //     parser.showHelp();
-    //     process.exit(0);
-    // }
-
-    config.plugins = ['cf.cplace.training.extended'];
-    // config.plugins = ['cf.cplace.pptexport'];
-
-    new AssetsCompiler(config).start().then(() => {
-        // success
-    }, () => {
-        // failed
-    });
-
-    // new AssetsCompiler(config).start();
-})();

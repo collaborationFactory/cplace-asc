@@ -14,15 +14,17 @@
   "author": "collaboration Factory AG",
   "license": "ISC",
   "dependencies": {
+    "generic-pool": "latest",
     "gulp-typescript": "^5.0.0-alpha.3",
     "less": "^3.8.1",
+    "meow": "^5.0.0",
     "webpack": "^4.26.0",
-    "xml2js": "^0.4.19",
-    "generic-pool": "latest"
+    "xml2js": "^0.4.19"
   },
   "devDependencies": {
     "@types/generic-pool": "^3.1.6",
     "@types/less": "^3.0.0",
+    "@types/meow": "^5.0.0",
     "@types/minimist": "^1.2.0",
     "@types/node": "^10.12.10",
     "@types/vinyl": "^2.0.2",

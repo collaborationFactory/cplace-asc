@@ -1,7 +1,3 @@
-export interface IRunConfig {
-    plugins: string[];
-}
-
 export type LessEntryFile = 'plugin' | 'cplace';
 
 export interface ICompileRequest {
