@@ -1,6 +1,7 @@
 {
   "name": "@cplace/asc",
-  "version": "1.0.0",
+  "version": "0.0.0",
+  "private": false,
   "description": "cplace assets compiler",
   "repository": "https://github.com/collaborationFactory/cplace-asc",
   "main": "dist/index.js",
