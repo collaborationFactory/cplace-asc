@@ -2,11 +2,14 @@
   "name": "@cplace/asc",
   "version": "1.0.0",
   "description": "cplace assets compiler",
+  "repository": "https://github.com/collaborationFactory/cplace-asc",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev:tsc": "tsc",
-    "dev:link": "npm run dev:tsc && npm link"
+    "dev:link": "npm run dev:tsc && npm link",
+    "clean": "rimraf dist/ *.tgz",
+    "prod": "npm run clean && npm run dev:tsc && npm pack"
   },
   "bin": {
     "cplace-asc": "dist/index.js"
@@ -32,6 +35,7 @@
     "@types/node": "^10.12.10",
     "@types/vinyl": "^2.0.2",
     "@types/webpack": "^4.4.19",
+    "rimraf": "^2.6.2",
     "typescript": "^3.1.6"
   }
 }
