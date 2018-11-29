@@ -19,6 +19,7 @@ const cli = meow(`
     Options:
         --plugin, -p <plugin>   Run for specified plugin (and dependencies)
         --watch, -w             Enable watching of source files (continuous compilation)
+        --onlypre, -o   Run only preprocessing steps (like create tsconfig.json files)
 `, {
     flags: {
         plugin: {
@@ -30,6 +31,11 @@ const cli = meow(`
             type: 'boolean',
             alias: 'w',
             default: false
+        },
+        onlypre: {
+            type: 'boolean',
+            alias: 'o',
+            default: false
         }
     }
 });
@@ -38,10 +44,15 @@ if (cli.flags.plugin !== null && !cli.flags.plugin) {
     console.error(cerr`Missing value for --plugin|-p argument`);
     process.exit(1);
 }
+if (cli.flags.watch && cli.flags.onlypre) {
+    console.error(cerr`--watch and --onlypre cannot be enabled simultaneously`);
+    process.exit(1);
+}
 
 const config: IAssetsCompilerConfiguration = {
     rootPlugins: cli.flags.plugin ? [cli.flags.plugin] : [],
-    watchFiles: cli.flags.watch
+    watchFiles: cli.flags.watch,
+    onlyPreprocessing: cli.flags.onlypre
 };
 
 console.log(getAvailableStats());

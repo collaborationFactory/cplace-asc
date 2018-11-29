@@ -19,6 +19,11 @@ export interface IAssetsCompilerConfiguration {
      * Indicates whether file watching should be active
      */
     watchFiles: boolean;
+
+    /**
+     * Indicates whether only the preprocessing steps should be executed but no acutal compilation
+     */
+    onlyPreprocessing: boolean;
 }
 
 /**
@@ -62,6 +67,13 @@ export class AssetsCompiler {
     }
 
     public start(): Promise<void> {
+        if (this.runConfig.onlyPreprocessing) {
+            console.log();
+            console.log(csucc`Preprocessing completed successfully`);
+            console.log();
+            return new Promise<void>(resolve => resolve());
+        }
+
         return this.scheduler.start().then(() => {
             const log = () => {
                 console.log();
