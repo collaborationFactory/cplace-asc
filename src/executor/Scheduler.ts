@@ -6,16 +6,28 @@ import {ExecutorService} from './ExecutorService';
 import {ICompileRequest} from '../types';
 import CplacePlugin from '../model/CplacePlugin';
 import {JobDetails, JobTracker} from './JobTracker';
+import * as path from 'path';
+import * as chokidar from 'chokidar';
+import {FSWatcher} from 'chokidar';
+import {cerr} from '../utils';
+import Timeout = NodeJS.Timeout;
 
 export class Scheduler {
     private readonly tsJobs: JobTracker;
     private readonly lessJobs: JobTracker;
 
-    private completed: boolean = false;
+    private watchers = {
+        'ts': new Map<string, FSWatcher>(),
+        'less': new Map<string, FSWatcher>()
+    };
+
+    private completed = false;
     private finishedResolver?: () => void;
     private finishedRejecter?: (reason: any) => void;
 
-    constructor(private executor: ExecutorService, private plugins: Map<string, CplacePlugin>) {
+    constructor(private readonly executor: ExecutorService,
+                private readonly plugins: Map<string, CplacePlugin>,
+                private readonly watchFiles: boolean = false) {
         this.tsJobs = this.createTsJobTracker();
         this.lessJobs = this.createLessJobTracker();
     }
@@ -25,6 +37,10 @@ export class Scheduler {
         return new Promise((resolve, reject) => {
             this.finishedResolver = resolve;
             this.finishedRejecter = reject;
+        }).then(() => {
+            this.cleanup();
+        }, () => {
+            this.cleanup();
         });
     }
 
@@ -45,7 +61,10 @@ export class Scheduler {
             this.executor
                 .run(compileRequest)
                 .then(() => {
-                    this.tsJobs.markCompleted(nextTsPlugin);
+                    const firstCompletion = this.tsJobs.markCompleted(nextTsPlugin);
+                    if (firstCompletion && this.watchFiles) {
+                        this.registerWatch(nextTsPlugin, 'ts');
+                    }
                     this.scheduleNext();
                 }, (e) => {
                     this.completed = true;
@@ -84,11 +103,22 @@ export class Scheduler {
         }*/
 
         if (nextTsPlugin === null /*&& nextLessPlugin === null*/) {
-            this.completed = true;
-            this.finishedResolver && this.finishedResolver();
+            if (!this.watchFiles) {
+                this.completed = true;
+                this.finishedResolver && this.finishedResolver();
+            }
         } else if (nextTsPlugin !== undefined) {
             this.scheduleNext();
         }
+    }
+
+    private cleanup(): void {
+        this.watchers.ts.forEach(watcher => {
+            watcher.close();
+        });
+        this.watchers.less.forEach(watcher => {
+            watcher.close();
+        });
     }
 
     private createTsJobTracker(): JobTracker {
@@ -135,6 +165,44 @@ export class Scheduler {
             .map(p => this.getPlugin(p))
             .filter(p => p.hasLessAssets)
             .map(p => p.pluginName);
+    }
+
+    private registerWatch(pluginName: string, type: 'ts' | 'less'): void {
+        if (!this.watchFiles) {
+            return;
+        }
+
+        const plugin = this.getPlugin(pluginName);
+        const watchDir = path.join(plugin.assetsDir, type);
+        const glob = `${watchDir}/**/*.${type}`;
+        const watcher = chokidar.watch(glob);
+        this.watchers[type].set(pluginName, watcher);
+
+        const jobTracker = type === 'ts' ? this.tsJobs : this.lessJobs;
+        let ready = false;
+        let debounce: Timeout;
+        const handleEvent = () => {
+            if (!ready) {
+                return;
+            }
+            console.log('===> Recompiling', pluginName);
+            debounce && clearTimeout(debounce);
+            debounce = setTimeout(() => {
+                jobTracker.markDirty(pluginName);
+                this.scheduleNext();
+            }, 500);
+        };
+
+        watcher
+            .on('ready', () => ready = true)
+            .on('add', handleEvent)
+            .on('change', handleEvent)
+            .on('unlink', handleEvent)
+            .on('unlinkDir', handleEvent)
+            .on('error', (e) => {
+                console.error(cerr`[${pluginName}] watcher failed: ${e}`);
+                watcher.close();
+            });
     }
 
     private getPlugin(pluginName: string): CplacePlugin {

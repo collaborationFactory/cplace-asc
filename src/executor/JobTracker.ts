@@ -14,6 +14,7 @@ export class JobTracker {
     private readonly keyToDetails: Map<string, JobDetails> = new Map<string, JobDetails>();
     private readonly dirtyKeys = new Set<string>();
     private readonly pendingKeys = new Set<string>();
+    private readonly alreadyCompletedOnce = new Set<string>();
 
     constructor(public readonly jobs: JobDetails[]) {
         jobs.forEach(j => {
@@ -48,13 +49,21 @@ export class JobTracker {
     }
 
     /**
-     * Marks the given `key` as processed.
+     * Marks the given `key` as processed and returns `true` iff the given `key`
+     * has been processed the first time.
      */
-    public markCompleted(key: string): void {
+    public markCompleted(key: string): boolean {
         if (!this.keyToDetails.has(key)) {
             throw Error(`unknown job key: ${key}`);
         }
         this.pendingKeys.delete(key);
+
+        if (!this.alreadyCompletedOnce.has(key)) {
+            this.alreadyCompletedOnce.add(key);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**

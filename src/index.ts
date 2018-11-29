@@ -18,12 +18,18 @@ const cli = meow(`
 
     Options:
         --plugin, -p <plugin>   Run for specified plugin (and dependencies)
+        --watch, -w             Enable watching of source files (continuous compilation)
 `, {
     flags: {
         plugin: {
             type: 'string',
             alias: 'p',
             default: null
+        },
+        watch: {
+            type: 'boolean',
+            alias: 'w',
+            default: false
         }
     }
 });
@@ -34,7 +40,8 @@ if (cli.flags.plugin !== null && !cli.flags.plugin) {
 }
 
 const config: IAssetsCompilerConfiguration = {
-    rootPlugins: cli.flags.plugin ? [cli.flags.plugin] : []
+    rootPlugins: cli.flags.plugin ? [cli.flags.plugin] : [],
+    watchFiles: cli.flags.watch
 };
 
 console.log(getAvailableStats());

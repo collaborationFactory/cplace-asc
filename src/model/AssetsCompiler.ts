@@ -14,6 +14,11 @@ export interface IAssetsCompilerConfiguration {
      * automatically, too.
      */
     rootPlugins: string[];
+
+    /**
+     * Indicates whether file watching should be active
+     */
+    watchFiles: boolean;
 }
 
 /**
@@ -43,18 +48,21 @@ export class AssetsCompiler {
      */
     private readonly executor: ExecutorService;
 
+    /**
+     * Schedule managing order and necessity of execution
+     */
+    private readonly scheduler: Scheduler;
+
     constructor(private readonly runConfig: IAssetsCompilerConfiguration) {
         this.isSubRepo = AssetsCompiler.checkIsSubRepo();
         this.mainRepoPath = AssetsCompiler.getMainRepoPath();
         this.projects = AssetsCompiler.setupProjects(runConfig.rootPlugins, this.mainRepoPath);
-
         this.executor = new ExecutorService(3);
+        this.scheduler = new Scheduler(this.executor, this.projects, runConfig.watchFiles);
     }
 
     public start(): Promise<void> {
-        const scheduler = new Scheduler(this.executor, this.projects);
-
-        return scheduler.start().then(() => {
+        return this.scheduler.start().then(() => {
             const log = () => {
                 console.log();
                 console.log(csucc`Assets compiled successfully`);
