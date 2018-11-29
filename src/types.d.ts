@@ -1,5 +1,3 @@
-export type LessEntryFile = 'plugin' | 'cplace';
-
 export interface ICompileRequest {
     pluginName: string;
     assetsPath: string;

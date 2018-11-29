@@ -3,5 +3,5 @@ export interface ICompilerConstructor {
 }
 
 export interface ICompiler {
-    compile(): Promise<any>;
+    compile(): Promise<void>;
 }

@@ -33,15 +33,17 @@ export class Scheduler {
     }
 
     start(): Promise<void> {
-        this.scheduleNext();
-        return new Promise((resolve, reject) => {
+        const p = new Promise<void>((resolve, reject) => {
             this.finishedResolver = resolve;
             this.finishedRejecter = reject;
-        }).then(() => {
+            this.scheduleNext();
+        });
+        p.then(() => {
             this.cleanup();
         }, () => {
             this.cleanup();
         });
+        return p;
     }
 
     private scheduleNext(): void {
@@ -72,12 +74,11 @@ export class Scheduler {
                 });
 
             if (!this.executor.hasCapacity()) {
-                console.log('no capacity');
                 return;
             }
         }
 
-        /*const nextLessPlugin = this.lessJobs.getNextKey();
+        const nextLessPlugin = this.lessJobs.getNextKey();
         if (nextLessPlugin) {
             const plugin = this.getPlugin(nextLessPlugin);
             const compileRequest: ICompileRequest = {
@@ -89,26 +90,33 @@ export class Scheduler {
             this.executor
                 .run(compileRequest)
                 .then(() => {
-                    this.lessJobs.markCompleted(nextLessPlugin);
+                    const firstCompletion = this.lessJobs.markCompleted(nextLessPlugin);
+                    if (firstCompletion && this.watchFiles) {
+                        this.registerWatch(nextLessPlugin, 'less');
+                    }
                     this.scheduleNext();
                 }, (e) => {
-                    this.completed = true;
-                    this.finishedRejecter && this.finishedRejecter(e);
+                    if (!this.completed) {
+                        this.completed = true;
+                        this.finishedRejecter && this.finishedRejecter(e);
+                    }
                 });
 
             if (!this.executor.hasCapacity()) {
-                console.log('no capacity');
                 return;
             }
-        }*/
+        }
 
-        if (nextTsPlugin === null /*&& nextLessPlugin === null*/) {
-            if (!this.watchFiles) {
+        if (nextTsPlugin === null && nextLessPlugin === null) {
+            if (!this.watchFiles && !this.completed) {
                 this.completed = true;
                 this.finishedResolver && this.finishedResolver();
             }
-        } else if (nextTsPlugin !== undefined) {
-            this.scheduleNext();
+        } else if (nextTsPlugin || nextLessPlugin) {
+            if (this.executor.hasCapacity()) {
+                console.log(nextTsPlugin, nextLessPlugin);
+                this.scheduleNext();
+            }
         }
     }
 

@@ -75,19 +75,19 @@ export class AssetsCompiler {
         }
 
         return this.scheduler.start().then(() => {
-            const log = () => {
+            const successLog = () => {
                 console.log();
                 console.log(csucc`Assets compiled successfully`);
                 console.log();
             };
-            this.executor.destroy().then(log, log);
+            this.executor.destroy().then(successLog, successLog);
         }, (e) => {
-            const log = () => {
+            const errorLog = () => {
                 console.log();
                 console.error(cerr`COMPILATION FAILED - please check errors in output above`);
                 console.log();
             };
-            this.executor.destroy().then(log, log);
+            this.executor.destroy().then(errorLog, errorLog);
         });
     }
 

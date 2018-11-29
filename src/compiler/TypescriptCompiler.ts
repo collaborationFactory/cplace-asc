@@ -27,10 +27,10 @@ export class TypescriptCompiler implements ICompiler {
         callback();
     }];
 
-    constructor(public readonly pluginName: string, private readonly assetsPath: string) {
+    constructor(private readonly pluginName: string, private readonly assetsPath: string) {
     }
 
-    async compile() {
+    async compile(): Promise<void> {
         console.log(`⟲ [${this.pluginName}] starting TypeScript compilation...`);
         this.runTsc();
         console.log(cgreen`⇢`, `[${this.pluginName}] TypeScript compiled, starting bundling...`);
