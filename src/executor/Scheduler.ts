@@ -3,13 +3,13 @@
  */
 
 import {ExecutorService} from './ExecutorService';
-import {ICompileRequest} from '../types';
 import CplacePlugin from '../model/CplacePlugin';
 import {JobDetails, JobTracker} from './JobTracker';
 import * as path from 'path';
 import * as chokidar from 'chokidar';
 import {FSWatcher} from 'chokidar';
 import {cerr, debug, isDebugEnabled} from '../utils';
+import {ICompileRequest} from '../compiler/interfaces';
 import Timeout = NodeJS.Timeout;
 
 export class Scheduler {
@@ -57,6 +57,7 @@ export class Scheduler {
             const compileRequest: ICompileRequest = {
                 pluginName: plugin.pluginName,
                 assetsPath: plugin.assetsDir,
+                mainRepoDir: plugin.mainRepoDir,
                 verbose: isDebugEnabled(),
                 ts: true
             };
@@ -87,6 +88,7 @@ export class Scheduler {
             const compileRequest: ICompileRequest = {
                 pluginName: plugin.pluginName,
                 assetsPath: plugin.assetsDir,
+                mainRepoDir: plugin.mainRepoDir,
                 verbose: isDebugEnabled(),
                 less: true
             };

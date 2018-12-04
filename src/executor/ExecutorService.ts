@@ -5,8 +5,8 @@
 import {createPool, Factory, Pool} from 'generic-pool';
 import * as path from 'path';
 import {ChildProcess, fork} from 'child_process';
-import {ICompileRequest} from '../types';
 import {MESSAGE_PROCESS_COMPLETED} from '../compiler';
+import {ICompileRequest} from '../compiler/interfaces';
 
 const COMPILER_ENTRY_POINT = path.resolve(path.dirname(__filename), '../compiler/index.js');
 

@@ -3,9 +3,8 @@
  */
 
 import {LessCompiler} from './LessCompiler';
-import {ICompileRequest} from '../types';
 import {TypescriptCompiler} from './TypescriptCompiler';
-import {ICompilerConstructor} from './interfaces';
+import {ICompilerConstructor, ICompileRequest} from './interfaces';
 import {cerr, enableDebug} from '../utils';
 
 export const MESSAGE_PROCESS_COMPLETED = 'done';
@@ -18,19 +17,24 @@ export const MESSAGE_PROCESS_FAILED = 'failed';
 
 if (require.main === module) {
     process.on('message', (request: ICompileRequest) => {
-        handleRequest(request).then(() => {
-            if (!process.send) {
-                throw Error('must be called as a worker');
-            }
-            process.send(MESSAGE_PROCESS_COMPLETED);
-        }, () => {
-            if (process.send) {
-                process.send(MESSAGE_PROCESS_FAILED);
-            }
-        });
+        handleRequest(request)
+            .then(() => {
+                if (!process.send) {
+                    throw Error('must be called as a worker');
+                }
+                process.send(MESSAGE_PROCESS_COMPLETED);
+            })
+            .catch((e) => {
+                console.error();
+                console.error(cerr`${e}`);
+                console.error();
+                if (process.send) {
+                    process.send(MESSAGE_PROCESS_FAILED);
+                }
+            });
     });
 
-    async function handleRequest(request: ICompileRequest) {
+    function handleRequest(request: ICompileRequest): Promise<void> {
         enableDebug(request.verbose);
 
         // verify that all required values are present
@@ -50,7 +54,7 @@ if (require.main === module) {
 
         let compiler;
         try {
-            compiler = new CompilerConstructor(request.pluginName, request.assetsPath);
+            compiler = new CompilerConstructor(request.pluginName, request.assetsPath, request.mainRepoDir);
         } catch (e) {
             console.error(cerr`${e.message}`);
             throw Error(e);

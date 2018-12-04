@@ -24,6 +24,11 @@ export interface IAssetsCompilerConfiguration {
      * Indicates whether only the preprocessing steps should be executed but no acutal compilation
      */
     onlyPreprocessing: boolean;
+
+    /**
+     * Indicates whether generated folders should be cleaned before execution
+     */
+    clean: boolean;
 }
 
 /**
@@ -66,7 +71,14 @@ export class AssetsCompiler {
         this.scheduler = new Scheduler(this.executor, this.projects, runConfig.watchFiles);
     }
 
-    public start(): Promise<void> {
+    public async start(): Promise<void> {
+        if (this.runConfig.clean) {
+            debug(`(AssetsCompiler) running clean for all plugins...`);
+            for (const plugin of this.projects.values()) {
+                await plugin.cleanGeneratedOutput();
+            }
+        }
+
         if (this.runConfig.onlyPreprocessing) {
             console.log();
             console.log(csucc`Preprocessing completed successfully`);
@@ -74,6 +86,7 @@ export class AssetsCompiler {
             return new Promise<void>(resolve => resolve());
         }
 
+        debug(`(AssetsCompiler) starting scheduler for compilation tasks...`);
         return this.scheduler.start().then(() => {
             const successLog = () => {
                 console.log();
@@ -119,7 +132,7 @@ export class AssetsCompiler {
 
         projects.forEach(project => {
             if (project.hasTypeScriptAssets) {
-                project.generateTsConfigAndGetTsProject(p => projects.get(p));
+                project.generateTsConfig(p => projects.get(p));
             }
         });
 

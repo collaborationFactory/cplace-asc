@@ -27,7 +27,11 @@ export class TypescriptCompiler implements ICompiler {
         callback();
     }];
 
-    constructor(private readonly pluginName: string, private readonly assetsPath: string) {
+    constructor(private readonly pluginName: string, private readonly assetsPath: string, private readonly mainRepoDir: string) {
+    }
+
+    public static getJavaScriptOutputDir(assetsPath: string): string {
+        return path.resolve(assetsPath, this.DEST_DIR);
     }
 
     async compile(): Promise<void> {
@@ -40,13 +44,13 @@ export class TypescriptCompiler implements ICompiler {
 
     private runTsc() {
         const tsAssetsPath = path.resolve(this.assetsPath, 'ts');
-        debug(`(TypescriptCompiler) [${this.pluginName}] executing command 'npx tsc' in '${tsAssetsPath}'`);
-        let args = ['tsc'];
+        const tscExecutable = this.getTscExecutable();
+        let args = ['--project', tsAssetsPath];
         if (isDebugEnabled()) {
             args.push('--extendedDiagnostics');
         }
-        const result = spawn.sync('npx', args, {
-            cwd: tsAssetsPath,
+        debug(`(TypescriptCompiler) [${this.pluginName}] executing command '${tscExecutable} ${args.join(' ')}'`);
+        const result = spawn.sync(tscExecutable, args, {
             stdio: [process.stdin, process.stdout, process.stderr]
         });
 
@@ -115,5 +119,14 @@ export class TypescriptCompiler implements ICompiler {
                 extensions: ['.ts', '.js']
             }
         };
+    }
+
+    private getTscExecutable(): string {
+        return path.resolve(
+            this.mainRepoDir,
+            'node_modules',
+            '.bin',
+            'tsc'
+        );
     }
 }

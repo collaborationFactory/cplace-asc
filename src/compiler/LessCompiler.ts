@@ -4,7 +4,7 @@ import {promisify} from 'util';
 import * as less from 'less';
 
 import {ICompiler} from './interfaces';
-import {cgreen, GREEN_CHECK} from '../utils';
+import {cerr, cgreen, GREEN_CHECK} from '../utils';
 
 export class LessCompiler implements ICompiler {
     private static readonly LESS_SOURCES_DIR = 'less';
@@ -13,7 +13,7 @@ export class LessCompiler implements ICompiler {
     private readonly pathToLessSources: string;
     private readonly pathToEntryFile: string = '';
 
-    constructor(private readonly pluginName: string, private readonly assetsPath: string) {
+    constructor(private readonly pluginName: string, private readonly assetsPath: string, private readonly mainRepoDir: string) {
         this.pathToLessSources = path.join(this.assetsPath, LessCompiler.LESS_SOURCES_DIR);
 
         for (const name of ['plugin', 'cplace']) {
@@ -28,25 +28,35 @@ export class LessCompiler implements ICompiler {
         }
     }
 
-    async compile(): Promise<void> {
+    public static getCssOutputDir(assetsPath: string): string {
+        return path.resolve(assetsPath, this.LESS_OUTPUT_DIR);
+    }
+
+    compile(): Promise<void> {
         const filename = path.basename(this.pathToEntryFile, '.less');
         const entryFile = path.join(this.assetsPath, LessCompiler.LESS_SOURCES_DIR, `${filename}.less`);
-        const outputFile = path.join(this.assetsPath, LessCompiler.LESS_OUTPUT_DIR, `${filename}.css`);
-        const sourceMapFile = path.join(this.assetsPath, LessCompiler.LESS_OUTPUT_DIR, `${filename}.map`);
+        const lessOutputDir = LessCompiler.getCssOutputDir(this.assetsPath);
+        const outputFile = path.join(lessOutputDir, `${filename}.css`);
+        const sourceMapFile = path.join(lessOutputDir, `${filename}.map`);
 
         const writeFile = promisify(fs.writeFile);
 
         console.log(`⟲ [${this.pluginName}] starting LESS compilation...`);
-        return new Promise<void>((resolve) => {
+        return new Promise<void>((resolve, reject) => {
             less
                 .render(fs.readFileSync(entryFile, 'utf8'), {
                     filename: path.resolve(entryFile)
                 })
                 .catch((err) => {
-                    throw Error(`[${this.pluginName}] LESS compilation failed...`)
+                    console.error(cerr`${err}`);
+                    throw Error(`[${this.pluginName}] LESS compilation failed`);
                 })
                 .then((output: any) => {
                     console.log(cgreen`⇢`, `[${this.pluginName}] LESS compiled, writing output...`);
+
+                    if (!fs.existsSync(lessOutputDir)) {
+                        fs.mkdirSync(lessOutputDir);
+                    }
 
                     return Promise
                         .all([
@@ -58,9 +68,11 @@ export class LessCompiler implements ICompiler {
                             resolve();
                         })
                         .catch((err) => {
+                            console.error(cerr`${err}`);
                             throw Error(`[${this.pluginName}] Failed to write LESS output`);
                         });
-                });
+                })
+                .catch((e) => reject(e));
         });
     }
 }

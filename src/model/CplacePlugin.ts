@@ -3,11 +3,13 @@
  */
 
 import * as path from 'path';
-import * as gts from 'gulp-typescript';
 import * as fs from 'fs';
 import {TsConfigGenerator} from './TsConfigGenerator';
-import {cerr, GREEN_CHECK} from '../utils';
+import {cerr, debug, GREEN_CHECK} from '../utils';
 import {ImlParser} from './ImlParser';
+import {LessCompiler} from '../compiler/LessCompiler';
+import * as rimraf from 'rimraf';
+import {TypescriptCompiler} from '../compiler/TypescriptCompiler';
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined
@@ -35,16 +37,6 @@ export default class CplacePlugin {
      */
     public readonly dependents: string[];
 
-    /**
-     * gulp-typescript project instance
-     */
-    private tsProject?: gts.Project;
-
-    /**
-     * depth/level in the graph based on topology
-     */
-    group: number = 0;
-
     constructor(public readonly pluginName: string,
                 public readonly pluginDir: string,
                 public readonly mainRepoDir: string) {
@@ -58,7 +50,7 @@ export default class CplacePlugin {
         this.parseDependencies();
     }
 
-    public generateTsConfigAndGetTsProject(pluginResolver: ICplacePluginResolver): gts.Project {
+    public generateTsConfig(pluginResolver: ICplacePluginResolver): void {
         if (!this.hasTypeScriptAssets) {
             throw Error(`[${this.pluginName}] plugin does not have TypeScript assets`);
         }
@@ -88,9 +80,23 @@ export default class CplacePlugin {
         } else {
             console.log(`${GREEN_CHECK} [${this.pluginName}] wrote tsconfig...`);
         }
+    }
 
-        this.tsProject = gts.createProject(tsconfigPath);
-        return this.tsProject;
+    public async cleanGeneratedOutput(): Promise<void> {
+        const promises: Promise<void>[] = [];
+        if (this.hasLessAssets) {
+            const generatedCss = LessCompiler.getCssOutputDir(this.assetsDir);
+            promises.push(this.removeDir(generatedCss));
+        }
+        if (this.hasTypeScriptAssets) {
+            const generatedJs = TypescriptCompiler.getJavaScriptOutputDir(this.assetsDir);
+            promises.push(this.removeDir(generatedJs));
+        }
+        await Promise.all(promises);
+
+        if (promises.length) {
+            console.log(`${GREEN_CHECK} [${this.pluginName}] cleaned output directories`);
+        }
     }
 
     private parseDependencies(): void {
@@ -104,22 +110,16 @@ export default class CplacePlugin {
         });
     }
 
-    // TODO: do we need this?
-    // getCleanTask(): TaskFunction {
-    //     const clean: TaskFunction = () => {
-    //         // console.log('Starting del');
-    //         return del([
-    //             `${this.assets}/generated_css/**`
-    //         ], {
-    //             force: true
-    //         });
-    //     };
-    //
-    //     clean.displayName = `ts:${this.pluginName}`;
-    //     clean.description = `Clear for ${this.pluginName}`;
-    //
-    //     return clean;
-    // }
-
-
+    private async removeDir(path: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            rimraf(path, e => {
+                if (!e) {
+                    debug(`(CplacePlugin) [${this.pluginName}] removed folder ${path}`);
+                    resolve();
+                } else {
+                    reject(e);
+                }
+            });
+        });
+    }
 }

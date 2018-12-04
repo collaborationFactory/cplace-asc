@@ -20,6 +20,7 @@ const cli = meow(`
         --plugin, -p <plugin>   Run for specified plugin (and dependencies)
         --watch, -w             Enable watching of source files (continuous compilation)
         --onlypre, -o           Run only preprocessing steps (like create tsconfig.json files)
+        --clean, -c             Clean generated output folders at the beginning
         --verbose, -v           Enable verbose logging
 `, {
     flags: {
@@ -36,6 +37,11 @@ const cli = meow(`
         onlypre: {
             type: 'boolean',
             alias: 'o',
+            default: false
+        },
+        clean: {
+            type: 'boolean',
+            alias: 'c',
             default: false
         },
         verbose: {
@@ -63,18 +69,17 @@ if (cli.flags.verbose) {
 const config: IAssetsCompilerConfiguration = {
     rootPlugins: cli.flags.plugin ? [cli.flags.plugin] : [],
     watchFiles: cli.flags.watch,
-    onlyPreprocessing: cli.flags.onlypre
+    onlyPreprocessing: cli.flags.onlypre,
+    clean: cli.flags.clean
 };
 
 console.log(getAvailableStats());
+
 new AssetsCompiler(config).start().then(() => {
     // success
 }, () => {
     // failed
 });
-
-// new AssetsCompiler(config).start();
-
 
 function checkNodeVersion(): void {
     let major = Number.MAX_VALUE;
