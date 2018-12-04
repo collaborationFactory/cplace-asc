@@ -19,6 +19,7 @@
   "license": "ISC",
   "dependencies": {
     "chokidar": "^2.0.4",
+    "cross-spawn": "^6.0.5",
     "generic-pool": "latest",
     "gulp-typescript": "^5.0.0",
     "less": "^3.8.1",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@types/chokidar": "^1.7.5",
+    "@types/cross-spawn": "^6.0.0",
     "@types/generic-pool": "^3.1.6",
     "@types/less": "^3.0.0",
     "@types/meow": "^5.0.0",
