@@ -1,7 +1,7 @@
 export const RED_CROSS = cred`✗`;
 export const GREEN_CHECK = cgreen`✓`;
 
-export let DEBUG_ENABLED = false;
+export let DEBUG_ENABLED = true;
 
 export function enableDebug(): void {
     DEBUG_ENABLED = true;

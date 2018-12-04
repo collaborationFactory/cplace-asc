@@ -39,7 +39,7 @@ export class TypescriptCompiler implements ICompiler {
     }
 
     private runTsc() {
-        debug(`[${this.pluginName}] executing command 'npx tsc ${path.resolve(this.assetsPath, 'ts')}`);
+        debug(`(TypescriptCompiler) [${this.pluginName}] executing command 'npx tsc ${path.resolve(this.assetsPath, 'ts')}`);
         let args = ['tsc'];
         if (DEBUG_ENABLED) {
             args.push('--extendedDiagnostics');
@@ -49,7 +49,7 @@ export class TypescriptCompiler implements ICompiler {
             stdio: 'inherit'
         });
 
-        debug(`[${this.pluginName}] tsc return code: ${result.status}`);
+        debug(`(TypescriptCompiler) [${this.pluginName}] tsc return code: ${result.status}`);
         if (result.status !== 0) {
             throw Error(`[${this.pluginName}] TypeScript compilation failed...`);
         }

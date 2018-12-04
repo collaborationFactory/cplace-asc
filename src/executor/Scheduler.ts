@@ -59,7 +59,7 @@ export class Scheduler {
                 assetsPath: plugin.assetsDir,
                 ts: true
             };
-            debug(`(Scheduler) scheduling TS compile step for ${plugin}`);
+            debug(`(Scheduler) scheduling TS compile step for ${plugin.pluginName}`);
 
             this.tsJobs.markProcessing(nextTsPlugin);
             this.executor
@@ -88,7 +88,7 @@ export class Scheduler {
                 assetsPath: plugin.assetsDir,
                 less: true
             };
-            debug(`(Scheduler) scheduling LESS compile step for ${plugin}`);
+            debug(`(Scheduler) scheduling LESS compile step for ${plugin.pluginName}`);
 
             this.lessJobs.markProcessing(nextLessPlugin);
             this.executor
