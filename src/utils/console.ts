@@ -1,6 +1,16 @@
 export const RED_CROSS = cred`✗`;
 export const GREEN_CHECK = cgreen`✓`;
 
+export let DEBUG_ENABLED = false;
+
+export function enableDebug(): void {
+    DEBUG_ENABLED = true;
+}
+
+export function debug(content: string): void {
+    DEBUG_ENABLED && console.debug(`\x1b[37m✹ ${content}\x1b[0m`);
+}
+
 export function cred(templateStrings: TemplateStringsArray, ...values: any) {
     let result = `\x1b[1;31m`;
     templateStrings.forEach((v, i) => {

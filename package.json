@@ -20,7 +20,7 @@
   "dependencies": {
     "chokidar": "^2.0.4",
     "generic-pool": "latest",
-    "gulp-typescript": "^5.0.0-alpha.3",
+    "gulp-typescript": "^5.0.0",
     "less": "^3.8.1",
     "meow": "^5.0.0",
     "webpack": "^4.26.0",

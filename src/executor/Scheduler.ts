@@ -9,7 +9,7 @@ import {JobDetails, JobTracker} from './JobTracker';
 import * as path from 'path';
 import * as chokidar from 'chokidar';
 import {FSWatcher} from 'chokidar';
-import {cerr} from '../utils';
+import {cerr, debug} from '../utils';
 import Timeout = NodeJS.Timeout;
 
 export class Scheduler {
@@ -59,6 +59,8 @@ export class Scheduler {
                 assetsPath: plugin.assetsDir,
                 ts: true
             };
+            debug(`(Scheduler) scheduling TS compile step for ${plugin}`);
+
             this.tsJobs.markProcessing(nextTsPlugin);
             this.executor
                 .run(compileRequest)
@@ -86,6 +88,8 @@ export class Scheduler {
                 assetsPath: plugin.assetsDir,
                 less: true
             };
+            debug(`(Scheduler) scheduling LESS compile step for ${plugin}`);
+
             this.lessJobs.markProcessing(nextLessPlugin);
             this.executor
                 .run(compileRequest)
@@ -114,7 +118,6 @@ export class Scheduler {
             }
         } else if (nextTsPlugin || nextLessPlugin) {
             if (this.executor.hasCapacity()) {
-                console.log(nextTsPlugin, nextLessPlugin);
                 this.scheduleNext();
             }
         }

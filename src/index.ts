@@ -5,7 +5,7 @@
 
 import {getAvailableStats} from './model/utils';
 import {AssetsCompiler, IAssetsCompilerConfiguration} from './model/AssetsCompiler';
-import {cerr} from './utils';
+import {cerr, debug, enableDebug} from './utils';
 import meow = require('meow');
 
 
@@ -19,7 +19,8 @@ const cli = meow(`
     Options:
         --plugin, -p <plugin>   Run for specified plugin (and dependencies)
         --watch, -w             Enable watching of source files (continuous compilation)
-        --onlypre, -o   Run only preprocessing steps (like create tsconfig.json files)
+        --onlypre, -o           Run only preprocessing steps (like create tsconfig.json files)
+        --verbose, -v           Enable verbose logging
 `, {
     flags: {
         plugin: {
@@ -36,6 +37,11 @@ const cli = meow(`
             type: 'boolean',
             alias: 'o',
             default: false
+        },
+        verbose: {
+            type: 'boolean',
+            alias: 'v',
+            default: false
         }
     }
 });
@@ -47,6 +53,11 @@ if (cli.flags.plugin !== null && !cli.flags.plugin) {
 if (cli.flags.watch && cli.flags.onlypre) {
     console.error(cerr`--watch and --onlypre cannot be enabled simultaneously`);
     process.exit(1);
+}
+
+if (cli.flags.verbose) {
+    enableDebug();
+    debug('Debugging enabled...');
 }
 
 const config: IAssetsCompilerConfiguration = {

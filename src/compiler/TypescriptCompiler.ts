@@ -8,7 +8,7 @@ import {spawnSync} from 'child_process';
 import * as webpack from 'webpack';
 import {ICompiler} from './interfaces';
 import {isFromLibrary} from '../model/utils';
-import {cgreen, GREEN_CHECK} from '../utils';
+import {cgreen, debug, DEBUG_ENABLED, GREEN_CHECK} from '../utils';
 
 export class TypescriptCompiler implements ICompiler {
     private static readonly ENTRY = 'app.js';
@@ -39,11 +39,17 @@ export class TypescriptCompiler implements ICompiler {
     }
 
     private runTsc() {
-        const result = spawnSync('npx', ['tsc'], {
+        debug(`[${this.pluginName}] executing command 'npx tsc ${path.resolve(this.assetsPath, 'ts')}`);
+        let args = ['tsc'];
+        if (DEBUG_ENABLED) {
+            args.push('--extendedDiagnostics');
+        }
+        const result = spawnSync('npx', args, {
             cwd: path.resolve(this.assetsPath, 'ts'),
-            stdio: [process.stdin, process.stdout, process.stderr]
+            stdio: 'inherit'
         });
 
+        debug(`[${this.pluginName}] tsc return code: ${result.status}`);
         if (result.status !== 0) {
             throw Error(`[${this.pluginName}] TypeScript compilation failed...`);
         }

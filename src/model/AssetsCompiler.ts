@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import CplacePlugin from './CplacePlugin';
 import {ExecutorService, Scheduler} from '../executor';
-import {cerr, csucc} from '../utils';
+import {cerr, csucc, debug} from '../utils';
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -82,6 +82,7 @@ export class AssetsCompiler {
             };
             this.executor.destroy().then(successLog, successLog);
         }, (e) => {
+            debug(`(AssetsCompiler) Error while running assets compiler: ${e}`);
             const errorLog = () => {
                 console.log();
                 console.error(cerr`COMPILATION FAILED - please check errors in output above`);
