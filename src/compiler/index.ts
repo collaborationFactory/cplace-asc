@@ -6,7 +6,7 @@ import {LessCompiler} from './LessCompiler';
 import {ICompileRequest} from '../types';
 import {TypescriptCompiler} from './TypescriptCompiler';
 import {ICompilerConstructor} from './interfaces';
-import {cerr} from '../utils';
+import {cerr, enableDebug} from '../utils';
 
 export const MESSAGE_PROCESS_COMPLETED = 'done';
 export const MESSAGE_PROCESS_FAILED = 'failed';
@@ -31,6 +31,8 @@ if (require.main === module) {
     });
 
     async function handleRequest(request: ICompileRequest) {
+        enableDebug(request.verbose);
+
         // verify that all required values are present
         if (!request.pluginName || !request.assetsPath) {
             throw Error('Invalid request');

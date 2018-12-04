@@ -9,7 +9,7 @@ import {JobDetails, JobTracker} from './JobTracker';
 import * as path from 'path';
 import * as chokidar from 'chokidar';
 import {FSWatcher} from 'chokidar';
-import {cerr, debug} from '../utils';
+import {cerr, debug, isDebugEnabled} from '../utils';
 import Timeout = NodeJS.Timeout;
 
 export class Scheduler {
@@ -57,6 +57,7 @@ export class Scheduler {
             const compileRequest: ICompileRequest = {
                 pluginName: plugin.pluginName,
                 assetsPath: plugin.assetsDir,
+                verbose: isDebugEnabled(),
                 ts: true
             };
             debug(`(Scheduler) scheduling TS compile step for ${plugin.pluginName}`);
@@ -86,6 +87,7 @@ export class Scheduler {
             const compileRequest: ICompileRequest = {
                 pluginName: plugin.pluginName,
                 assetsPath: plugin.assetsDir,
+                verbose: isDebugEnabled(),
                 less: true
             };
             debug(`(Scheduler) scheduling LESS compile step for ${plugin.pluginName}`);

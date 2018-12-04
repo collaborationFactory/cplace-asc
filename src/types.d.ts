@@ -1,6 +1,7 @@
 export interface ICompileRequest {
     pluginName: string;
     assetsPath: string;
+    verbose?: boolean;
     less?: boolean;
     ts?: boolean;
 }

@@ -4,11 +4,11 @@
 
 import * as path from 'path';
 import {CReplacePlugin} from './CReplacePlugin';
-import {spawnSync} from 'child_process';
+import * as spawn from 'cross-spawn';
 import * as webpack from 'webpack';
 import {ICompiler} from './interfaces';
 import {isFromLibrary} from '../model/utils';
-import {cgreen, debug, DEBUG_ENABLED, GREEN_CHECK} from '../utils';
+import {cgreen, debug, GREEN_CHECK, isDebugEnabled} from '../utils';
 
 export class TypescriptCompiler implements ICompiler {
     private static readonly ENTRY = 'app.js';
@@ -39,14 +39,15 @@ export class TypescriptCompiler implements ICompiler {
     }
 
     private runTsc() {
-        debug(`(TypescriptCompiler) [${this.pluginName}] executing command 'npx tsc ${path.resolve(this.assetsPath, 'ts')}`);
+        const tsAssetsPath = path.resolve(this.assetsPath, 'ts');
+        debug(`(TypescriptCompiler) [${this.pluginName}] executing command 'npx tsc' in '${tsAssetsPath}'`);
         let args = ['tsc'];
-        if (DEBUG_ENABLED) {
+        if (isDebugEnabled()) {
             args.push('--extendedDiagnostics');
         }
-        const result = spawnSync('npx', args, {
-            cwd: path.resolve(this.assetsPath, 'ts'),
-            stdio: 'inherit'
+        const result = spawn.sync('npx', args, {
+            cwd: tsAssetsPath,
+            stdio: [process.stdin, process.stdout, process.stderr]
         });
 
         debug(`(TypescriptCompiler) [${this.pluginName}] tsc return code: ${result.status}`);
