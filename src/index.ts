@@ -6,6 +6,7 @@
 import {getAvailableStats} from './model/utils';
 import {AssetsCompiler, IAssetsCompilerConfiguration} from './model/AssetsCompiler';
 import {cerr, debug, enableDebug} from './utils';
+import * as os from 'os';
 import meow = require('meow');
 
 
@@ -21,6 +22,7 @@ const cli = meow(`
         --watch, -w             Enable watching of source files (continuous compilation)
         --onlypre, -o           Run only preprocessing steps (like create tsconfig.json files)
         --clean, -c             Clean generated output folders at the beginning
+        --threads, -t           Maximum number of threads to run in parallel
         --verbose, -v           Enable verbose logging
 `, {
     flags: {
@@ -48,6 +50,11 @@ const cli = meow(`
             type: 'boolean',
             alias: 'v',
             default: false
+        },
+        threads: {
+            type: 'string',
+            alias: 't',
+            default: null
         }
     }
 });
@@ -60,6 +67,14 @@ if (cli.flags.watch && cli.flags.onlypre) {
     console.error(cerr`--watch and --onlypre cannot be enabled simultaneously`);
     process.exit(1);
 }
+if (cli.flags.threads !== null) {
+    const t = parseInt(cli.flags.threads);
+    if (isNaN(t)) {
+        console.error(cerr`Number of --threads|-t must be greater or equal to 0 `);
+        process.exit(1);
+    }
+    cli.flags.threads = t;
+}
 
 if (cli.flags.verbose) {
     enableDebug();
@@ -70,7 +85,8 @@ const config: IAssetsCompilerConfiguration = {
     rootPlugins: cli.flags.plugin ? [cli.flags.plugin] : [],
     watchFiles: cli.flags.watch,
     onlyPreprocessing: cli.flags.onlypre,
-    clean: cli.flags.clean
+    clean: cli.flags.clean,
+    maxParallelism: !!cli.flags.threads ? cli.flags.threads : os.cpus().length - 1
 };
 
 console.log(getAvailableStats());

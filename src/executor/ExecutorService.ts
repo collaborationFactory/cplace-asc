@@ -7,6 +7,7 @@ import * as path from 'path';
 import {ChildProcess, fork} from 'child_process';
 import {MESSAGE_PROCESS_COMPLETED} from '../compiler';
 import {ICompileRequest} from '../compiler/interfaces';
+import {debug} from '../utils';
 
 const COMPILER_ENTRY_POINT = path.resolve(path.dirname(__filename), '../compiler/index.js');
 
@@ -24,6 +25,7 @@ export class ExecutorService {
     private running = 0;
 
     constructor(private readonly maxParallelism: number) {
+        debug(`(ExecutorService) got maxParallelism: ${maxParallelism}`);
         this.pool = createPool(Processfactory, {
             max: maxParallelism
         });

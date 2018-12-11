@@ -29,6 +29,11 @@ export interface IAssetsCompilerConfiguration {
      * Indicates whether generated folders should be cleaned before execution
      */
     clean: boolean;
+
+    /**
+     * The maximum number of compilation steps to run in parallel at once
+     */
+    maxParallelism: number;
 }
 
 /**
@@ -67,7 +72,7 @@ export class AssetsCompiler {
         this.isSubRepo = AssetsCompiler.checkIsSubRepo();
         this.mainRepoPath = AssetsCompiler.getMainRepoPath();
         this.projects = AssetsCompiler.setupProjects(runConfig.rootPlugins, this.mainRepoPath);
-        this.executor = new ExecutorService(3);
+        this.executor = new ExecutorService(this.runConfig.maxParallelism);
         this.scheduler = new Scheduler(this.executor, this.projects, runConfig.watchFiles);
     }
 
