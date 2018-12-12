@@ -34,6 +34,11 @@ export interface IAssetsCompilerConfiguration {
      * The maximum number of compilation steps to run in parallel at once
      */
     maxParallelism: number;
+
+    /**
+     * Indicates whether only the current directory should be processed for plugins
+     */
+    localOnly: boolean;
 }
 
 /**
@@ -69,11 +74,11 @@ export class AssetsCompiler {
     private readonly scheduler: Scheduler;
 
     constructor(private readonly runConfig: IAssetsCompilerConfiguration) {
+        this.mainRepoPath = this.getMainRepoPath();
         this.isSubRepo = AssetsCompiler.checkIsSubRepo();
-        this.mainRepoPath = AssetsCompiler.getMainRepoPath();
-        this.projects = AssetsCompiler.setupProjects(runConfig.rootPlugins, this.mainRepoPath);
+        this.projects = this.setupProjects();
         this.executor = new ExecutorService(this.runConfig.maxParallelism);
-        this.scheduler = new Scheduler(this.executor, this.projects, runConfig.watchFiles);
+        this.scheduler = new Scheduler(this.executor, this.projects, this.runConfig.watchFiles);
     }
 
     public async start(): Promise<void> {
@@ -110,27 +115,18 @@ export class AssetsCompiler {
         });
     }
 
-    private static checkIsSubRepo(): boolean {
-        const localPathToPlatform = path.join(process.cwd(), this.PLATFORM_PLUGIN_NAME);
-        return fs.statSync(localPathToPlatform).isDirectory();
-    }
-
-    private static getMainRepoPath(): string {
-        return path.resolve(path.join(process.cwd(), '..', this.CPLACE_REPO_NAME));
-    }
-
-    private static setupProjects(rootPlugins: string[], mainRepoPath: string): Map<string, CplacePlugin> {
+    private setupProjects(): Map<string, CplacePlugin> {
         const projects = new Map<string, CplacePlugin>();
         // TODO: this does not yet work for sub repos...?
-        const files = fs.readdirSync(mainRepoPath);
+        const files = fs.readdirSync(this.mainRepoPath);
 
         files.forEach(file => {
-            const filePath = path.join(mainRepoPath, file);
+            const filePath = path.join(this.mainRepoPath, file);
             if (fs.lstatSync(filePath).isDirectory()) {
                 const potentialPluginName = path.basename(file);
-                if ((rootPlugins.length === 0 || rootPlugins.indexOf(potentialPluginName) !== -1)
+                if ((this.runConfig.rootPlugins.length === 0 || this.runConfig.rootPlugins.indexOf(potentialPluginName) !== -1)
                     && fs.existsSync(path.join(filePath, `${potentialPluginName}.iml`))) {
-                    this.addProjectDependenciesRecursively(projects, mainRepoPath, potentialPluginName, filePath);
+                    AssetsCompiler.addProjectDependenciesRecursively(projects, this.mainRepoPath, potentialPluginName, filePath);
                 }
             }
         });
@@ -141,8 +137,30 @@ export class AssetsCompiler {
             }
         });
 
-        this.setDependents(projects);
+        AssetsCompiler.setDependents(projects);
         return projects;
+    }
+
+    private getMainRepoPath(): string {
+        let mainRepoPath = '';
+        if (this.runConfig.localOnly) {
+            mainRepoPath = path.resolve(process.cwd());
+        } else {
+            mainRepoPath = path.resolve(path.join(process.cwd(), '..', AssetsCompiler.CPLACE_REPO_NAME));
+        }
+
+        if (!fs.existsSync(mainRepoPath)
+            || !fs.existsSync(path.join(mainRepoPath, AssetsCompiler.PLATFORM_PLUGIN_NAME))) {
+            debug(`(AssetsCompiler) Main repo cannot be found: ${mainRepoPath}`);
+            throw Error(`Cannot find main repo: ${mainRepoPath}`);
+        }
+
+        return mainRepoPath;
+    }
+
+    private static checkIsSubRepo(): boolean {
+        const localPathToPlatform = path.join(process.cwd(), this.PLATFORM_PLUGIN_NAME);
+        return fs.existsSync(localPathToPlatform);
     }
 
     private static addProjectDependenciesRecursively(projects: Map<string, CplacePlugin>, mainRepoPath: string, pluginName: string, pluginPath: string) {

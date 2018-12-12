@@ -125,7 +125,8 @@ export class TypescriptCompiler implements ICompiler {
         return path.resolve(
             this.mainRepoDir,
             'node_modules',
-            '.bin',
+            'typescript',
+            'bin',
             'tsc'
         );
     }

@@ -23,6 +23,7 @@ const cli = meow(`
         --onlypre, -o           Run only preprocessing steps (like create tsconfig.json files)
         --clean, -c             Clean generated output folders at the beginning
         --threads, -t           Maximum number of threads to run in parallel
+        --localonly, -l         Enable to not scan other directories than CWD for plugins
         --verbose, -v           Enable verbose logging
 `, {
     flags: {
@@ -46,15 +47,20 @@ const cli = meow(`
             alias: 'c',
             default: false
         },
-        verbose: {
-            type: 'boolean',
-            alias: 'v',
-            default: false
-        },
         threads: {
             type: 'string',
             alias: 't',
             default: null
+        },
+        localonly: {
+            type: 'boolean',
+            alias: 'l',
+            default: false
+        },
+        verbose: {
+            type: 'boolean',
+            alias: 'v',
+            default: false
         }
     }
 });
@@ -86,16 +92,21 @@ const config: IAssetsCompilerConfiguration = {
     watchFiles: cli.flags.watch,
     onlyPreprocessing: cli.flags.onlypre,
     clean: cli.flags.clean,
-    maxParallelism: !!cli.flags.threads ? cli.flags.threads : os.cpus().length - 1
+    maxParallelism: !!cli.flags.threads ? cli.flags.threads : os.cpus().length - 1,
+    localOnly: cli.flags.localonly
 };
 
 console.log(getAvailableStats());
 
-new AssetsCompiler(config).start().then(() => {
-    // success
-}, () => {
-    // failed
-});
+try {
+    new AssetsCompiler(config).start().then(() => {
+        // success
+    }, () => {
+        // failed
+    });
+} catch (err) {
+    console.error(cerr`Failed to start assets compiler: ${err.message}`);
+}
 
 function checkNodeVersion(): void {
     let major = Number.MAX_VALUE;
