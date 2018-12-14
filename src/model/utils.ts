@@ -2,7 +2,6 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 import * as os from 'os';
-import {StringObj} from '../types';
 
 /**
  * Returns a human readable info line with the number of cpus/cores
@@ -26,12 +25,6 @@ export function isFromLibrary(file: string) {
     return LIB_TEST_RE.test(file);
 }
 
-
-export function getPathDependency(dependency: string, path: string) {
-    const o: StringObj<Array<string>> = {};
-    o[`@${dependency}/*`] = [path + '/*'];
-    return o;
-}
 
 export function getRelPath(path: string, isSubRepo = false) {
     return `${isSubRepo ? '../main/' : ''}../../../${path}`;

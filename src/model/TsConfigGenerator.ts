@@ -4,7 +4,6 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
-import {getPathDependency, getRelPath} from './utils';
 import CplacePlugin from './CplacePlugin';
 
 const PLATFORM_PLUGIN = 'cf.cplace.platform';
@@ -13,18 +12,32 @@ export class TsConfigGenerator {
     // @todo: maybe define a ts config interface
     private tsConfig: any;
 
-    constructor(private readonly moduleName: string,
-                private readonly mainPath: string,
-                private readonly isSubRepo: boolean,
+    constructor(private readonly plugin: CplacePlugin,
                 private readonly dependencies: CplacePlugin[]) {
     }
 
     public createConfigAndGetPath(): string {
-        const platformRelPath = getRelPath(`${PLATFORM_PLUGIN}/assets/ts`, this.isSubRepo);
+        const relRepoRootPrefix = `../../..`;
+        const pathToMain = this.plugin.repo !== 'main' ? path.join('..', 'main') : '';
+
+        const relPathToPlatform = path.join(relRepoRootPrefix, CplacePlugin.getPluginPathRelativeToRepo(this.plugin.repo, PLATFORM_PLUGIN, 'main'));
+        const relPathToPlatformTs = path.join(relPathToPlatform, 'assets', 'ts');
+
+        let defaultPaths = TsConfigGenerator.getPathDependency(PLATFORM_PLUGIN, relPathToPlatformTs);
+        if (this.plugin.isInSubRepo()) {
+            defaultPaths = {
+                ...defaultPaths,
+                '*': [
+                    '*',
+                    `${pathToMain}/node_modules/@types/*`
+                ]
+            };
+        }
+
         const defaultPathsAndRefs = {
-            paths: getPathDependency(PLATFORM_PLUGIN, platformRelPath),
+            paths: defaultPaths,
             refs: [{
-                path: platformRelPath
+                path: relPathToPlatformTs
             }]
         };
         const {paths, refs} = this.dependencies.reduce((acc, dependency) => {
@@ -33,9 +46,11 @@ export class TsConfigGenerator {
                 return acc;
             }
 
-            const relPath = getRelPath(`${dependency.pluginName}/assets/ts`, this.isSubRepo);
-            const newPath = getPathDependency(dependency.pluginName, relPath);
-            const newRef = {path: relPath};
+            const relPathToDependency = path.join(relRepoRootPrefix, dependency.getPluginPathRelativeFromRepo(this.plugin.repo));
+            const relPathToDependencyTs = path.join(relPathToDependency, 'assets', 'ts');
+
+            const newPath = TsConfigGenerator.getPathDependency(dependency.pluginName, relPathToDependencyTs);
+            const newRef = {path: relPathToDependencyTs};
 
             return {
                 paths: {
@@ -50,7 +65,7 @@ export class TsConfigGenerator {
         }, defaultPathsAndRefs);
 
         this.tsConfig = {
-            extends: '../../../tsconfig.base.json',
+            extends: path.join(relRepoRootPrefix, pathToMain, 'tsconfig.base.json'),
             compilerOptions: {
                 rootDir: '.',
                 baseUrl: '.',
@@ -59,17 +74,17 @@ export class TsConfigGenerator {
             include: ['./**/*.ts']
         };
 
-        if (this.moduleName !== PLATFORM_PLUGIN) {
+        if (this.plugin.pluginName !== PLATFORM_PLUGIN) {
             this.tsConfig.compilerOptions.paths = paths;
             this.tsConfig.references = refs;
         }
 
-        this.saveConfig();
+        // this.saveConfig();
         return this.getConfigPath();
     }
 
     public getConfigPath(): string {
-        return path.join(this.mainPath, this.moduleName, 'assets', 'ts', 'tsconfig.json');
+        return path.join(this.plugin.assetsDir, 'ts', 'tsconfig.json');
     }
 
     private saveConfig(): void {
@@ -81,5 +96,11 @@ export class TsConfigGenerator {
             JSON.stringify(this.tsConfig, null, 4),
             {encoding: 'utf8'}
         );
+    }
+
+    private static getPathDependency(dependency: string, path: string): { [dependencyKey: string]: string[] } {
+        const dependencyObject: { [dependencyKey: string]: string[] } = {};
+        dependencyObject[`@${dependency}/*`] = [path + '/*'];
+        return dependencyObject;
     }
 }

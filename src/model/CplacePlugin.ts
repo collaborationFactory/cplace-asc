@@ -21,6 +21,11 @@ export interface ICplacePluginResolver {
 export default class CplacePlugin {
 
     /**
+     * Name of the repository this plugin is contained in
+     */
+    public readonly repo: string;
+
+    /**
      * Path to the plugin's `/assets` directory
      */
     public readonly assetsDir: string;
@@ -43,11 +48,28 @@ export default class CplacePlugin {
         this.dependencies = [];
         this.dependents = [];
 
+        this.repo = path.basename(path.dirname(path.resolve(pluginDir)));
         this.assetsDir = path.resolve(pluginDir, 'assets');
         this.hasTypeScriptAssets = fs.existsSync(path.resolve(this.assetsDir, 'ts'));
         this.hasLessAssets = fs.existsSync(path.resolve(this.assetsDir, 'less'));
 
         this.parseDependencies();
+    }
+
+    public static getPluginPathRelativeToRepo(sourceRepo: string, targetPluginName: string, targetRepo: string): string {
+        if (sourceRepo === targetRepo) {
+            return targetPluginName;
+        } else {
+            return path.join('..', targetRepo, targetPluginName);
+        }
+    }
+
+    public isInSubRepo(): boolean {
+        return this.repo !== 'main';
+    }
+
+    public getPluginPathRelativeFromRepo(sourceRepo: string): string {
+        return CplacePlugin.getPluginPathRelativeToRepo(sourceRepo, this.pluginName, this.repo);
     }
 
     public generateTsConfig(pluginResolver: ICplacePluginResolver): void {
@@ -65,13 +87,7 @@ export default class CplacePlugin {
             })
             .filter(p => p.hasTypeScriptAssets);
 
-        // @todo: define option not to generate tsconfig each time (or to do it) and check existence
-        const tsConfigGenerator = new TsConfigGenerator(
-            this.pluginName,
-            this.mainRepoDir,
-            false, // @todo: this needs to be fixed
-            dependenciesWithTypeScript
-        );
+        const tsConfigGenerator = new TsConfigGenerator(this, dependenciesWithTypeScript);
         const tsconfigPath = tsConfigGenerator.createConfigAndGetPath();
 
         if (!fs.existsSync(tsconfigPath)) {

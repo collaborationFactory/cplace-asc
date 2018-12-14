@@ -116,17 +116,21 @@ export class AssetsCompiler {
     }
 
     private setupProjects(): Map<string, CplacePlugin> {
+        const knownRepoDependencies = AssetsCompiler.getRepoDependencies();
+        debug(`(AssetsCompiler) Detected repo dependencies: ${knownRepoDependencies.join(', ')}`);
+
         const projects = new Map<string, CplacePlugin>();
-        // TODO: this does not yet work for sub repos...?
-        const files = fs.readdirSync(this.mainRepoPath);
+        const files = fs.readdirSync(process.cwd());
 
         files.forEach(file => {
-            const filePath = path.join(this.mainRepoPath, file);
+            const filePath = path.join(process.cwd(), file);
             if (fs.lstatSync(filePath).isDirectory()) {
                 const potentialPluginName = path.basename(file);
                 if ((this.runConfig.rootPlugins.length === 0 || this.runConfig.rootPlugins.indexOf(potentialPluginName) !== -1)
                     && fs.existsSync(path.join(filePath, `${potentialPluginName}.iml`))) {
-                    AssetsCompiler.addProjectDependenciesRecursively(projects, this.mainRepoPath, potentialPluginName, filePath);
+                    AssetsCompiler.addProjectDependenciesRecursively(
+                        projects, this.mainRepoPath, knownRepoDependencies,
+                        potentialPluginName, filePath);
                 }
             }
         });
@@ -163,7 +167,8 @@ export class AssetsCompiler {
         return fs.existsSync(localPathToPlatform);
     }
 
-    private static addProjectDependenciesRecursively(projects: Map<string, CplacePlugin>, mainRepoPath: string, pluginName: string, pluginPath: string) {
+    private static addProjectDependenciesRecursively(projects: Map<string, CplacePlugin>, mainRepoPath: string, repoDependencies: string[],
+                                                     pluginName: string, pluginPath: string) {
         if (projects.has(pluginName)) {
             return;
         }
@@ -172,9 +177,11 @@ export class AssetsCompiler {
         projects.set(pluginName, project);
 
         project.dependencies.forEach(depName => {
-            if (!projects.has(depName)) {
-                this.addProjectDependenciesRecursively(projects, mainRepoPath, depName, path.join(mainRepoPath, depName));
+            if (projects.has(depName)) {
+                return;
             }
+            const pluginPath = this.findPluginPath(depName, repoDependencies);
+            this.addProjectDependenciesRecursively(projects, mainRepoPath, repoDependencies, depName, pluginPath);
         });
     }
 
@@ -188,5 +195,40 @@ export class AssetsCompiler {
                     }
                 });
         }
+    }
+
+    private static getRepoDependencies(): string[] {
+        if (path.basename(process.cwd()) === 'main') {
+            return [];
+        }
+
+        const parentReposPath = path.join(process.cwd(), 'parent-repos.json');
+        if (!fs.existsSync(parentReposPath)) {
+            debug(`(AssetsCompiler) could not find parent-repos.json: ${parentReposPath}`);
+            return [];
+        }
+        const parentReposContent = fs.readFileSync(parentReposPath, 'utf8');
+        try {
+            const parentRepos = JSON.parse(parentReposContent);
+            return Object.keys(parentRepos);
+        } catch (err) {
+            console.error(cerr`Failed to parse parent-repos.json: ${parentReposPath}`);
+            throw err;
+        }
+    }
+
+    private static findPluginPath(pluginName: string, repoDependencies: string[]): string {
+        let relativePath = pluginName;
+        if (fs.existsSync(relativePath)) {
+            return relativePath;
+        }
+        for (const repoName of repoDependencies) {
+            relativePath = path.join('..', repoName, pluginName);
+            if (fs.existsSync(relativePath)) {
+                return relativePath;
+            }
+        }
+        console.error(cerr`Could not locate plugin ${pluginName}`);
+        throw Error(`Could not locate plugin ${pluginName}`);
     }
 }

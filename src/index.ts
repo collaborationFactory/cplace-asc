@@ -5,7 +5,7 @@
 
 import {getAvailableStats} from './model/utils';
 import {AssetsCompiler, IAssetsCompilerConfiguration} from './model/AssetsCompiler';
-import {cerr, debug, enableDebug} from './utils';
+import {cerr, debug, enableDebug, isDebugEnabled} from './utils';
 import * as os from 'os';
 import meow = require('meow');
 
@@ -106,6 +106,9 @@ try {
     });
 } catch (err) {
     console.error(cerr`Failed to start assets compiler: ${err.message}`);
+    if (isDebugEnabled()) {
+        console.error(err);
+    }
 }
 
 function checkNodeVersion(): void {

@@ -64,13 +64,10 @@ export class TypescriptCompiler implements ICompiler {
         return new Promise((resolve, reject) => {
             // @ts-ignore
             webpack(this.getWebpackConfig(), (err, stats) => {
-                if (err || stats.hasErrors()) {
-                    // console.log('Webpack error...', this.pluginName, err, stats.toString({
-                    //     chunks: true,
-                    //     error: true,
-                    //     warnings: true
-                    // }));
+                if (err) {
                     reject(err);
+                } else if (stats.hasErrors()) {
+                    throw Error(stats.toString());
                 } else {
                     resolve();
                 }
