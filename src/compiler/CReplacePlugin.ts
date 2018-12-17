@@ -9,21 +9,16 @@ export class CReplacePlugin implements Plugin {
     constructor() {
     }
 
-    apply(compiler: Compiler) {
+    apply(compiler: Compiler): void {
         compiler.hooks.compilation.tap('CPlaceResolverPlugin', compilation => {
-            // @ts-ignore
-            compilation.hooks.dependencyReference.tap('CPlaceResolverPlugin', (_, { module }) => {
-                const { externalType, userRequest } = module;
-                const isALibrary = isFromLibrary(userRequest);
-
-                if (isALibrary) {
-                    const moduleReplacement = userRequest
-                    // @ts-ignore
-                        .replace(/(^@)([\w.]*)(.+)/gi, (match, _, folder, path) => {
-                            const resolver = folder.replace(/\./g, '_');
-                            const module = `.${path}.js`;
-                            return `window['$${resolver}']('${module}')`;
-                        });
+            (compilation.hooks as any).dependencyReference.tap('CPlaceResolverPlugin', (_, {module}) => {
+                const {externalType, userRequest} = module;
+                if (isFromLibrary(userRequest)) {
+                    const moduleReplacement = userRequest.replace(/(^@)([a-zA-Z.]+)(\/.+)/gi, (match, _, folder, path) => {
+                        const resolver = folder.replace(/\./g, '_');
+                        const module = `.${path}.js`;
+                        return `window['$${resolver}']('${module}')`;
+                    });
 
                     module.externalType = '';
                     module.request = moduleReplacement;

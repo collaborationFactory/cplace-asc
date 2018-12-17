@@ -19,13 +19,9 @@ export function getAvailableStats() {
     return op.join(', ');
 }
 
-const LIB_TEST_RE = /@cf\.cplace\.platform\/.+/;
+// const LIB_TEST_RE = /@cf\.cplace\.platform\/.+/;
+const LIB_TEST_RE = /@([a-zA-Z0-9.]+)\/.+/;
 
 export function isFromLibrary(file: string) {
     return LIB_TEST_RE.test(file);
-}
-
-
-export function getRelPath(path: string, isSubRepo = false) {
-    return `${isSubRepo ? '../main/' : ''}../../../${path}`;
 }

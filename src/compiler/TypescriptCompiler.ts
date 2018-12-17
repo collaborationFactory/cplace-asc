@@ -6,6 +6,7 @@ import * as path from 'path';
 import {CReplacePlugin} from './CReplacePlugin';
 import * as spawn from 'cross-spawn';
 import * as webpack from 'webpack';
+import {Configuration, ExternalsElement} from 'webpack';
 import {ICompiler} from './interfaces';
 import {isFromLibrary} from '../model/utils';
 import {cgreen, debug, GREEN_CHECK, isDebugEnabled} from '../utils';
@@ -14,18 +15,11 @@ export class TypescriptCompiler implements ICompiler {
     private static readonly ENTRY = 'app.js';
     private static readonly DEST_DIR = 'generated_js';
 
-    private readonly externals = [{
+    private readonly externals: ExternalsElement[] = [{
         d3: 'd3',
         moment: 'moment',
         underscore: '_'
-    }, (context: string, request: string, callback: Function) => {
-        // TODO: resolution needs to be configured differently and resolve all known plugin paths
-        if (isFromLibrary(request)) {
-            const newRequest = request.substr(1).replace('cf.cplace.', '');
-            return callback(null, newRequest);
-        }
-        callback();
-    }];
+    }, this.resolveWebpackExternal.bind(this)];
 
     constructor(private readonly pluginName: string, private readonly assetsPath: string, private readonly mainRepoDir: string) {
     }
@@ -75,7 +69,7 @@ export class TypescriptCompiler implements ICompiler {
         });
     }
 
-    private getWebpackConfig() {
+    private getWebpackConfig(): Configuration {
         return {
             context: path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR),
             devtool: 'source-map',
@@ -116,6 +110,16 @@ export class TypescriptCompiler implements ICompiler {
                 extensions: ['.ts', '.js']
             }
         };
+    }
+
+    private resolveWebpackExternal(context: string, request: string, callback: Function) {
+        // TODO: resolution needs to be configured differently and resolve all known plugin paths
+        if (isFromLibrary(request)) {
+            // const newRequest = request.substr(1).replace('cf.cplace.', '');
+            const newRequest = request.substr(1);
+            return callback(null, newRequest);
+        }
+        callback();
     }
 
     private getTscExecutable(): string {

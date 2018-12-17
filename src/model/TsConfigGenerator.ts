@@ -18,7 +18,7 @@ export class TsConfigGenerator {
 
     public createConfigAndGetPath(): string {
         const relRepoRootPrefix = `../../..`;
-        const pathToMain = this.plugin.repo !== 'main' ? path.join('..', 'main') : '';
+        const pathToMain = path.join(relRepoRootPrefix, this.plugin.repo !== 'main' ? path.join('..', 'main') : '');
 
         const relPathToPlatform = path.join(relRepoRootPrefix, CplacePlugin.getPluginPathRelativeToRepo(this.plugin.repo, PLATFORM_PLUGIN, 'main'));
         const relPathToPlatformTs = path.join(relPathToPlatform, 'assets', 'ts');
@@ -65,7 +65,7 @@ export class TsConfigGenerator {
         }, defaultPathsAndRefs);
 
         this.tsConfig = {
-            extends: path.join(relRepoRootPrefix, pathToMain, 'tsconfig.base.json'),
+            extends: path.join(pathToMain, 'tsconfig.base.json'),
             compilerOptions: {
                 rootDir: '.',
                 baseUrl: '.',
@@ -79,7 +79,7 @@ export class TsConfigGenerator {
             this.tsConfig.references = refs;
         }
 
-        // this.saveConfig();
+        this.saveConfig();
         return this.getConfigPath();
     }
 
