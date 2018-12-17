@@ -113,9 +113,7 @@ export class TypescriptCompiler implements ICompiler {
     }
 
     private resolveWebpackExternal(context: string, request: string, callback: Function) {
-        // TODO: resolution needs to be configured differently and resolve all known plugin paths
         if (isFromLibrary(request)) {
-            // const newRequest = request.substr(1).replace('cf.cplace.', '');
             const newRequest = request.substr(1);
             return callback(null, newRequest);
         }
