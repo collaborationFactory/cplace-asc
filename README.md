@@ -1,6 +1,6 @@
 # cplace-asc
 
-`cplace-asc` is the cplace assets compiler toolchain used to compile TypeScript and LESS sources into their JavaScript and CSS counterparts.
+`cplace-asc` is the new cplace assets compiler toolchain used to compile TypeScript and LESS sources into their JavaScript and CSS counterparts as well as compress multiple CSS files into a single file.
 
 ## Usage
 
@@ -59,7 +59,20 @@ $ cplace-asc --help
     </tbody>
 </table>
 
+## Source File Requirements
+
+### TypeScript
+For each plugin there must be one main entry file `assets/ts/app.ts` which will be used as entry point for bundling. As such any other source file must be imported (transitively) by that file.
+
+### LESS
+For each plugin there must be one main entry file: either `assets/less/plugin.less` *or* `assets/less/cplace.less`. The generated CSS file will be called `assets/generated_css/plugin.css` *or* `assets/generated_css/cplace.css` respectively.
+
+### Compress CSS
+For each plugin there must be one main entry file `assets/css/imports.css` which will be used as entry point for combining and compressing CSS code.
+
 ## Details
 
 - The compiler will spawn at most `X` number of compile processes in parallel where `X` equals the number of cores available on the system.
 - Compilation is run inside a subprocess via a scheduler. Cancelling the assets compiler may leave intermediate processing steps running for a short time in the background.
+- The TypeScript compiler is the one located in the `main` repository's `node_modules` directory.
+- The `clean-css` compiler is the one located in the `main` repository's `node_modules` directory.
