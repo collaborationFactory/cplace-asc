@@ -6,6 +6,7 @@ import {LessCompiler} from './LessCompiler';
 import {TypescriptCompiler} from './TypescriptCompiler';
 import {ICompilerConstructor, ICompileRequest} from './interfaces';
 import {cerr, enableDebug} from '../utils';
+import {CompressCssCompiler} from './CompressCssCompiler';
 
 export const MESSAGE_PROCESS_COMPLETED = 'done';
 export const MESSAGE_PROCESS_FAILED = 'failed';
@@ -47,6 +48,8 @@ if (require.main === module) {
             CompilerConstructor = TypescriptCompiler;
         } else if (request.less) {
             CompilerConstructor = LessCompiler;
+        } else if (request.compressCss) {
+            CompilerConstructor = CompressCssCompiler;
         } else {
             console.error(cerr`unknown compile type - neither ts nor less`);
             throw Error(`unknown compile type - neither ts nor less`);

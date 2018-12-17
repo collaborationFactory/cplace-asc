@@ -7,9 +7,9 @@ import * as fs from 'fs';
 import {TsConfigGenerator} from './TsConfigGenerator';
 import {cerr, debug, GREEN_CHECK} from '../utils';
 import {ImlParser} from './ImlParser';
-import {LessCompiler} from '../compiler/LessCompiler';
 import * as rimraf from 'rimraf';
 import {TypescriptCompiler} from '../compiler/TypescriptCompiler';
+import {CompressCssCompiler} from '../compiler/CompressCssCompiler';
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined
@@ -32,6 +32,7 @@ export default class CplacePlugin {
 
     public readonly hasTypeScriptAssets: boolean;
     public readonly hasLessAssets: boolean;
+    public readonly hasCompressCssAssets: boolean;
 
     /**
      * Plugin dependencies this plugin depends on (parsed from IML), i.e. outgoing dependencies
@@ -52,6 +53,7 @@ export default class CplacePlugin {
         this.assetsDir = path.resolve(pluginDir, 'assets');
         this.hasTypeScriptAssets = fs.existsSync(path.resolve(this.assetsDir, 'ts'));
         this.hasLessAssets = fs.existsSync(path.resolve(this.assetsDir, 'less'));
+        this.hasCompressCssAssets = fs.existsSync(path.resolve(this.assetsDir, 'css', CompressCssCompiler.ENTRY_FILE_NAME));
 
         this.parseDependencies();
     }
@@ -100,8 +102,8 @@ export default class CplacePlugin {
 
     public async cleanGeneratedOutput(): Promise<void> {
         const promises: Promise<void>[] = [];
-        if (this.hasLessAssets) {
-            const generatedCss = LessCompiler.getCssOutputDir(this.assetsDir);
+        if (this.hasLessAssets || this.hasCompressCssAssets) {
+            const generatedCss = CompressCssCompiler.getCssOutputDir(this.assetsDir);
             promises.push(this.removeDir(generatedCss));
         }
         if (this.hasTypeScriptAssets) {

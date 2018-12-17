@@ -5,10 +5,10 @@ import * as less from 'less';
 
 import {ICompiler} from './interfaces';
 import {cerr, cgreen, GREEN_CHECK} from '../utils';
+import {CompressCssCompiler} from './CompressCssCompiler';
 
 export class LessCompiler implements ICompiler {
     private static readonly LESS_SOURCES_DIR = 'less';
-    private static readonly LESS_OUTPUT_DIR = 'generated_css';
 
     private readonly pathToLessSources: string;
     private readonly pathToEntryFile: string = '';
@@ -28,14 +28,10 @@ export class LessCompiler implements ICompiler {
         }
     }
 
-    public static getCssOutputDir(assetsPath: string): string {
-        return path.resolve(assetsPath, this.LESS_OUTPUT_DIR);
-    }
-
     compile(): Promise<void> {
         const filename = path.basename(this.pathToEntryFile, '.less');
         const entryFile = path.join(this.assetsPath, LessCompiler.LESS_SOURCES_DIR, `${filename}.less`);
-        const lessOutputDir = LessCompiler.getCssOutputDir(this.assetsPath);
+        const lessOutputDir = CompressCssCompiler.getCssOutputDir(this.assetsPath);
         const outputFile = path.join(lessOutputDir, `${filename}.css`);
         const sourceMapFile = path.join(lessOutputDir, `${filename}.map`);
 

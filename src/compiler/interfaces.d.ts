@@ -5,12 +5,7 @@ export interface ICompileRequest {
     verbose?: boolean;
     less?: boolean;
     ts?: boolean;
-}
-
-export interface ICompileResponse {
-    pluginName: string;
-    tsStats?: any;
-    lessStats?: any;
+    compressCss?: boolean;
 }
 
 export interface ICompilerConstructor {

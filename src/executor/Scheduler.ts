@@ -12,9 +12,15 @@ import {cerr, debug, isDebugEnabled} from '../utils';
 import {ICompileRequest} from '../compiler/interfaces';
 import Timeout = NodeJS.Timeout;
 
+interface ISchedulingResult {
+    scheduledPlugin?: string | null | undefined;
+    backoff?: boolean;
+}
+
 export class Scheduler {
     private readonly tsJobs: JobTracker;
     private readonly lessJobs: JobTracker;
+    private readonly compressCssJobs: JobTracker;
 
     private watchers = {
         'ts': new Map<string, FSWatcher>(),
@@ -30,6 +36,7 @@ export class Scheduler {
                 private readonly watchFiles: boolean = false) {
         this.tsJobs = this.createTsJobTracker();
         this.lessJobs = this.createLessJobTracker();
+        this.compressCssJobs = this.createCompressCssJobTracker();
     }
 
     start(): Promise<void> {
@@ -51,25 +58,59 @@ export class Scheduler {
             return;
         }
 
-        const nextTsPlugin = this.tsJobs.getNextKey();
-        if (nextTsPlugin) {
-            const plugin = this.getPlugin(nextTsPlugin);
+        const tsSchedulingResult = this.getAndScheduleNextJob(this.tsJobs, 'ts', 'ts');
+        if (tsSchedulingResult.backoff) {
+            return;
+        }
+        const nextTsPlugin = tsSchedulingResult.scheduledPlugin;
+
+        const lessSchedulingResult = this.getAndScheduleNextJob(this.lessJobs, 'less', 'less');
+        if (lessSchedulingResult.backoff) {
+            return;
+        }
+        const nextLessPlugin = lessSchedulingResult.scheduledPlugin;
+
+        const compressCssSchedulingResult = this.getAndScheduleNextJob(this.compressCssJobs, 'compressCss', 'css');
+        if (compressCssSchedulingResult.backoff) {
+            return;
+        }
+        const nextCompressCssPlugin = compressCssSchedulingResult.scheduledPlugin;
+
+        if (nextTsPlugin === null && nextLessPlugin === null && nextCompressCssPlugin === null) {
+            if (!this.watchFiles && !this.completed) {
+                this.completed = true;
+                this.finishedResolver && this.finishedResolver();
+            }
+        } else if (nextTsPlugin || nextLessPlugin || nextCompressCssPlugin) {
+            if (this.executor.hasCapacity()) {
+                this.scheduleNext();
+            }
+        }
+    }
+
+    private getAndScheduleNextJob(jobTracker: JobTracker,
+                                  compileType: 'ts' | 'less' | 'compressCss',
+                                  watchType: 'ts' | 'less' | 'css'): ISchedulingResult {
+        const nextPlugin = jobTracker.getNextKey();
+        if (nextPlugin) {
+            const plugin = this.getPlugin(nextPlugin);
             const compileRequest: ICompileRequest = {
                 pluginName: plugin.pluginName,
                 assetsPath: plugin.assetsDir,
                 mainRepoDir: plugin.mainRepoDir,
                 verbose: isDebugEnabled(),
-                ts: true
             };
-            debug(`(Scheduler) scheduling TS compile step for ${plugin.pluginName}`);
+            compileRequest[compileType] = true;
 
-            this.tsJobs.markProcessing(nextTsPlugin);
+            debug(`(Scheduler) scheduling ${compileType} compile step for ${plugin.pluginName}`);
+
+            jobTracker.markProcessing(nextPlugin);
             this.executor
                 .run(compileRequest)
                 .then(() => {
-                    const firstCompletion = this.tsJobs.markCompleted(nextTsPlugin);
+                    const firstCompletion = jobTracker.markCompleted(nextPlugin);
                     if (firstCompletion && this.watchFiles) {
-                        this.registerWatch(nextTsPlugin, 'ts');
+                        this.registerWatch(nextPlugin, watchType);
                     }
                     this.scheduleNext();
                 }, (e) => {
@@ -78,53 +119,12 @@ export class Scheduler {
                 });
 
             if (!this.executor.hasCapacity()) {
-                return;
+                return {backoff: true};
             }
         }
-
-        const nextLessPlugin = this.lessJobs.getNextKey();
-        if (nextLessPlugin) {
-            const plugin = this.getPlugin(nextLessPlugin);
-            const compileRequest: ICompileRequest = {
-                pluginName: plugin.pluginName,
-                assetsPath: plugin.assetsDir,
-                mainRepoDir: plugin.mainRepoDir,
-                verbose: isDebugEnabled(),
-                less: true
-            };
-            debug(`(Scheduler) scheduling LESS compile step for ${plugin.pluginName}`);
-
-            this.lessJobs.markProcessing(nextLessPlugin);
-            this.executor
-                .run(compileRequest)
-                .then(() => {
-                    const firstCompletion = this.lessJobs.markCompleted(nextLessPlugin);
-                    if (firstCompletion && this.watchFiles) {
-                        this.registerWatch(nextLessPlugin, 'less');
-                    }
-                    this.scheduleNext();
-                }, (e) => {
-                    if (!this.completed) {
-                        this.completed = true;
-                        this.finishedRejecter && this.finishedRejecter(e);
-                    }
-                });
-
-            if (!this.executor.hasCapacity()) {
-                return;
-            }
-        }
-
-        if (nextTsPlugin === null && nextLessPlugin === null) {
-            if (!this.watchFiles && !this.completed) {
-                this.completed = true;
-                this.finishedResolver && this.finishedResolver();
-            }
-        } else if (nextTsPlugin || nextLessPlugin) {
-            if (this.executor.hasCapacity()) {
-                this.scheduleNext();
-            }
-        }
+        return {
+            scheduledPlugin: nextPlugin
+        };
     }
 
     private cleanup(): void {
@@ -168,6 +168,20 @@ export class Scheduler {
         return new JobTracker(jobs);
     }
 
+    private createCompressCssJobTracker(): JobTracker {
+        const compressPlugins: CplacePlugin[] = [];
+        this.plugins.forEach(plugin => {
+            if (plugin.hasCompressCssAssets) {
+                compressPlugins.push(plugin);
+            }
+        });
+
+        const jobs: JobDetails[] = compressPlugins.map(plugin => new JobDetails(
+            plugin.pluginName, [], []
+        ));
+        return new JobTracker(jobs);
+    }
+
     private filterTypeScriptPlugins(plugins: string[]): string[] {
         return plugins
             .map(p => this.getPlugin(p))
@@ -182,7 +196,7 @@ export class Scheduler {
             .map(p => p.pluginName);
     }
 
-    private registerWatch(pluginName: string, type: 'ts' | 'less'): void {
+    private registerWatch(pluginName: string, type: 'ts' | 'less' | 'css'): void {
         if (!this.watchFiles) {
             return;
         }
@@ -193,7 +207,19 @@ export class Scheduler {
         const watcher = chokidar.watch(glob);
         this.watchers[type].set(pluginName, watcher);
 
-        const jobTracker = type === 'ts' ? this.tsJobs : this.lessJobs;
+        let jobTracker;
+        switch (type) {
+            case 'ts':
+                jobTracker = this.tsJobs;
+                break;
+            case 'less':
+                jobTracker = this.lessJobs;
+                break;
+            case 'css':
+                jobTracker = this.compressCssJobs;
+                break;
+        }
+
         let ready = false;
         let debounce: Timeout;
         const handleEvent = () => {
