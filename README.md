@@ -2,6 +2,14 @@
 
 `cplace-asc` is the new cplace assets compiler toolchain used to compile TypeScript and LESS sources into their JavaScript and CSS counterparts as well as compress multiple CSS files into a single file.
 
+## Installation
+
+Just run the following command which will install the assets compiler globally:
+
+```
+$ npm install -g @clace/asc
+```
+
 ## Usage
 
 The assets compiler supports multiple parameters:
