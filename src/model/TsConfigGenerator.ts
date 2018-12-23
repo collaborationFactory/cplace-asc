@@ -5,6 +5,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import CplacePlugin from './CplacePlugin';
+import {debug} from '../utils';
 
 const PLATFORM_PLUGIN = 'cf.cplace.platform';
 
@@ -94,11 +95,15 @@ export class TsConfigGenerator {
         /* this is done sync for now, 'cause when a error occurs later in the execution
            and is not caught, it will fail the file generation
          */
+        const content = JSON.stringify(this.tsConfig, null, 4);
         fs.writeFileSync(
             this.getConfigPath(),
-            JSON.stringify(this.tsConfig, null, 4),
+            content,
             {encoding: 'utf8'}
         );
+
+        debug(`(TsConfigGenerator) [${this.plugin.pluginName}] TS Config content:`);
+        debug(content);
     }
 
     private static getPathDependency(dependency: string, path: string): { [dependencyKey: string]: string[] } {
