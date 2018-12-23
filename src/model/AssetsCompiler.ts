@@ -112,6 +112,7 @@ export class AssetsCompiler {
                 console.log();
             };
             this.executor.destroy().then(errorLog, errorLog);
+            throw e;
         });
     }
 
