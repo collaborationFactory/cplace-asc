@@ -13,14 +13,17 @@ export class TsConfigGenerator {
     private tsConfig: any;
 
     constructor(private readonly plugin: CplacePlugin,
-                private readonly dependencies: CplacePlugin[]) {
+                private readonly dependencies: CplacePlugin[],
+                private readonly localOnly: boolean) {
     }
 
     public createConfigAndGetPath(): string {
         const relRepoRootPrefix = `../../..`;
-        const pathToMain = path.join(relRepoRootPrefix, this.plugin.repo !== 'main' ? path.join('..', 'main') : '');
+        const pathToMain = path.join(relRepoRootPrefix,
+            !this.localOnly && this.plugin.repo !== 'main' ? path.join('..', 'main') : ''
+        );
 
-        const relPathToPlatform = path.join(relRepoRootPrefix, CplacePlugin.getPluginPathRelativeToRepo(this.plugin.repo, PLATFORM_PLUGIN, 'main'));
+        const relPathToPlatform = path.join(relRepoRootPrefix, CplacePlugin.getPluginPathRelativeToRepo(this.plugin.repo, PLATFORM_PLUGIN, 'main', this.localOnly));
         const relPathToPlatformTs = path.join(relPathToPlatform, 'assets', 'ts');
 
         let defaultPaths = TsConfigGenerator.getPathDependency(PLATFORM_PLUGIN, relPathToPlatformTs);

@@ -45,7 +45,8 @@ export default class CplacePlugin {
 
     constructor(public readonly pluginName: string,
                 public readonly pluginDir: string,
-                public readonly mainRepoDir: string) {
+                public readonly mainRepoDir: string,
+                public readonly localOnly: boolean) {
         this.dependencies = [];
         this.dependents = [];
 
@@ -58,7 +59,8 @@ export default class CplacePlugin {
         this.parseDependencies();
     }
 
-    public static getPluginPathRelativeToRepo(sourceRepo: string, targetPluginName: string, targetRepo: string): string {
+    public static getPluginPathRelativeToRepo(sourceRepo: string, targetPluginName: string, targetRepo: string,
+                                              localOnly: boolean): string {
         if (sourceRepo === targetRepo) {
             return targetPluginName;
         } else {
@@ -71,7 +73,7 @@ export default class CplacePlugin {
     }
 
     public getPluginPathRelativeFromRepo(sourceRepo: string): string {
-        return CplacePlugin.getPluginPathRelativeToRepo(sourceRepo, this.pluginName, this.repo);
+        return CplacePlugin.getPluginPathRelativeToRepo(sourceRepo, this.pluginName, this.repo, this.localOnly);
     }
 
     public generateTsConfig(pluginResolver: ICplacePluginResolver): void {
@@ -89,7 +91,7 @@ export default class CplacePlugin {
             })
             .filter(p => p.hasTypeScriptAssets);
 
-        const tsConfigGenerator = new TsConfigGenerator(this, dependenciesWithTypeScript);
+        const tsConfigGenerator = new TsConfigGenerator(this, dependenciesWithTypeScript, this.localOnly);
         const tsconfigPath = tsConfigGenerator.createConfigAndGetPath();
 
         if (!fs.existsSync(tsconfigPath)) {

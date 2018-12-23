@@ -131,7 +131,7 @@ export class AssetsCompiler {
                     && fs.existsSync(path.join(filePath, `${potentialPluginName}.iml`))) {
                     AssetsCompiler.addProjectDependenciesRecursively(
                         projects, this.mainRepoPath, knownRepoDependencies,
-                        potentialPluginName, filePath);
+                        potentialPluginName, filePath, this.runConfig.localOnly);
                 }
             }
         });
@@ -168,13 +168,17 @@ export class AssetsCompiler {
         return fs.existsSync(localPathToPlatform);
     }
 
-    private static addProjectDependenciesRecursively(projects: Map<string, CplacePlugin>, mainRepoPath: string, repoDependencies: string[],
-                                                     pluginName: string, pluginPath: string) {
+    private static addProjectDependenciesRecursively(projects: Map<string, CplacePlugin>,
+                                                     mainRepoPath: string,
+                                                     repoDependencies: string[],
+                                                     pluginName: string,
+                                                     pluginPath: string,
+                                                     localOnly: boolean) {
         if (projects.has(pluginName)) {
             return;
         }
 
-        const project = new CplacePlugin(pluginName, pluginPath, mainRepoPath);
+        const project = new CplacePlugin(pluginName, pluginPath, mainRepoPath, localOnly);
         projects.set(pluginName, project);
 
         project.dependencies.forEach(depName => {
@@ -182,7 +186,7 @@ export class AssetsCompiler {
                 return;
             }
             const pluginPath = this.findPluginPath(depName, repoDependencies);
-            this.addProjectDependenciesRecursively(projects, mainRepoPath, repoDependencies, depName, pluginPath);
+            this.addProjectDependenciesRecursively(projects, mainRepoPath, repoDependencies, depName, pluginPath, localOnly);
         });
     }
 
