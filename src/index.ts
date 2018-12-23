@@ -99,10 +99,11 @@ const config: IAssetsCompilerConfiguration = {
 console.log(getAvailableStats());
 
 try {
+    // Timeout to ensure flush of stdout
     new AssetsCompiler(config).start().then(() => {
-        // success
+        setTimeout(() => process.exit(0), 200);
     }, () => {
-        // failed
+        setTimeout(() => process.exit(1), 200);
     });
 } catch (err) {
     console.error(cerr`Failed to start assets compiler: ${err.message}`);
