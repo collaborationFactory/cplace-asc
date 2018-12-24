@@ -61,7 +61,7 @@ export default class CplacePlugin {
 
     public static getPluginPathRelativeToRepo(sourceRepo: string, targetPluginName: string, targetRepo: string,
                                               localOnly: boolean): string {
-        if (sourceRepo === targetRepo) {
+        if (localOnly || sourceRepo === targetRepo) {
             return targetPluginName;
         } else {
             return path.join('..', targetRepo, targetPluginName);
