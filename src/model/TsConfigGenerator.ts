@@ -5,9 +5,13 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import CplacePlugin from './CplacePlugin';
-import {debug} from '../utils';
+import {cerr, debug} from '../utils';
 
 const PLATFORM_PLUGIN = 'cf.cplace.platform';
+
+interface IExtraTypes {
+    definitions: string[];
+}
 
 export class TsConfigGenerator {
     // @todo: maybe define a ts config interface
@@ -68,6 +72,9 @@ export class TsConfigGenerator {
             };
         }, defaultPathsAndRefs);
 
+        const extraTypes = TsConfigGenerator.checkExtraTypes(this.plugin, this.dependencies);
+        const additionalIncludes = extraTypes === null ? [] : extraTypes.definitions;
+
         this.tsConfig = {
             extends: path.join(pathToMain, 'tsconfig.base.json'),
             compilerOptions: {
@@ -75,7 +82,10 @@ export class TsConfigGenerator {
                 baseUrl: '.',
                 outDir: '../generated_js'
             },
-            include: ['./**/*.ts']
+            include: [
+                './**/*.ts',
+                ...additionalIncludes
+            ]
         };
 
         if (this.plugin.pluginName !== PLATFORM_PLUGIN) {
@@ -104,6 +114,45 @@ export class TsConfigGenerator {
 
         debug(`(TsConfigGenerator) [${this.plugin.pluginName}] TS Config content:`);
         debug(content);
+    }
+
+    private static checkExtraTypes(plugin: CplacePlugin, dependencies: CplacePlugin[]): IExtraTypes | null {
+        const typesPath = path.resolve(plugin.assetsDir, 'ts', 'extra-types.json');
+        let result: IExtraTypes;
+
+        if (fs.existsSync(typesPath)) {
+            const content = fs.readFileSync(typesPath, {encoding: 'utf8'});
+            try {
+                result = JSON.parse(content);
+            } catch (e) {
+                console.error(cerr`[${plugin.pluginName}] Cannot read extra types: ${typesPath}`);
+                return null;
+            }
+        } else {
+            result = {
+                definitions: []
+            };
+        }
+
+        if (!result.definitions) {
+            result.definitions = [];
+        } else {
+            result.definitions = result.definitions.map(p => path.resolve(
+                plugin.assetsDir, 'ts', p
+            ));
+        }
+
+        dependencies
+            .map(dep => {
+                return this.checkExtraTypes(dep, []);
+            })
+            .forEach(r => {
+                if (r !== null) {
+                    result.definitions = [...result.definitions, ...r.definitions]
+                }
+            });
+
+        return result;
     }
 
     private static getPathDependency(dependency: string, path: string): { [dependencyKey: string]: string[] } {
