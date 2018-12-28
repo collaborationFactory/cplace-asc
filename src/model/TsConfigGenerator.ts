@@ -31,16 +31,14 @@ export class TsConfigGenerator {
         const relPathToPlatform = path.join(relRepoRootPrefix, CplacePlugin.getPluginPathRelativeToRepo(this.plugin.repo, PLATFORM_PLUGIN, 'main', this.localOnly));
         const relPathToPlatformTs = path.join(relPathToPlatform, 'assets', 'ts');
 
-        let defaultPaths = TsConfigGenerator.getPathDependency(PLATFORM_PLUGIN, relPathToPlatformTs);
-        if (this.plugin.isInSubRepo()) {
-            defaultPaths = {
-                ...defaultPaths,
-                '*': [
-                    '*',
-                    `${pathToMain}/node_modules/@types/*`
-                ]
-            };
-        }
+        let defaultPaths = {
+            ...TsConfigGenerator.getPathDependency(PLATFORM_PLUGIN, relPathToPlatformTs),
+            '*': [
+                '*',
+                `${pathToMain}/node_modules/@types/*`,
+                `${pathToMain}/cf.cplace.platform/assets/@cplaceTypes/*`
+            ]
+        };
 
         const defaultPathsAndRefs = {
             paths: defaultPaths,

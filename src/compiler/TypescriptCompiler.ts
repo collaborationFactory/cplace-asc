@@ -18,7 +18,8 @@ export class TypescriptCompiler implements ICompiler {
     private readonly externals: ExternalsElement[] = [{
         d3: 'd3',
         moment: 'moment',
-        underscore: '_'
+        underscore: '_',
+        draggable: 'draggable'
     }, this.resolveWebpackExternal.bind(this)];
 
     constructor(private readonly pluginName: string, private readonly assetsPath: string, private readonly mainRepoDir: string) {
