@@ -19,7 +19,7 @@ export class TypescriptCompiler implements ICompiler {
         d3: 'd3',
         moment: 'moment',
         underscore: '_',
-        draggable: 'draggable'
+        draggable: 'Draggable'
     }, this.resolveWebpackExternal.bind(this)];
 
     constructor(private readonly pluginName: string, private readonly assetsPath: string, private readonly mainRepoDir: string) {
