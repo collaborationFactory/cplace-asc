@@ -203,7 +203,7 @@ export class Scheduler {
 
         const plugin = this.getPlugin(pluginName);
         const watchDir = path.join(plugin.assetsDir, type);
-        const glob = `${watchDir}/**/*.${type}`;
+        const glob = Scheduler.convertToUnixPath(`${watchDir}/**/*.${type}`);
         const watcher = chokidar.watch(glob);
         this.watchers[type].set(pluginName, watcher);
 
@@ -252,5 +252,17 @@ export class Scheduler {
             throw Error(`unknown plugin: ${plugin}`);
         }
         return plugin;
+    }
+
+    // code from some github project
+    static convertToUnixPath(input) {
+        const isExtendedLengthPath = /^\\\\\?\\/.test(input);
+        const hasNonAscii = /[^\u0000-\u0080]+/.test(input);
+
+        if (isExtendedLengthPath || hasNonAscii) {
+            return input;
+        }
+
+        return input.replace(/\\/g, '/');
     }
 }
