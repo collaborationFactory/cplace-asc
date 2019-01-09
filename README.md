@@ -67,6 +67,19 @@ $ cplace-asc --help
     </tbody>
 </table>
 
+The tool will automatically check for updates on every run so you will be prompted with a large message when a newer version is available:
+``` 
+$ cplace-asc --help
+⇢ Checking whether newer version is available... ✓
+!---------------------------------------------!
+! A newer version of @cplace/asc is available !
+! -> Please update to the latest version:     !
+!    npm install -g @cplace/asc               !
+!---------------------------------------------!
+
+...
+```
+
 ## Source File Requirements
 
 ### TypeScript
