@@ -5,15 +5,15 @@
 
 import {getAvailableStats} from './model/utils';
 import {AssetsCompiler, IAssetsCompilerConfiguration} from './model/AssetsCompiler';
-import {cerr, debug, enableDebug, isDebugEnabled} from './utils';
+import {cerr, checkForUpdate, debug, enableDebug, isDebugEnabled} from './utils';
 import * as os from 'os';
 import meow = require('meow');
 
-
 checkNodeVersion();
+checkForUpdate().then(() => run()).catch(() => run());
 
-
-const cli = meow(`
+function run() {
+    const cli = meow(`
     Usage:
         $ cplace-asc
 
@@ -26,89 +26,90 @@ const cli = meow(`
         --localonly, -l         Enable to not scan other directories than CWD for plugins
         --verbose, -v           Enable verbose logging
 `, {
-    flags: {
-        plugin: {
-            type: 'string',
-            alias: 'p',
-            default: null
-        },
-        watch: {
-            type: 'boolean',
-            alias: 'w',
-            default: false
-        },
-        onlypre: {
-            type: 'boolean',
-            alias: 'o',
-            default: false
-        },
-        clean: {
-            type: 'boolean',
-            alias: 'c',
-            default: false
-        },
-        threads: {
-            type: 'string',
-            alias: 't',
-            default: null
-        },
-        localonly: {
-            type: 'boolean',
-            alias: 'l',
-            default: false
-        },
-        verbose: {
-            type: 'boolean',
-            alias: 'v',
-            default: false
+        flags: {
+            plugin: {
+                type: 'string',
+                alias: 'p',
+                default: null
+            },
+            watch: {
+                type: 'boolean',
+                alias: 'w',
+                default: false
+            },
+            onlypre: {
+                type: 'boolean',
+                alias: 'o',
+                default: false
+            },
+            clean: {
+                type: 'boolean',
+                alias: 'c',
+                default: false
+            },
+            threads: {
+                type: 'string',
+                alias: 't',
+                default: null
+            },
+            localonly: {
+                type: 'boolean',
+                alias: 'l',
+                default: false
+            },
+            verbose: {
+                type: 'boolean',
+                alias: 'v',
+                default: false
+            }
         }
-    }
-});
+    });
 
-if (cli.flags.plugin !== null && !cli.flags.plugin) {
-    console.error(cerr`Missing value for --plugin|-p argument`);
-    process.exit(1);
-}
-if (cli.flags.watch && cli.flags.onlypre) {
-    console.error(cerr`--watch and --onlypre cannot be enabled simultaneously`);
-    process.exit(1);
-}
-if (cli.flags.threads !== null) {
-    const t = parseInt(cli.flags.threads);
-    if (isNaN(t)) {
-        console.error(cerr`Number of --threads|-t must be greater or equal to 0 `);
+    if (cli.flags.plugin !== null && !cli.flags.plugin) {
+        console.error(cerr`Missing value for --plugin|-p argument`);
         process.exit(1);
     }
-    cli.flags.threads = t;
-}
+    if (cli.flags.watch && cli.flags.onlypre) {
+        console.error(cerr`--watch and --onlypre cannot be enabled simultaneously`);
+        process.exit(1);
+    }
+    if (cli.flags.threads !== null) {
+        const t = parseInt(cli.flags.threads);
+        if (isNaN(t)) {
+            console.error(cerr`Number of --threads|-t must be greater or equal to 0 `);
+            process.exit(1);
+        }
+        cli.flags.threads = t;
+    }
 
-if (cli.flags.verbose) {
-    enableDebug();
-    debug('Debugging enabled...');
-}
+    if (cli.flags.verbose) {
+        enableDebug();
+        debug('Debugging enabled...');
+    }
 
-const config: IAssetsCompilerConfiguration = {
-    rootPlugins: cli.flags.plugin ? [cli.flags.plugin] : [],
-    watchFiles: cli.flags.watch,
-    onlyPreprocessing: cli.flags.onlypre,
-    clean: cli.flags.clean,
-    maxParallelism: !!cli.flags.threads ? cli.flags.threads : os.cpus().length - 1,
-    localOnly: cli.flags.localonly
-};
+    const config: IAssetsCompilerConfiguration = {
+        rootPlugins: cli.flags.plugin ? [cli.flags.plugin] : [],
+        watchFiles: cli.flags.watch,
+        onlyPreprocessing: cli.flags.onlypre,
+        clean: cli.flags.clean,
+        maxParallelism: !!cli.flags.threads ? cli.flags.threads : os.cpus().length - 1,
+        localOnly: cli.flags.localonly
+    };
 
-console.log(getAvailableStats());
+    console.log(getAvailableStats());
 
-try {
-    // Timeout to ensure flush of stdout
-    new AssetsCompiler(config).start().then(() => {
-        setTimeout(() => process.exit(0), 200);
-    }, () => {
-        setTimeout(() => process.exit(1), 200);
-    });
-} catch (err) {
-    console.error(cerr`Failed to start assets compiler: ${err.message}`);
-    if (isDebugEnabled()) {
-        console.error(err);
+    try {
+        // Timeout to ensure flush of stdout
+        new AssetsCompiler(config).start().then(() => {
+            setTimeout(() => process.exit(0), 200);
+        }, () => {
+            setTimeout(() => process.exit(1), 200);
+        });
+    } catch (err) {
+        console.error(cerr`Failed to start assets compiler: ${err.message}`);
+        if (isDebugEnabled()) {
+            console.error(err);
+        }
     }
 }
 
