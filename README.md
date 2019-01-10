@@ -7,7 +7,7 @@
 Just run the following command which will install the assets compiler globally:
 
 ```
-$ npm install -g @clace/asc
+$ npm install -g @cplace/asc
 ```
 
 ## Usage
