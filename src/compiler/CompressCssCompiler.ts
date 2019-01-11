@@ -1,7 +1,7 @@
 import * as path from 'path';
 
 import {ICompiler} from './interfaces';
-import {debug, GREEN_CHECK} from '../utils';
+import {debug, formatDuration, GREEN_CHECK} from '../utils';
 import * as spawn from 'cross-spawn';
 import * as fs from 'fs';
 
@@ -32,6 +32,7 @@ export class CompressCssCompiler implements ICompiler {
             fs.mkdirSync(generatedCssDir);
         }
 
+        const start = new Date().getTime();
         console.log(`⟲ [${this.pluginName}] starting CSS compression...`);
 
         const cleanCssExecutable = this.getCleanCssExecutable();
@@ -47,7 +48,8 @@ export class CompressCssCompiler implements ICompiler {
             throw Error(`[${this.pluginName}] CSS compression failed...`);
         }
 
-        console.log(GREEN_CHECK, `[${this.pluginName}] CSS compression finished`);
+        const end = new Date().getTime();
+        console.log(GREEN_CHECK, `[${this.pluginName}] CSS compression finished (${formatDuration(end - start)})`);
 
         return new Promise<void>(resolve => resolve());
     }

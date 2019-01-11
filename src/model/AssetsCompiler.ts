@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import CplacePlugin from './CplacePlugin';
 import {ExecutorService, Scheduler} from '../executor';
-import {cerr, csucc, debug} from '../utils';
+import {cerr, csucc, debug, formatDuration} from '../utils';
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -82,6 +82,7 @@ export class AssetsCompiler {
     }
 
     public async start(): Promise<void> {
+        const start = new Date().getTime();
         if (this.runConfig.clean) {
             debug(`(AssetsCompiler) running clean for all plugins...`);
             for (const plugin of this.projects.values()) {
@@ -98,9 +99,10 @@ export class AssetsCompiler {
 
         debug(`(AssetsCompiler) starting scheduler for compilation tasks...`);
         return this.scheduler.start().then(() => {
+            const end = new Date().getTime();
             const successLog = () => {
                 console.log();
-                console.log(csucc`Assets compiled successfully`);
+                console.log(csucc`Assets compiled successfully (${formatDuration(end - start)})`);
                 console.log();
             };
             this.executor.destroy().then(successLog, successLog);

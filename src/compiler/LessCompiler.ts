@@ -4,7 +4,7 @@ import {promisify} from 'util';
 import * as less from 'less';
 
 import {ICompiler} from './interfaces';
-import {cerr, cgreen, GREEN_CHECK} from '../utils';
+import {cerr, cgreen, formatDuration, GREEN_CHECK} from '../utils';
 import {CompressCssCompiler} from './CompressCssCompiler';
 
 export class LessCompiler implements ICompiler {
@@ -37,6 +37,7 @@ export class LessCompiler implements ICompiler {
 
         const writeFile = promisify(fs.writeFile);
 
+        const start = new Date().getTime();
         console.log(`⟲ [${this.pluginName}] starting LESS compilation...`);
         return new Promise<void>((resolve, reject) => {
             less
@@ -48,7 +49,8 @@ export class LessCompiler implements ICompiler {
                     throw Error(`[${this.pluginName}] LESS compilation failed`);
                 })
                 .then((output: any) => {
-                    console.log(cgreen`⇢`, `[${this.pluginName}] LESS compiled, writing output...`);
+                    let end = new Date().getTime();
+                    console.log(cgreen`⇢`, `[${this.pluginName}] LESS compiled, writing output... (${formatDuration(end - start)})`);
 
                     if (!fs.existsSync(lessOutputDir)) {
                         fs.mkdirSync(lessOutputDir);
@@ -60,7 +62,8 @@ export class LessCompiler implements ICompiler {
                             writeFile(sourceMapFile, output.map, 'utf8')
                         ])
                         .then(() => {
-                            console.log(GREEN_CHECK, `[${this.pluginName}] LESS finished`);
+                            let end = new Date().getTime();
+                            console.log(GREEN_CHECK, `[${this.pluginName}] LESS finished (${formatDuration(end - start)})`);
                             resolve();
                         })
                         .catch((err) => {
