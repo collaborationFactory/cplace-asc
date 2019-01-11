@@ -124,6 +124,10 @@ export class Scheduler {
                     }
                     this.scheduleNext();
                 }, (e) => {
+                    // when watching we don't kill the compiler here but just continue
+                    if (this.watchFiles) {
+                        return;
+                    }
                     this.completed = true;
                     this.finishedRejecter && this.finishedRejecter(e);
                 });
