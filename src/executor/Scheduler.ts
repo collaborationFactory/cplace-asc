@@ -8,7 +8,7 @@ import {JobDetails, JobTracker} from './JobTracker';
 import * as path from 'path';
 import * as chokidar from 'chokidar';
 import {FSWatcher} from 'chokidar';
-import {cerr, debug, isDebugEnabled} from '../utils';
+import {cerr, csucc, debug, isDebugEnabled} from '../utils';
 import {ICompileRequest} from '../compiler/interfaces';
 import Timeout = NodeJS.Timeout;
 
@@ -24,7 +24,8 @@ export class Scheduler {
 
     private watchers = {
         'ts': new Map<string, FSWatcher>(),
-        'less': new Map<string, FSWatcher>()
+        'less': new Map<string, FSWatcher>(),
+        'css': new Map<string, FSWatcher>()
     };
 
     private completed = false;
@@ -51,6 +52,11 @@ export class Scheduler {
             this.cleanup();
         });
         return p;
+    }
+
+    public stop(): void {
+        this.completed = true;
+        this.cleanup();
     }
 
     private scheduleNext(): void {
@@ -80,6 +86,10 @@ export class Scheduler {
             if (!this.watchFiles && !this.completed) {
                 this.completed = true;
                 this.finishedResolver && this.finishedResolver();
+            } else if (this.watchFiles) {
+                console.log();
+                console.log(csucc`Compilation completed - watching files...`);
+                console.log();
             }
         } else if (nextTsPlugin || nextLessPlugin || nextCompressCssPlugin) {
             if (this.executor.hasCapacity()) {
@@ -132,6 +142,9 @@ export class Scheduler {
             watcher.close();
         });
         this.watchers.less.forEach(watcher => {
+            watcher.close();
+        });
+        this.watchers.css.forEach(watcher => {
             watcher.close();
         });
     }

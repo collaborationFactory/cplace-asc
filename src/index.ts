@@ -99,8 +99,18 @@ function run() {
     console.log(getAvailableStats());
 
     try {
+        const assetsCompiler = new AssetsCompiler(config);
+        process.on('SIGTERM', () => {
+            debug('Shutting down...');
+            assetsCompiler.shutdown().then(() => {
+                process.exit(0);
+            }, () => {
+                process.exit(1);
+            });
+        });
+
         // Timeout to ensure flush of stdout
-        new AssetsCompiler(config).start().then(() => {
+        assetsCompiler.start().then(() => {
             setTimeout(() => process.exit(0), 200);
         }, () => {
             setTimeout(() => process.exit(1), 200);

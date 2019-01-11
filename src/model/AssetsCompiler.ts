@@ -116,6 +116,15 @@ export class AssetsCompiler {
         });
     }
 
+    public async shutdown(): Promise<void> {
+        this.scheduler.stop();
+        try {
+            await this.executor.destroy();
+        } catch (e) {
+            debug(e);
+        }
+    }
+
     private setupProjects(): Map<string, CplacePlugin> {
         const knownRepoDependencies = AssetsCompiler.getRepoDependencies();
         debug(`(AssetsCompiler) Detected repo dependencies: ${knownRepoDependencies.join(', ')}`);
