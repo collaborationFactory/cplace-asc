@@ -40,9 +40,18 @@ export class ExecutorService {
         return new Promise<void>((resolve, reject) => {
             this.pool.acquire().then((process) => {
                 let resolved = false;
+                const exit = (code) => {
+                    if (!resolved) {
+                        this.pool.release(process);
+                        this.running--;
+                        reject(code);
+                    }
+                };
+
                 process.send(compileRequest);
 
                 process.once('message', (message) => {
+                    process.removeListener('exit', exit);
                     this.pool.release(process);
                     resolved = true;
                     if (message === MESSAGE_PROCESS_COMPLETED) {
@@ -53,13 +62,7 @@ export class ExecutorService {
                         reject(2);
                     }
                 });
-                process.on('exit', (code) => {
-                    if (!resolved) {
-                        this.pool.release(process);
-                        this.running--;
-                        reject(code);
-                    }
-                });
+                process.once('exit', exit);
             }, (e) => {
                 this.running--;
                 throw Error(`failed to acquire process: ${e}`);
