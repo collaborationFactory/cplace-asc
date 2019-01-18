@@ -124,8 +124,10 @@ export class Scheduler {
                     }
                     this.scheduleNext();
                 }, (e) => {
+                    jobTracker.markCompleted(nextPlugin);
                     // when watching we don't kill the compiler here but just continue
                     if (this.watchFiles) {
+                        this.scheduleNext();
                         return;
                     }
                     this.completed = true;
