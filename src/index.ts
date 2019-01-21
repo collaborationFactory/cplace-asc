@@ -25,6 +25,7 @@ function run() {
         --threads, -t           Maximum number of threads to run in parallel
         --localonly, -l         Enable to not scan other directories than CWD for plugins
         --verbose, -v           Enable verbose logging
+        --production, -P        Enable production mode (ignores test dependencies)
 `, {
         flags: {
             plugin: {
@@ -61,6 +62,11 @@ function run() {
                 type: 'boolean',
                 alias: 'v',
                 default: false
+            },
+            production: {
+                type: 'boolean',
+                alias: 'P',
+                default: false
             }
         }
     });
@@ -71,6 +77,10 @@ function run() {
     }
     if (cli.flags.watch && cli.flags.onlypre) {
         console.error(cerr`--watch and --onlypre cannot be enabled simultaneously`);
+        process.exit(1);
+    }
+    if (cli.flags.production && cli.flags.onlypre) {
+        console.error(cerr`--production and --onlypre cannot be enabled simultaneously`);
         process.exit(1);
     }
     if (cli.flags.threads !== null) {
@@ -93,7 +103,8 @@ function run() {
         onlyPreprocessing: cli.flags.onlypre,
         clean: cli.flags.clean,
         maxParallelism: !!cli.flags.threads ? cli.flags.threads : os.cpus().length - 1,
-        localOnly: cli.flags.localonly
+        localOnly: cli.flags.localonly,
+        production: cli.flags.production
     };
 
     console.log(getAvailableStats());
