@@ -3,6 +3,11 @@ declare function require(name: string): any;
 const fs = require('fs');
 const parseString = require('xml2js').parseString;
 
+export interface IImlModuleDependency {
+    moduleName: string;
+    isTestScoped: boolean;
+}
+
 export class ImlParser {
     private _module: any;
 
@@ -13,9 +18,9 @@ export class ImlParser {
         this.parseFile();
     }
 
-    public getReferencedModules(): string[] {
+    public getReferencedModules(): IImlModuleDependency[] {
         const components = this._module.component as any[];
-        let result: string[] = [];
+        let result: IImlModuleDependency[] = [];
 
         if (components) {
             components.forEach(component => {
@@ -39,18 +44,22 @@ export class ImlParser {
         });
     }
 
-    private static getReferencedModulesFromManager(component: any): string[] {
+    private static getReferencedModulesFromManager(component: any): IImlModuleDependency[] {
         const entries = component.orderEntry as any[];
         if (!entries) {
             return [];
         }
 
         return entries
+            .filter(entry => entry.$.type && entry.$.type === 'module')
             .map(entry => {
-                return entry.$.type && entry.$.type === 'module' ? entry.$['module-name'] : null;
+                return {
+                    moduleName: entry.$['module-name'],
+                    isTestScoped: entry.$['scope'] === 'TEST'
+                };
             })
-            .filter(name => {
-                return !!name;
+            .filter(dep => {
+                return !!dep.moduleName;
             });
     }
 }
