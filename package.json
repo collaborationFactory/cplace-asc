@@ -6,7 +6,7 @@
   "repository": "https://github.com/collaborationFactory/cplace-asc",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"SSSSHhhhhh... no test specified\"",
     "dev:tsc": "tsc",
     "dev:link": "npm run dev:tsc && npm link",
     "clean": "rimraf dist/ *.tgz",
