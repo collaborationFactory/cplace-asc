@@ -39,6 +39,11 @@ export interface IAssetsCompilerConfiguration {
      * Indicates whether only the current directory should be processed for plugins
      */
     localOnly: boolean;
+
+    /**
+     * Indicates whether the compiler should be run in production mode
+     */
+    production: boolean;
 }
 
 /**
@@ -142,7 +147,8 @@ export class AssetsCompiler {
                     && fs.existsSync(path.join(filePath, `${potentialPluginName}.iml`))) {
                     AssetsCompiler.addProjectDependenciesRecursively(
                         projects, this.mainRepoPath, knownRepoDependencies,
-                        potentialPluginName, filePath, this.runConfig.localOnly);
+                        potentialPluginName, filePath,
+                        this.runConfig.localOnly, this.runConfig.production);
                 }
             }
         });
@@ -184,12 +190,14 @@ export class AssetsCompiler {
                                                      repoDependencies: string[],
                                                      pluginName: string,
                                                      pluginPath: string,
-                                                     localOnly: boolean) {
+                                                     localOnly: boolean,
+                                                     excludeTestDependencies: boolean) {
         if (projects.has(pluginName)) {
             return;
         }
 
         const project = new CplacePlugin(pluginName, pluginPath, mainRepoPath, localOnly);
+        project.parseDependencies(excludeTestDependencies);
         projects.set(pluginName, project);
 
         project.dependencies.forEach(depName => {
@@ -197,7 +205,7 @@ export class AssetsCompiler {
                 return;
             }
             const pluginPath = this.findPluginPath(depName, repoDependencies);
-            this.addProjectDependenciesRecursively(projects, mainRepoPath, repoDependencies, depName, pluginPath, localOnly);
+            this.addProjectDependenciesRecursively(projects, mainRepoPath, repoDependencies, depName, pluginPath, localOnly, excludeTestDependencies);
         });
     }
 

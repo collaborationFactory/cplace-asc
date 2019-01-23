@@ -55,8 +55,6 @@ export default class CplacePlugin {
         this.hasTypeScriptAssets = fs.existsSync(path.resolve(this.assetsDir, 'ts'));
         this.hasLessAssets = fs.existsSync(path.resolve(this.assetsDir, 'less'));
         this.hasCompressCssAssets = fs.existsSync(path.resolve(this.assetsDir, 'css', CompressCssCompiler.ENTRY_FILE_NAME));
-
-        this.parseDependencies();
     }
 
     public static getPluginPathRelativeToRepo(sourceRepo: string, targetPluginName: string, targetRepo: string,
@@ -119,15 +117,23 @@ export default class CplacePlugin {
         }
     }
 
-    private parseDependencies(): void {
+    public parseDependencies(excludeTestDependencies: boolean = false): void {
         const imlPath = path.join(this.pluginDir, `${this.pluginName}.iml`);
         if (!fs.existsSync(imlPath)) {
             throw Error(`[${this.pluginName}] failed to find plugin IML`);
         }
 
-        new ImlParser(imlPath).getReferencedModules().forEach(p => {
-            return this.dependencies.push(p);
-        });
+        new ImlParser(imlPath).getReferencedModules()
+            .filter(module => {
+                const includeDependency = !excludeTestDependencies || !module.isTestScoped;
+                if (!includeDependency) {
+                    debug(`(CplacePlugin) [${this.pluginName}] excluding test dependency: ${module.moduleName}`);
+                }
+                return includeDependency;
+            })
+            .forEach(module => {
+                return this.dependencies.push(module.moduleName);
+            });
     }
 
     private async removeDir(path: string): Promise<void> {
