@@ -74,7 +74,7 @@ export default class CplacePlugin {
         return CplacePlugin.getPluginPathRelativeToRepo(sourceRepo, this.pluginName, this.repo, this.localOnly);
     }
 
-    public generateTsConfig(pluginResolver: ICplacePluginResolver): void {
+    public generateTsConfig(pluginResolver: ICplacePluginResolver, isProduction: boolean): void {
         if (!this.hasTypeScriptAssets) {
             throw Error(`[${this.pluginName}] plugin does not have TypeScript assets`);
         }
@@ -89,7 +89,7 @@ export default class CplacePlugin {
             })
             .filter(p => p.hasTypeScriptAssets);
 
-        const tsConfigGenerator = new TsConfigGenerator(this, dependenciesWithTypeScript, this.localOnly);
+        const tsConfigGenerator = new TsConfigGenerator(this, dependenciesWithTypeScript, this.localOnly, isProduction);
         const tsconfigPath = tsConfigGenerator.createConfigAndGetPath();
 
         if (!fs.existsSync(tsconfigPath)) {

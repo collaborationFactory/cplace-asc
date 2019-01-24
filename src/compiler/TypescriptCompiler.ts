@@ -22,7 +22,10 @@ export class TypescriptCompiler implements ICompiler {
         draggable: 'Draggable'
     }, this.resolveWebpackExternal.bind(this)];
 
-    constructor(private readonly pluginName: string, private readonly assetsPath: string, private readonly mainRepoDir: string) {
+    constructor(private readonly pluginName: string,
+                private readonly assetsPath: string,
+                private readonly mainRepoDir: string,
+                private readonly isProduction: boolean) {
     }
 
     public static getJavaScriptOutputDir(assetsPath: string): string {

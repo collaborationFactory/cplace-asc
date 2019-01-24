@@ -13,7 +13,10 @@ export class LessCompiler implements ICompiler {
     private readonly pathToLessSources: string;
     private readonly pathToEntryFile: string = '';
 
-    constructor(private readonly pluginName: string, private readonly assetsPath: string, private readonly mainRepoDir: string) {
+    constructor(private readonly pluginName: string,
+                private readonly assetsPath: string,
+                private readonly mainRepoDir: string,
+                private readonly isProduction: boolean) {
         this.pathToLessSources = path.join(this.assetsPath, LessCompiler.LESS_SOURCES_DIR);
 
         for (const name of ['plugin', 'cplace']) {
@@ -56,11 +59,15 @@ export class LessCompiler implements ICompiler {
                         fs.mkdirSync(lessOutputDir);
                     }
 
+                    const promises = [
+                        writeFile(outputFile, output.css, 'utf8')
+                    ];
+                    if (!this.isProduction) {
+                        promises.push(writeFile(sourceMapFile, output.map, 'utf8'));
+                    }
+
                     return Promise
-                        .all([
-                            writeFile(outputFile, output.css, 'utf8'),
-                            writeFile(sourceMapFile, output.map, 'utf8')
-                        ])
+                        .all(promises)
                         .then(() => {
                             let end = new Date().getTime();
                             console.log(GREEN_CHECK, `[${this.pluginName}] LESS finished (${formatDuration(end - start)})`);

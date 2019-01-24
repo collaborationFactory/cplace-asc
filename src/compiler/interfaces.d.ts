@@ -2,6 +2,7 @@ export interface ICompileRequest {
     pluginName: string;
     assetsPath: string;
     mainRepoDir: string;
+    isProduction: boolean;
     verbose?: boolean;
     less?: boolean;
     ts?: boolean;
@@ -9,7 +10,10 @@ export interface ICompileRequest {
 }
 
 export interface ICompilerConstructor {
-    new(pluginName: string, assetsPath: string, mainRepoDir: string): ICompiler;
+    new(pluginName: string,
+        assetsPath: string,
+        mainRepoDir: string,
+        isProduction: boolean): ICompiler;
 }
 
 export interface ICompiler {
