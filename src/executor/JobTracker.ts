@@ -31,6 +31,9 @@ export class JobTracker {
         if (!this.keyToDetails.has(key)) {
             throw Error(`unknown job key: ${key}`);
         }
+        if (this.dirtyKeys.has(key)) {
+            return;
+        }
         this.dirtyKeys.add(key);
         this.getDetails(key)
             .after
@@ -81,11 +84,14 @@ export class JobTracker {
 
         const ready = [...this.dirtyKeys.values()]
             .map(key => this.getDetails(key))
+            // Check if a dependency is still pending...
             .filter(details => details
                 .before
                 .filter(beforeKey => this.isDirtyOrPending(beforeKey))
                 .length === 0
             )
+            // Check if the same plugin is already being compiled (can't run in parallel)
+            .filter(details => !this.pendingKeys.has(details.key))
             .map(details => details.key);
         return ready.length > 0 ? ready[0] : undefined;
     }

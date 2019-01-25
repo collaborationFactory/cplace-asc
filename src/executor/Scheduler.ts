@@ -8,7 +8,7 @@ import {JobDetails, JobTracker} from './JobTracker';
 import * as path from 'path';
 import * as chokidar from 'chokidar';
 import {FSWatcher} from 'chokidar';
-import {cerr, debug, isDebugEnabled} from '../utils';
+import {cerr, csucc, debug, isDebugEnabled} from '../utils';
 import {ICompileRequest} from '../compiler/interfaces';
 import Timeout = NodeJS.Timeout;
 
@@ -24,7 +24,8 @@ export class Scheduler {
 
     private watchers = {
         'ts': new Map<string, FSWatcher>(),
-        'less': new Map<string, FSWatcher>()
+        'less': new Map<string, FSWatcher>(),
+        'css': new Map<string, FSWatcher>()
     };
 
     private completed = false;
@@ -51,6 +52,11 @@ export class Scheduler {
             this.cleanup();
         });
         return p;
+    }
+
+    public stop(): void {
+        this.completed = true;
+        this.cleanup();
     }
 
     private scheduleNext(): void {
@@ -80,6 +86,10 @@ export class Scheduler {
             if (!this.watchFiles && !this.completed) {
                 this.completed = true;
                 this.finishedResolver && this.finishedResolver();
+            } else if (this.watchFiles) {
+                console.log();
+                console.log(csucc`Compilation completed - watching files...`);
+                console.log();
             }
         } else if (nextTsPlugin || nextLessPlugin || nextCompressCssPlugin) {
             if (this.executor.hasCapacity()) {
@@ -114,6 +124,12 @@ export class Scheduler {
                     }
                     this.scheduleNext();
                 }, (e) => {
+                    jobTracker.markCompleted(nextPlugin);
+                    // when watching we don't kill the compiler here but just continue
+                    if (this.watchFiles) {
+                        this.scheduleNext();
+                        return;
+                    }
                     this.completed = true;
                     this.finishedRejecter && this.finishedRejecter(e);
                 });
@@ -132,6 +148,9 @@ export class Scheduler {
             watcher.close();
         });
         this.watchers.less.forEach(watcher => {
+            watcher.close();
+        });
+        this.watchers.css.forEach(watcher => {
             watcher.close();
         });
     }
@@ -203,7 +222,7 @@ export class Scheduler {
 
         const plugin = this.getPlugin(pluginName);
         const watchDir = path.join(plugin.assetsDir, type);
-        const glob = `${watchDir}/**/*.${type}`;
+        const glob = Scheduler.convertToUnixPath(`${watchDir}/**/*.${type}`);
         const watcher = chokidar.watch(glob);
         this.watchers[type].set(pluginName, watcher);
 
@@ -252,5 +271,17 @@ export class Scheduler {
             throw Error(`unknown plugin: ${plugin}`);
         }
         return plugin;
+    }
+
+    // code from some github project
+    static convertToUnixPath(input) {
+        const isExtendedLengthPath = /^\\\\\?\\/.test(input);
+        const hasNonAscii = /[^\u0000-\u0080]+/.test(input);
+
+        if (isExtendedLengthPath || hasNonAscii) {
+            return input;
+        }
+
+        return input.replace(/\\/g, '/');
     }
 }

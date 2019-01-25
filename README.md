@@ -7,7 +7,7 @@
 Just run the following command which will install the assets compiler globally:
 
 ```
-$ npm install -g @clace/asc
+$ npm install -g @cplace/asc
 ```
 
 ## Usage
@@ -15,7 +15,9 @@ $ npm install -g @clace/asc
 The assets compiler supports multiple parameters:
 
 ```
-$ cplace-asc --help
+$ cplace-asc --help   
+⇢ Checking whether newer version is available... ✓
+
 
   cplace assets compiler
 
@@ -27,7 +29,10 @@ $ cplace-asc --help
       --watch, -w             Enable watching of source files (continuous compilation)
       --onlypre, -o           Run only preprocessing steps (like create tsconfig.json files)
       --clean, -c             Clean generated output folders at the beginning
+      --threads, -t           Maximum number of threads to run in parallel
+      --localonly, -l         Enable to not scan other directories than CWD for plugins
       --verbose, -v           Enable verbose logging
+      --production, -P        Enable production mode (ignores test dependencies)
 ```
 
 <table>
@@ -60,12 +65,30 @@ $ cplace-asc --help
         <td>When enabled the assets compiler will first clean any output directories where compiled assets are placed (e.g. <code>generated_js</code> and <code>generated_css</code>).</td>
     </tr>
     <tr>
+            <td><code>--production / -P</code<</td>
+            <td><code>boolean</code> (<code>false</code>)</td>
+            <td>When enabled the assets compiler will ignore dependencies that are marked as <em>TEST</em> scoped.</td>
+        </tr>
+    <tr>
         <td><code>--verbose / -v</code<</td>
         <td><code>boolean</code> (<code>false</code>)</td>
         <td>When enabled verbose logging statements are output in order to facilitate debugging.</td>
     </tr>
     </tbody>
 </table>
+
+The tool will automatically check for updates on every run so you will be prompted with a large message when a newer version is available:
+``` 
+$ cplace-asc --help
+⇢ Checking whether newer version is available... ✓
+!---------------------------------------------!
+! A newer version of @cplace/asc is available !
+! -> Please update to the latest version:     !
+!    npm install -g @cplace/asc               !
+!---------------------------------------------!
+
+...
+```
 
 ## Source File Requirements
 

@@ -9,7 +9,7 @@ import * as webpack from 'webpack';
 import {Configuration, ExternalsElement} from 'webpack';
 import {ICompiler} from './interfaces';
 import {isFromLibrary} from '../model/utils';
-import {cgreen, debug, GREEN_CHECK, isDebugEnabled} from '../utils';
+import {cgreen, debug, formatDuration, GREEN_CHECK, isDebugEnabled} from '../utils';
 
 export class TypescriptCompiler implements ICompiler {
     private static readonly ENTRY = 'app.js';
@@ -30,11 +30,14 @@ export class TypescriptCompiler implements ICompiler {
     }
 
     async compile(): Promise<void> {
+        const start = new Date().getTime();
         console.log(`⟲ [${this.pluginName}] starting TypeScript compilation...`);
         this.runTsc();
-        console.log(cgreen`⇢`, `[${this.pluginName}] TypeScript compiled, starting bundling...`);
+        let end = new Date().getTime();
+        console.log(cgreen`⇢`, `[${this.pluginName}] TypeScript compiled, starting bundling... (${formatDuration(end - start)})`);
         await this.runWebpack();
-        console.log(GREEN_CHECK, `[${this.pluginName}] TypeScript finished`);
+        end = new Date().getTime();
+        console.log(GREEN_CHECK, `[${this.pluginName}] TypeScript finished (${formatDuration(end - start)})`);
     }
 
     private runTsc() {

@@ -1,16 +1,15 @@
 {
   "name": "@cplace/asc",
-  "version": "0.3.8",
+  "version": "0.5.0",
   "private": false,
   "description": "cplace assets compiler",
   "repository": "https://github.com/collaborationFactory/cplace-asc",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"SSSSHhhhhh... no test specified\"",
     "dev:tsc": "tsc",
-    "dev:link": "npm run dev:tsc && npm link",
     "clean": "rimraf dist/ *.tgz",
-    "prod": "npm run clean && npm run dev:tsc && npm pack"
+    "prepare": "npm run clean && npm run dev:tsc"
   },
   "bin": {
     "cplace-asc": "dist/index.js"
