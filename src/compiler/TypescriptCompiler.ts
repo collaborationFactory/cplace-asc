@@ -77,25 +77,26 @@ export class TypescriptCompiler implements ICompiler {
     }
 
     private getWebpackConfig(): Configuration {
-        return {
+        const config: Configuration = {
             context: path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR),
-            devtool: 'source-map',
             entry: {
                 tsc: './' + TypescriptCompiler.ENTRY
             },
             externals: this.externals,
             mode: 'development',
             module: {
-                rules: [{
-                    test: /\.js$/,
-                    exclude: /node_modules/,
-                    use: [{
-                        loader: path.resolve(__filename, '../contextInjectorLoader.js'),
-                        options: {
-                            entry: TypescriptCompiler.ENTRY
-                        }
-                    }]
-                }]
+                rules: [
+                    {
+                        test: /\.js$/,
+                        exclude: /node_modules/,
+                        use: [{
+                            loader: path.resolve(__filename, '../contextInjectorLoader.js'),
+                            options: {
+                                entry: TypescriptCompiler.ENTRY
+                            }
+                        }]
+                    }
+                ]
             },
             output: {
                 filename: '[name].js',
@@ -117,6 +118,21 @@ export class TypescriptCompiler implements ICompiler {
                 extensions: ['.ts', '.js']
             }
         };
+
+        if (!this.isProduction) {
+            config.devtool = 'source-map';
+            // @ts-ignore
+            config.module.rules.push({
+                test: /\.js$/,
+                exclude: /node_modules/,
+                use: [{
+                    loader: path.resolve(__filename, '../../../node_modules/source-map-loader')
+                }],
+                enforce: 'pre'
+            });
+        }
+
+        return config;
     }
 
     private resolveWebpackExternal(context: string, request: string, callback: Function) {
