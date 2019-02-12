@@ -4,6 +4,7 @@
   "private": false,
   "description": "cplace assets compiler",
   "repository": "https://github.com/collaborationFactory/cplace-asc",
+  "homepage": "https://github.com/collaborationFactory/cplace-asc",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"SSSSHhhhhh... no test specified\"",
