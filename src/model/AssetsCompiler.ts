@@ -83,7 +83,7 @@ export class AssetsCompiler {
         this.isSubRepo = AssetsCompiler.checkIsSubRepo();
         this.projects = this.setupProjects();
         this.executor = new ExecutorService(this.runConfig.maxParallelism);
-        this.scheduler = new Scheduler(this.executor, this.projects, this.runConfig.watchFiles);
+        this.scheduler = new Scheduler(this.executor, this.projects, this.runConfig.production, this.runConfig.watchFiles);
     }
 
     public async start(): Promise<void> {
@@ -155,7 +155,7 @@ export class AssetsCompiler {
 
         projects.forEach(project => {
             if (project.hasTypeScriptAssets) {
-                project.generateTsConfig(p => projects.get(p));
+                project.generateTsConfig(p => projects.get(p), this.runConfig.production);
             }
         });
 
