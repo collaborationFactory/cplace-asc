@@ -67,7 +67,7 @@ $ cplace-asc --help
     <tr>
             <td><code>--production / -P</code<</td>
             <td><code>boolean</code> (<code>false</code>)</td>
-            <td>When enabled the assets compiler will ignore dependencies that are marked as <em>TEST</em> scoped.</td>
+            <td>When enabled the assets compiler will ignore dependencies that are marked as <em>TEST</em> scoped. Furthermore, no source maps will be generated.</td>
         </tr>
     <tr>
         <td><code>--verbose / -v</code<</td>

@@ -15,7 +15,10 @@ export class CompressCssCompiler implements ICompiler {
     private readonly pathToCssSources: string;
     private readonly pathToEntryFile: string = '';
 
-    constructor(private readonly pluginName: string, private readonly assetsPath: string, private readonly mainRepoDir: string) {
+    constructor(private readonly pluginName: string,
+                private readonly assetsPath: string,
+                private readonly mainRepoDir: string,
+                private readonly isProduction: boolean) {
         this.pathToCssSources = path.join(this.assetsPath, CompressCssCompiler.CSS_SOURCES_DIR);
         this.pathToEntryFile = path.join(this.pathToCssSources, CompressCssCompiler.ENTRY_FILE_NAME);
     }

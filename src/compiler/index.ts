@@ -57,7 +57,12 @@ if (require.main === module) {
 
         let compiler;
         try {
-            compiler = new CompilerConstructor(request.pluginName, request.assetsPath, request.mainRepoDir);
+            compiler = new CompilerConstructor(
+                request.pluginName,
+                request.assetsPath,
+                request.mainRepoDir,
+                request.isProduction
+            );
         } catch (e) {
             console.error(cerr`${e.message}`);
             throw Error(e);

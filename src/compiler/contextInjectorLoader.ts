@@ -9,14 +9,14 @@ import {loader} from 'webpack';
     This file is configured by `TypescriptCompiler` as a loader for Webpack
  */
 
-export default function (this: loader.LoaderContext, content: string) {
+export default function (this: loader.LoaderContext, source: string, map: any) {
     // @ts-ignore
     if (this.resourcePath === path.resolve(this.rootContext, this.query.entry)) {
         const requireContext = '\n//======================================================\n' +
             'exports.default = require.context(".", true, /.js$/);\n' +
             '//======================================================\n';
 
-        return content + requireContext;
+        source = source + requireContext;
     }
-    return content;
+    this.callback(null, source, map);
 };

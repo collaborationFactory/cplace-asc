@@ -19,7 +19,8 @@ export class TsConfigGenerator {
 
     constructor(private readonly plugin: CplacePlugin,
                 private readonly dependencies: CplacePlugin[],
-                private readonly localOnly: boolean) {
+                private readonly localOnly: boolean,
+                private readonly isProduction: boolean) {
     }
 
     public createConfigAndGetPath(): string {
@@ -78,7 +79,9 @@ export class TsConfigGenerator {
             compilerOptions: {
                 rootDir: '.',
                 baseUrl: '.',
-                outDir: '../generated_js'
+                outDir: '../generated_js',
+                sourceMap: !this.isProduction,
+                declarationMap: !this.isProduction
             },
             include: [
                 './**/*.ts',
