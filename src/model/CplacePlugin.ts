@@ -43,10 +43,7 @@ export default class CplacePlugin {
      */
     public readonly dependents: string[];
 
-    constructor(public readonly pluginName: string,
-                public readonly pluginDir: string,
-                public readonly mainRepoDir: string,
-                public readonly localOnly: boolean) {
+    constructor(public readonly pluginName: string, public readonly pluginDir: string) {
         this.dependencies = [];
         this.dependents = [];
 
@@ -66,15 +63,11 @@ export default class CplacePlugin {
         }
     }
 
-    public isInSubRepo(): boolean {
-        return this.repo !== 'main';
+    public getPluginPathRelativeFromRepo(sourceRepo: string, localOnly: boolean): string {
+        return CplacePlugin.getPluginPathRelativeToRepo(sourceRepo, this.pluginName, this.repo, localOnly);
     }
 
-    public getPluginPathRelativeFromRepo(sourceRepo: string): string {
-        return CplacePlugin.getPluginPathRelativeToRepo(sourceRepo, this.pluginName, this.repo, this.localOnly);
-    }
-
-    public generateTsConfig(pluginResolver: ICplacePluginResolver, isProduction: boolean): void {
+    public generateTsConfig(pluginResolver: ICplacePluginResolver, isProduction: boolean, localOnly: boolean): void {
         if (!this.hasTypeScriptAssets) {
             throw Error(`[${this.pluginName}] plugin does not have TypeScript assets`);
         }
@@ -89,7 +82,7 @@ export default class CplacePlugin {
             })
             .filter(p => p.hasTypeScriptAssets);
 
-        const tsConfigGenerator = new TsConfigGenerator(this, dependenciesWithTypeScript, this.localOnly, isProduction);
+        const tsConfigGenerator = new TsConfigGenerator(this, dependenciesWithTypeScript, localOnly, isProduction);
         const tsconfigPath = tsConfigGenerator.createConfigAndGetPath();
 
         if (!fs.existsSync(tsconfigPath)) {
