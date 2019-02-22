@@ -10,6 +10,7 @@ import {Configuration, ExternalsElement} from 'webpack';
 import {ICompiler} from './interfaces';
 import {isFromLibrary} from '../model/utils';
 import {cgreen, debug, formatDuration, GREEN_CHECK, isDebugEnabled} from '../utils';
+import * as fs from 'fs';
 
 export class TypescriptCompiler implements ICompiler {
     private static readonly ENTRY = 'app.js';
@@ -63,6 +64,12 @@ export class TypescriptCompiler implements ICompiler {
 
     private runWebpack() {
         return new Promise((resolve, reject) => {
+            // remove previously generated webpack bundle if exists (so it does not append)
+            const bundleFile = path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR, 'tsc.js');
+            if (fs.existsSync(bundleFile)) {
+                fs.unlinkSync(bundleFile);
+            }
+
             // @ts-ignore
             webpack(this.getWebpackConfig(), (err, stats) => {
                 if (err) {
