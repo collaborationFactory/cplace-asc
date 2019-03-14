@@ -11,10 +11,12 @@ import {ICompiler} from './interfaces';
 import {isFromLibrary} from '../model/utils';
 import {cgreen, debug, formatDuration, GREEN_CHECK, isDebugEnabled} from '../utils';
 import * as fs from 'fs';
+import * as copyFiles from 'copyfiles';
 
 export class TypescriptCompiler implements ICompiler {
     private static readonly ENTRY = 'app.js';
     private static readonly DEST_DIR = 'generated_js';
+    private static readonly STATIC_IMPORT_EXTENSIONS = 'html|htm';
 
     private readonly externals: ExternalsElement[] = [{
         d3: 'd3',
@@ -54,6 +56,15 @@ export class TypescriptCompiler implements ICompiler {
         debug(`(TypescriptCompiler) [${this.pluginName}] executing command '${tscExecutable} ${args.join(' ')}'`);
         const result = spawn.sync(tscExecutable, args, {
             stdio: [process.stdin, process.stdout, process.stderr]
+        });
+
+        const glob = tsAssetsPath + '/**/*.+(' + TypescriptCompiler.STATIC_IMPORT_EXTENSIONS + ')';
+        const dest = path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR) + '/';
+        const upLength = tsAssetsPath.split('/').length;
+        copyFiles([glob, dest], {up: upLength}, (error) => {
+            if(error) {
+                throw Error(`[${this.pluginName}] Error copying template files`);
+            }
         });
 
         debug(`(TypescriptCompiler) [${this.pluginName}] tsc return code: ${result.status}`);
@@ -101,6 +112,12 @@ export class TypescriptCompiler implements ICompiler {
                             options: {
                                 entry: TypescriptCompiler.ENTRY
                             }
+                        }]
+                    },
+                    {
+                        test: new RegExp('\.(' + TypescriptCompiler.STATIC_IMPORT_EXTENSIONS + ')$'),
+                        use: [{
+                            loader: path.resolve(__filename, '../../../node_modules/raw-loader')
                         }]
                     }
                 ]
