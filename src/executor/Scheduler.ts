@@ -34,6 +34,7 @@ export class Scheduler {
 
     constructor(private readonly executor: ExecutorService,
                 private readonly plugins: Map<string, CplacePlugin>,
+                private readonly mainRepoDir: string,
                 private readonly isProduction: boolean,
                 private readonly watchFiles: boolean) {
         this.tsJobs = this.createTsJobTracker();
@@ -108,7 +109,7 @@ export class Scheduler {
             const compileRequest: ICompileRequest = {
                 pluginName: plugin.pluginName,
                 assetsPath: plugin.assetsDir,
-                mainRepoDir: plugin.mainRepoDir,
+                mainRepoDir: this.mainRepoDir,
                 isProduction: this.isProduction,
                 verbose: isDebugEnabled()
             };

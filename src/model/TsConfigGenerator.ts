@@ -53,7 +53,10 @@ export class TsConfigGenerator {
                 return acc;
             }
 
-            const relPathToDependency = path.join(relRepoRootPrefix, dependency.getPluginPathRelativeFromRepo(this.plugin.repo));
+            const relPathToDependency = path.join(
+                relRepoRootPrefix,
+                dependency.getPluginPathRelativeFromRepo(this.plugin.repo, this.localOnly)
+            );
             const relPathToDependencyTs = path.join(relPathToDependency, 'assets', 'ts');
 
             const newPath = TsConfigGenerator.getPathDependency(dependency.pluginName, relPathToDependencyTs);
