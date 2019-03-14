@@ -59,8 +59,8 @@ export class TypescriptCompiler implements ICompiler {
         });
 
         const glob = tsAssetsPath + '/**/*.+(' + TypescriptCompiler.STATIC_IMPORT_EXTENSIONS + ')';
-        const dest = path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR) + '/';
-        const upLength = tsAssetsPath.split('/').length;
+        const dest = path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR) + path.sep;
+        const upLength = tsAssetsPath.split(path.sep).length;
         copyFiles([glob, dest], {up: upLength}, (error) => {
             if(error) {
                 throw Error(`[${this.pluginName}] Error copying template files`);
