@@ -11,10 +11,12 @@ import {ICompiler} from './interfaces';
 import {isFromLibrary} from '../model/utils';
 import {cgreen, debug, formatDuration, GREEN_CHECK, isDebugEnabled} from '../utils';
 import * as fs from 'fs';
+import * as copyFiles from 'copyfiles';
 
 export class TypescriptCompiler implements ICompiler {
     private static readonly ENTRY = 'app.js';
     private static readonly DEST_DIR = 'generated_js';
+    private static readonly STATIC_IMPORT_EXTENSIONS = 'html|htm';
 
     private readonly externals: ExternalsElement[] = [{
         d3: 'd3',
@@ -37,6 +39,7 @@ export class TypescriptCompiler implements ICompiler {
         const start = new Date().getTime();
         console.log(`⟲ [${this.pluginName}] starting TypeScript compilation...`);
         this.runTsc();
+        await this.copyStaticFiles();
         let end = new Date().getTime();
         console.log(cgreen`⇢`, `[${this.pluginName}] TypeScript compiled, starting bundling... (${formatDuration(end - start)})`);
         await this.runWebpack();
@@ -44,7 +47,7 @@ export class TypescriptCompiler implements ICompiler {
         console.log(GREEN_CHECK, `[${this.pluginName}] TypeScript finished (${formatDuration(end - start)})`);
     }
 
-    private runTsc() {
+    private runTsc(): void {
         const tsAssetsPath = path.resolve(this.assetsPath, 'ts');
         const tscExecutable = this.getTscExecutable();
         let args = ['--project', tsAssetsPath];
@@ -102,6 +105,12 @@ export class TypescriptCompiler implements ICompiler {
                                 entry: TypescriptCompiler.ENTRY
                             }
                         }]
+                    },
+                    {
+                        test: new RegExp(`\.(${TypescriptCompiler.STATIC_IMPORT_EXTENSIONS})$`),
+                        use: [{
+                            loader: path.resolve(__filename, '../../../node_modules/raw-loader')
+                        }]
                     }
                 ]
             },
@@ -158,5 +167,27 @@ export class TypescriptCompiler implements ICompiler {
             'bin',
             'tsc'
         );
+    }
+
+    private async copyStaticFiles(): Promise<void> {
+        const tsAssetsPath = path.resolve(this.assetsPath, 'ts');
+        const srcGlob = `${tsAssetsPath}/**/*.+(${TypescriptCompiler.STATIC_IMPORT_EXTENSIONS})`;
+        const dest = path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR) + path.sep;
+        const upLength = tsAssetsPath.split(path.sep).length;
+        const options = {
+            up: upLength,
+            verbose: isDebugEnabled()
+        };
+
+        debug(`(TypescriptCompiler) [${this.pluginName}] copying static files...`);
+        return new Promise((resolve, reject) => {
+            copyFiles([srcGlob, dest], options, (error) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
     }
 }
