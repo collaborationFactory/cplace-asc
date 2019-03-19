@@ -38,7 +38,7 @@ export class TypescriptCompiler implements ICompiler {
     async compile(): Promise<void> {
         const start = new Date().getTime();
         console.log(`⟲ [${this.pluginName}] starting TypeScript compilation...`);
-        this.runTsc();
+        await this.runTsc();
         let end = new Date().getTime();
         console.log(cgreen`⇢`, `[${this.pluginName}] TypeScript compiled, starting bundling... (${formatDuration(end - start)})`);
         await this.runWebpack();
@@ -46,7 +46,7 @@ export class TypescriptCompiler implements ICompiler {
         console.log(GREEN_CHECK, `[${this.pluginName}] TypeScript finished (${formatDuration(end - start)})`);
     }
 
-    private runTsc() {
+    private async runTsc() {
         const tsAssetsPath = path.resolve(this.assetsPath, 'ts');
         const tscExecutable = this.getTscExecutable();
         let args = ['--project', tsAssetsPath];
@@ -58,14 +58,7 @@ export class TypescriptCompiler implements ICompiler {
             stdio: [process.stdin, process.stdout, process.stderr]
         });
 
-        const glob = tsAssetsPath + '/**/*.+(' + TypescriptCompiler.STATIC_IMPORT_EXTENSIONS + ')';
-        const dest = path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR) + path.sep;
-        const upLength = tsAssetsPath.split(path.sep).length;
-        copyFiles([glob, dest], {up: upLength}, (error) => {
-            if(error) {
-                throw Error(`[${this.pluginName}] Error copying template files`);
-            }
-        });
+        await this.copyStaticFiles(tsAssetsPath);
 
         debug(`(TypescriptCompiler) [${this.pluginName}] tsc return code: ${result.status}`);
         if (result.status !== 0) {
@@ -115,7 +108,7 @@ export class TypescriptCompiler implements ICompiler {
                         }]
                     },
                     {
-                        test: new RegExp('\.(' + TypescriptCompiler.STATIC_IMPORT_EXTENSIONS + ')$'),
+                        test: new RegExp(`\.(${TypescriptCompiler.STATIC_IMPORT_EXTENSIONS})$`),
                         use: [{
                             loader: path.resolve(__filename, '../../../node_modules/raw-loader')
                         }]
@@ -175,5 +168,24 @@ export class TypescriptCompiler implements ICompiler {
             'bin',
             'tsc'
         );
+    }
+
+    private async copyStaticFiles(tsAssetsPath: string) {
+        const srcGlob = `${tsAssetsPath}/**/*.+(${TypescriptCompiler.STATIC_IMPORT_EXTENSIONS})`;
+        const dest = path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR) + path.sep;
+        const upLength = tsAssetsPath.split(path.sep).length;
+        const options = {
+            up: upLength,
+            verbose: isDebugEnabled()
+        };
+        return new Promise((resolve, reject) => {
+            copyFiles([srcGlob, dest], options, (error) => {
+                if(error) {
+                    reject(error);
+                    throw Error(`[${this.pluginName}] Error copying template files`);
+                }
+                resolve();
+            });
+        });
     }
 }
