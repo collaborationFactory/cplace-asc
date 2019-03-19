@@ -38,7 +38,8 @@ export class TypescriptCompiler implements ICompiler {
     async compile(): Promise<void> {
         const start = new Date().getTime();
         console.log(`⟲ [${this.pluginName}] starting TypeScript compilation...`);
-        await this.runTsc();
+        this.runTsc();
+        await this.copyStaticFiles();
         let end = new Date().getTime();
         console.log(cgreen`⇢`, `[${this.pluginName}] TypeScript compiled, starting bundling... (${formatDuration(end - start)})`);
         await this.runWebpack();
@@ -46,7 +47,7 @@ export class TypescriptCompiler implements ICompiler {
         console.log(GREEN_CHECK, `[${this.pluginName}] TypeScript finished (${formatDuration(end - start)})`);
     }
 
-    private async runTsc() {
+    private runTsc(): void {
         const tsAssetsPath = path.resolve(this.assetsPath, 'ts');
         const tscExecutable = this.getTscExecutable();
         let args = ['--project', tsAssetsPath];
@@ -57,8 +58,6 @@ export class TypescriptCompiler implements ICompiler {
         const result = spawn.sync(tscExecutable, args, {
             stdio: [process.stdin, process.stdout, process.stderr]
         });
-
-        await this.copyStaticFiles(tsAssetsPath);
 
         debug(`(TypescriptCompiler) [${this.pluginName}] tsc return code: ${result.status}`);
         if (result.status !== 0) {
@@ -170,7 +169,8 @@ export class TypescriptCompiler implements ICompiler {
         );
     }
 
-    private async copyStaticFiles(tsAssetsPath: string) {
+    private async copyStaticFiles(): Promise<void> {
+        const tsAssetsPath = path.resolve(this.assetsPath, 'ts');
         const srcGlob = `${tsAssetsPath}/**/*.+(${TypescriptCompiler.STATIC_IMPORT_EXTENSIONS})`;
         const dest = path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR) + path.sep;
         const upLength = tsAssetsPath.split(path.sep).length;
@@ -178,13 +178,15 @@ export class TypescriptCompiler implements ICompiler {
             up: upLength,
             verbose: isDebugEnabled()
         };
+
+        debug(`(TypescriptCompiler) [${this.pluginName}] copying static files...`);
         return new Promise((resolve, reject) => {
             copyFiles([srcGlob, dest], options, (error) => {
-                if(error) {
+                if (error) {
                     reject(error);
-                    throw Error(`[${this.pluginName}] Error copying template files`);
+                } else {
+                    resolve();
                 }
-                resolve();
             });
         });
     }
