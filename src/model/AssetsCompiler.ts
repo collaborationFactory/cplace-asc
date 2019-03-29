@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import CplacePlugin from './CplacePlugin';
 import {ExecutorService, Scheduler} from '../executor';
-import {cerr, cgreen, csucc, debug, formatDuration} from '../utils';
+import {cerr, cgreen, csucc, debug, formatDuration, IUpdateDetails} from '../utils';
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -72,7 +72,7 @@ export class AssetsCompiler {
         this.projects = this.setupProjects();
     }
 
-    public async start(): Promise<void> {
+    public async start(updateDetails: IUpdateDetails | null): Promise<void> {
         if (!this.projects.size) {
             console.log(cgreen`->`, 'Nothing to do, no plugins detected...');
             return new Promise<void>(resolve => resolve());
@@ -104,7 +104,8 @@ export class AssetsCompiler {
         this.executor = new ExecutorService(this.runConfig.maxParallelism);
         this.scheduler = new Scheduler(
             this.executor, this.projects, mainRepoPath,
-            this.runConfig.production, this.runConfig.watchFiles
+            this.runConfig.production, this.runConfig.watchFiles,
+            updateDetails
         );
 
         debug(`(AssetsCompiler) starting scheduler for compilation tasks...`);
