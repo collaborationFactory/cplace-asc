@@ -4,7 +4,12 @@ import {cgreen, debug, GREEN_CHECK, RED_CROSS} from './console';
 import * as https from 'https';
 import {Socket} from 'net';
 
-export async function checkForUpdate(): Promise<void> {
+export interface IUpdateDetails {
+    installedVersion: Version;
+    availableVersion: Version;
+}
+
+export async function checkForUpdate(): Promise<IUpdateDetails | undefined> {
     process.stdout.write(cgreen`⇢` + ` Checking whether newer version is available... `);
 
     try {
@@ -14,31 +19,46 @@ export async function checkForUpdate(): Promise<void> {
         if (!currentVersion) {
             process.stdout.write(RED_CROSS + '\n');
             debug(`[UpdateCheck] Could not check whether a newer version is available, continuing...`);
-            return;
+            return undefined;
         }
 
         const remoteVersion = await getRemoteVersionFromRegistry(packageJson.name);
         if (!remoteVersion) {
             process.stdout.write(RED_CROSS + '\n');
             debug(`[UpdateCheck] Could not check whether a newer version is available, continuing...`);
-            return;
+            return undefined;
         }
 
         process.stdout.write(GREEN_CHECK + '\n');
 
         if (remoteVersion.isNewerThan(currentVersion)) {
-            console.log(cgreen`!---------------------------------------------!`);
-            console.log(cgreen`! A newer version of @cplace/asc is available !`);
-            console.log(cgreen`! -> Please update to the latest version:     !`);
-            console.log(cgreen`!    npm install -g @cplace/asc               !`);
-            console.log(cgreen`!---------------------------------------------!`);
+            return {
+                installedVersion: currentVersion,
+                availableVersion: remoteVersion
+            };
         }
-        console.log();
     } catch (e) {
         process.stdout.write(RED_CROSS + '\n');
         debug(`[UpdateCheck] Failed to check whether an update is available, continuing...`);
         debug(e);
     }
+    return undefined;
+}
+
+export function printUpdateDetails(updateDetails?: IUpdateDetails): void {
+    if (!updateDetails) {
+        return;
+    }
+    const installed = updateDetails.installedVersion.toString().padStart(8);
+    const available = updateDetails.availableVersion.toString().padEnd(8);
+    console.log();
+    console.log(cgreen`!---------------------------------------------!`);
+    console.log(cgreen`! A newer version of @cplace/asc is available !`);
+    console.log(cgreen`! >> ${installed} -> ${available}                     !`);
+    console.log(cgreen`! -> Please update to the latest version:     !`);
+    console.log(cgreen`!    npm install -g @cplace/asc               !`);
+    console.log(cgreen`!---------------------------------------------!`);
+    console.log();
 }
 
 async function getRemoteVersionFromRegistry(packageName: string): Promise<Version | null> {
@@ -109,5 +129,9 @@ class Version {
         } else {
             return this.patch > other.patch;
         }
+    }
+
+    public toString(): string {
+        return `${this.major || 0}.${this.minor || 0}.${this.patch || 0}`;
     }
 }

@@ -5,14 +5,16 @@
 
 import {getAvailableStats} from './model/utils';
 import {AssetsCompiler, IAssetsCompilerConfiguration} from './model/AssetsCompiler';
-import {cerr, checkForUpdate, debug, enableDebug, isDebugEnabled} from './utils';
+import {cerr, checkForUpdate, debug, enableDebug, isDebugEnabled, IUpdateDetails} from './utils';
 import * as os from 'os';
 import meow = require('meow');
 
 checkNodeVersion();
-checkForUpdate().then(() => run()).catch(() => run());
+checkForUpdate()
+    .then(details => run(details))
+    .catch(() => run());
 
-function run() {
+function run(updateDetails?: IUpdateDetails) {
     const cli = meow(`
     Usage:
         $ cplace-asc
@@ -121,7 +123,7 @@ function run() {
         });
 
         // Timeout to ensure flush of stdout
-        assetsCompiler.start().then(() => {
+        assetsCompiler.start(updateDetails).then(() => {
             setTimeout(() => process.exit(0), 200);
         }, () => {
             setTimeout(() => process.exit(1), 200);
