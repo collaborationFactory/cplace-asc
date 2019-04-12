@@ -37,7 +37,7 @@ export class Scheduler {
                 private readonly mainRepoDir: string,
                 private readonly isProduction: boolean,
                 private readonly watchFiles: boolean,
-                private readonly updateDetails: IUpdateDetails | null) {
+                private readonly updateDetails?: IUpdateDetails) {
         this.tsJobs = this.createTsJobTracker();
         this.lessJobs = this.createLessJobTracker();
         this.compressCssJobs = this.createCompressCssJobTracker();
@@ -87,14 +87,14 @@ export class Scheduler {
 
         if (nextTsPlugin === null && nextLessPlugin === null && nextCompressCssPlugin === null) {
             if (!this.watchFiles && !this.completed) {
-                this.updateDetails && printUpdateDetails(this.updateDetails);
+                printUpdateDetails(this.updateDetails);
                 this.completed = true;
                 this.finishedResolver && this.finishedResolver();
             } else if (this.watchFiles) {
                 console.log();
                 console.log(csucc`Compilation completed - watching files...`);
                 console.log();
-                this.updateDetails && printUpdateDetails(this.updateDetails);
+                printUpdateDetails(this.updateDetails);
             }
         } else if (nextTsPlugin || nextLessPlugin || nextCompressCssPlugin) {
             if (this.executor.hasCapacity()) {

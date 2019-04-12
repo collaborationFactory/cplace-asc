@@ -72,7 +72,7 @@ export class AssetsCompiler {
         this.projects = this.setupProjects();
     }
 
-    public async start(updateDetails: IUpdateDetails | null): Promise<void> {
+    public async start(updateDetails?: IUpdateDetails): Promise<void> {
         if (!this.projects.size) {
             console.log(cgreen`->`, 'Nothing to do, no plugins detected...');
             return new Promise<void>(resolve => resolve());

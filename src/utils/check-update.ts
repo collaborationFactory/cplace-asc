@@ -9,7 +9,7 @@ export interface IUpdateDetails {
     availableVersion: Version;
 }
 
-export async function checkForUpdate(): Promise<IUpdateDetails | null> {
+export async function checkForUpdate(): Promise<IUpdateDetails | undefined> {
     process.stdout.write(cgreen`⇢` + ` Checking whether newer version is available... `);
 
     try {
@@ -19,14 +19,14 @@ export async function checkForUpdate(): Promise<IUpdateDetails | null> {
         if (!currentVersion) {
             process.stdout.write(RED_CROSS + '\n');
             debug(`[UpdateCheck] Could not check whether a newer version is available, continuing...`);
-            return null;
+            return undefined;
         }
 
         const remoteVersion = await getRemoteVersionFromRegistry(packageJson.name);
         if (!remoteVersion) {
             process.stdout.write(RED_CROSS + '\n');
             debug(`[UpdateCheck] Could not check whether a newer version is available, continuing...`);
-            return null;
+            return undefined;
         }
 
         process.stdout.write(GREEN_CHECK + '\n');
@@ -42,10 +42,13 @@ export async function checkForUpdate(): Promise<IUpdateDetails | null> {
         debug(`[UpdateCheck] Failed to check whether an update is available, continuing...`);
         debug(e);
     }
-    return null;
+    return undefined;
 }
 
-export function printUpdateDetails(updateDetails: IUpdateDetails): void {
+export function printUpdateDetails(updateDetails?: IUpdateDetails): void {
+    if (!updateDetails) {
+        return;
+    }
     const installed = updateDetails.installedVersion.toString().padStart(8);
     const available = updateDetails.availableVersion.toString().padEnd(8);
     console.log();

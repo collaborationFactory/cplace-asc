@@ -12,9 +12,9 @@ import meow = require('meow');
 checkNodeVersion();
 checkForUpdate()
     .then(details => run(details))
-    .catch(() => run(null));
+    .catch(() => run());
 
-function run(updateDetails: IUpdateDetails | null) {
+function run(updateDetails?: IUpdateDetails) {
     const cli = meow(`
     Usage:
         $ cplace-asc
