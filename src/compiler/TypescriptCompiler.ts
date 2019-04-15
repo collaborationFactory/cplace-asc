@@ -53,12 +53,9 @@ export class TypescriptCompiler implements ICompiler {
             const oldHash = this.readCompilationHash();
             const newHash = await this.computeAndUpdateCompilationHash();
             debug(`(TypescriptCompiler) [${this.pluginName}] Old hash: ${oldHash} - New hash: ${newHash}`);
-            if (newHash) {
-                const unchanged = oldHash === newHash;
-                if (unchanged) {
-                    console.log(cgreen`⇢`, `[${this.pluginName}] TypeScript API did not change, no recompilation of dependants required`);
-                    return CompilationResult.UNCHANGED;
-                }
+            if (newHash && oldHash === newHash) {
+                console.log(cgreen`⇢`, `[${this.pluginName}] TypeScript API did not change, no recompilation of dependants required`);
+                return CompilationResult.UNCHANGED;
             }
         } catch (e) {
             debug(`(TypescriptCompiler) [${this.pluginName}] Failed to get and compute hashes: ${e}`);
