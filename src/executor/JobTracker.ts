@@ -26,9 +26,11 @@ export class JobTracker {
     }
 
     /**
-     * Marks the given `key` as dirty.
+     * Marks the given `key` as dirty. If `recursive` is set
+     * to `true` then all dependants will also be marked dirty, i.e. all
+     * `JobDetails.after` keys will be marked as dirty.
      */
-    public markDirty(key: string): void {
+    public markDirty(key: string, recursive = false): void {
         if (!this.keyToDetails.has(key)) {
             throw Error(`unknown job key: ${key}`);
         }
@@ -36,10 +38,16 @@ export class JobTracker {
             return;
         }
         this.dirtyKeys.add(key);
+
+        if (recursive) {
+            this.getDetails(key)
+                .after
+                .forEach(after => this.markDirty(after, true));
+        }
     }
 
     /**
-     * Marks the given `key` as currently being processed
+     * Marks the given `key` as currently being processed.
      */
     public markProcessing(key: string): void {
         if (!this.keyToDetails.has(key)) {
@@ -75,7 +83,7 @@ export class JobTracker {
         if (outputChanged || firstCompletion) {
             this.getDetails(key)
                 .after
-                .forEach(after => this.markDirty(after));
+                .forEach(after => this.markDirty(after, true));
         }
 
         return firstCompletion;
