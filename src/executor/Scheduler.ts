@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as chokidar from 'chokidar';
 import {FSWatcher} from 'chokidar';
 import {cerr, csucc, debug, isDebugEnabled, IUpdateDetails, printUpdateDetails} from '../utils';
-import {ICompileRequest} from '../compiler/interfaces';
+import {CompilationResult, ICompileRequest} from '../compiler/interfaces';
 import Timeout = NodeJS.Timeout;
 
 interface ISchedulingResult {
@@ -123,14 +123,16 @@ export class Scheduler {
             jobTracker.markProcessing(nextPlugin);
             this.executor
                 .run(compileRequest)
-                .then(() => {
-                    const firstCompletion = jobTracker.markCompleted(nextPlugin);
+                .then((result?: CompilationResult) => {
+                    console.log(result);
+                    const compilationResultChanged = result !== CompilationResult.UNCHANGED;
+                    const firstCompletion = jobTracker.markCompleted(nextPlugin, compilationResultChanged);
                     if (firstCompletion && this.watchFiles) {
                         this.registerWatch(nextPlugin, watchType);
                     }
                     this.scheduleNext();
                 }, (e) => {
-                    jobTracker.markCompleted(nextPlugin);
+                    jobTracker.markCompleted(nextPlugin, false);
                     // when watching we don't kill the compiler here but just continue
                     if (this.watchFiles) {
                         this.scheduleNext();

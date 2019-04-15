@@ -7,7 +7,7 @@ import {CReplacePlugin} from './CReplacePlugin';
 import * as spawn from 'cross-spawn';
 import * as webpack from 'webpack';
 import {Configuration, ExternalsElement} from 'webpack';
-import {ICompiler} from './interfaces';
+import {CompilationResult, ICompiler} from './interfaces';
 import {isFromLibrary} from '../model/utils';
 import {cgreen, debug, formatDuration, GREEN_CHECK, isDebugEnabled} from '../utils';
 import * as fs from 'fs';
@@ -35,7 +35,7 @@ export class TypescriptCompiler implements ICompiler {
         return path.resolve(assetsPath, this.DEST_DIR);
     }
 
-    async compile(): Promise<void> {
+    async compile(): Promise<CompilationResult> {
         const start = new Date().getTime();
         console.log(`⟲ [${this.pluginName}] starting TypeScript compilation...`);
         this.runTsc();
@@ -45,6 +45,7 @@ export class TypescriptCompiler implements ICompiler {
         await this.runWebpack();
         end = new Date().getTime();
         console.log(GREEN_CHECK, `[${this.pluginName}] TypeScript finished (${formatDuration(end - start)})`);
+        return CompilationResult.CHANGED;
     }
 
     private runTsc(): void {

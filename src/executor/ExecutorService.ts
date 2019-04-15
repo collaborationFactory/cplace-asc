@@ -5,8 +5,7 @@
 import {createPool, Factory, Pool} from 'generic-pool';
 import * as path from 'path';
 import {ChildProcess, fork} from 'child_process';
-import {MESSAGE_PROCESS_COMPLETED} from '../compiler';
-import {ICompileRequest} from '../compiler/interfaces';
+import {CompilationResult, ICompileRequest, ICompileResponse, ProcessState} from '../compiler/interfaces';
 import {debug} from '../utils';
 
 const COMPILER_ENTRY_POINT = path.resolve(path.dirname(__filename), '../compiler/index.js');
@@ -35,9 +34,9 @@ export class ExecutorService {
         return this.running < this.maxParallelism;
     }
 
-    public run(compileRequest: ICompileRequest): Promise<void> {
+    public run(compileRequest: ICompileRequest): Promise<CompilationResult> {
         this.running++;
-        return new Promise<void>((resolve, reject) => {
+        return new Promise<CompilationResult>((resolve, reject) => {
             this.pool.acquire().then((process) => {
                 let resolved = false;
                 const exit = (code) => {
@@ -50,13 +49,13 @@ export class ExecutorService {
 
                 process.send(compileRequest);
 
-                process.once('message', (message) => {
+                process.once('message', (message: ICompileResponse) => {
                     process.removeListener('exit', exit);
                     this.pool.release(process);
                     resolved = true;
-                    if (message === MESSAGE_PROCESS_COMPLETED) {
+                    if (message.state === ProcessState.DONE) {
                         this.running--;
-                        resolve();
+                        resolve(message.result);
                     } else {
                         this.running--;
                         reject(2);
