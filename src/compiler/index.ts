@@ -4,12 +4,9 @@
 
 import {LessCompiler} from './LessCompiler';
 import {TypescriptCompiler} from './TypescriptCompiler';
-import {ICompilerConstructor, ICompileRequest} from './interfaces';
+import {CompilationResult, ICompiler, ICompilerConstructor, ICompileRequest, ICompileResponse, ProcessState} from './interfaces';
 import {cerr, enableDebug} from '../utils';
 import {CompressCssCompiler} from './CompressCssCompiler';
-
-export const MESSAGE_PROCESS_COMPLETED = 'done';
-export const MESSAGE_PROCESS_FAILED = 'failed';
 
 /* ==================
  *      This file will be called as main process by `ExecutorService` as specified by
@@ -19,23 +16,30 @@ export const MESSAGE_PROCESS_FAILED = 'failed';
 if (require.main === module) {
     process.on('message', (request: ICompileRequest) => {
         handleRequest(request)
-            .then(() => {
+            .then((result) => {
                 if (!process.send) {
                     throw Error('must be called as a worker');
                 }
-                process.send(MESSAGE_PROCESS_COMPLETED);
+                const response: ICompileResponse = {
+                    state: ProcessState.DONE,
+                    result
+                };
+                process.send(response);
             })
             .catch((e) => {
                 console.error();
                 console.error(cerr`${e}`);
                 console.error();
                 if (process.send) {
-                    process.send(MESSAGE_PROCESS_FAILED);
+                    const response: ICompileResponse = {
+                        state: ProcessState.FAILED
+                    };
+                    process.send(response);
                 }
             });
     });
 
-    function handleRequest(request: ICompileRequest): Promise<void> {
+    function handleRequest(request: ICompileRequest): Promise<CompilationResult> {
         enableDebug(request.verbose);
 
         // verify that all required values are present
@@ -55,7 +59,7 @@ if (require.main === module) {
             throw Error(`unknown compile type - neither ts nor less`);
         }
 
-        let compiler;
+        let compiler: ICompiler;
         try {
             compiler = new CompilerConstructor(
                 request.pluginName,

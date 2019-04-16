@@ -3,7 +3,7 @@ import * as path from 'path';
 import {promisify} from 'util';
 import * as less from 'less';
 
-import {ICompiler} from './interfaces';
+import {CompilationResult, ICompiler} from './interfaces';
 import {cerr, cgreen, formatDuration, GREEN_CHECK} from '../utils';
 import {CompressCssCompiler} from './CompressCssCompiler';
 import Options = Less.Options;
@@ -32,7 +32,7 @@ export class LessCompiler implements ICompiler {
         }
     }
 
-    compile(): Promise<void> {
+    compile(): Promise<CompilationResult> {
         const filename = path.basename(this.pathToEntryFile, '.less');
         const entryFile = path.join(this.assetsPath, LessCompiler.LESS_SOURCES_DIR, `${filename}.less`);
         const lessOutputDir = CompressCssCompiler.getCssOutputDir(this.assetsPath);
@@ -43,7 +43,7 @@ export class LessCompiler implements ICompiler {
 
         const start = new Date().getTime();
         console.log(`⟲ [${this.pluginName}] starting LESS compilation...`);
-        return new Promise<void>((resolve, reject) => {
+        return new Promise<CompilationResult>((resolve, reject) => {
             const lesscOptions: Options = {
                 filename: path.resolve(entryFile)
             };
@@ -80,7 +80,7 @@ export class LessCompiler implements ICompiler {
                         .then(() => {
                             let end = new Date().getTime();
                             console.log(GREEN_CHECK, `[${this.pluginName}] LESS finished (${formatDuration(end - start)})`);
-                            resolve();
+                            resolve(CompilationResult.CHANGED);
                         })
                         .catch((err) => {
                             console.error(cerr`${err}`);

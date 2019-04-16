@@ -9,6 +9,16 @@ export interface ICompileRequest {
     compressCss?: boolean;
 }
 
+export enum ProcessState {
+    DONE = 'done',
+    FAILED = 'failed'
+}
+
+export interface ICompileResponse {
+    state: ProcessState;
+    result?: CompilationResult;
+}
+
 export interface ICompilerConstructor {
     new(pluginName: string,
         assetsPath: string,
@@ -16,6 +26,11 @@ export interface ICompilerConstructor {
         isProduction: boolean): ICompiler;
 }
 
+export enum CompilationResult {
+    UNCHANGED = 'unchanged',
+    CHANGED = 'modified'
+}
+
 export interface ICompiler {
-    compile(): Promise<void>;
+    compile(): Promise<CompilationResult>;
 }

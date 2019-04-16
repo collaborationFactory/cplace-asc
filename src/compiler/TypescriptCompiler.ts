@@ -3,20 +3,23 @@
  */
 
 import * as path from 'path';
+import * as crypto from 'crypto';
 import {CReplacePlugin} from './CReplacePlugin';
 import * as spawn from 'cross-spawn';
 import * as webpack from 'webpack';
 import {Configuration, ExternalsElement} from 'webpack';
-import {ICompiler} from './interfaces';
+import {CompilationResult, ICompiler} from './interfaces';
 import {isFromLibrary} from '../model/utils';
 import {cgreen, debug, formatDuration, GREEN_CHECK, isDebugEnabled} from '../utils';
 import * as fs from 'fs';
 import * as copyFiles from 'copyfiles';
+import * as glob from 'glob';
 
 export class TypescriptCompiler implements ICompiler {
     private static readonly ENTRY = 'app.js';
     private static readonly DEST_DIR = 'generated_js';
     private static readonly STATIC_IMPORT_EXTENSIONS = 'html|htm';
+    private static readonly HASH_FILE = 'typings.hash';
 
     private readonly externals: ExternalsElement[] = [{
         d3: 'd3',
@@ -35,7 +38,7 @@ export class TypescriptCompiler implements ICompiler {
         return path.resolve(assetsPath, this.DEST_DIR);
     }
 
-    async compile(): Promise<void> {
+    async compile(): Promise<CompilationResult> {
         const start = new Date().getTime();
         console.log(`⟲ [${this.pluginName}] starting TypeScript compilation...`);
         this.runTsc();
@@ -45,6 +48,19 @@ export class TypescriptCompiler implements ICompiler {
         await this.runWebpack();
         end = new Date().getTime();
         console.log(GREEN_CHECK, `[${this.pluginName}] TypeScript finished (${formatDuration(end - start)})`);
+
+        try {
+            const oldHash = this.readCompilationHash();
+            const newHash = await this.computeAndUpdateCompilationHash();
+            debug(`(TypescriptCompiler) [${this.pluginName}] Old hash: ${oldHash} - New hash: ${newHash}`);
+            if (newHash && oldHash === newHash) {
+                console.log(cgreen`⇢`, `[${this.pluginName}] TypeScript API did not change, no recompilation of dependants required`);
+                return CompilationResult.UNCHANGED;
+            }
+        } catch (e) {
+            debug(`(TypescriptCompiler) [${this.pluginName}] Failed to get and compute hashes: ${e}`);
+        }
+        return CompilationResult.CHANGED;
     }
 
     private runTsc(): void {
@@ -186,6 +202,47 @@ export class TypescriptCompiler implements ICompiler {
                     reject(error);
                 } else {
                     resolve();
+                }
+            });
+        });
+    }
+
+    private getHashFilePath(): string {
+        return path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR, TypescriptCompiler.HASH_FILE);
+    }
+
+    private readCompilationHash(): string | null {
+        const hashPath = this.getHashFilePath();
+        if (fs.existsSync(hashPath)) {
+            return fs.readFileSync(hashPath, {encoding: 'utf8'});
+        } else {
+            return null;
+        }
+    }
+
+    private computeAndUpdateCompilationHash(): Promise<string> {
+        const generatedJsPath = path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR);
+        const hashPath = this.getHashFilePath();
+
+        return new Promise((resolve, reject) => {
+            const hash = crypto.createHash('sha256');
+            glob(`${generatedJsPath}/**/*.d.ts`, {}, (err, files) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                files.forEach(f => {
+                    const data = fs.readFileSync(f);
+                    hash.update(data);
+                });
+
+                const newHash = hash.digest('hex');
+                try {
+                    fs.writeFileSync(hashPath, newHash, {encoding: 'utf8'});
+                    resolve(newHash);
+                } catch (e) {
+                    reject(e);
                 }
             });
         });

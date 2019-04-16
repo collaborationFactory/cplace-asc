@@ -107,3 +107,59 @@ For each plugin there must be one main entry file `assets/css/imports.css` which
 - Compilation is run inside a subprocess via a scheduler. Cancelling the assets compiler may leave intermediate processing steps running for a short time in the background.
 - The TypeScript compiler is the one located in the `main` repository's `node_modules` directory.
 - The `clean-css` compiler is the one located in the `main` repository's `node_modules` directory.
+
+## Known Caveats
+
+### Implicit Dependencies
+
+As of version 3.4 the TypeScript compiler supports *incremental* compilation. As such it tracks which files have to be recompiled due to changes of other source files. However, this does not cover implicit dependencies. See the following example:
+
+**types.ts**:
+```typescript
+export interface IComputationResult {
+    status: number;
+    content: string;
+}
+```
+
+**utils.ts**
+```typescript
+import { IComputationResult } from './types';
+export function computeValue(input: string): IComputationResult {
+    let result: IComputationResult;
+    // does some magic
+    // ...
+    return result;
+}
+```
+
+**component.ts**
+```typescript
+import { computeValue } from './utils';
+
+export function componentLogic(): void {
+    // does some things...
+    const result = computeValue('my complex input');
+    
+    console.log(result.status, result.content);
+}
+```
+
+As you can see in the example above, `component.ts` has an implicit dependency on `types.ts` as it has the `result` variable with an inferred type of `IComputationResult`. Changing the `IComputationResult`, e.g. by renaming content to `output`, will *not* cause a compilation error if the TypeScript compiler is running in watch mode with incremental compilation (*default behavior*). Only a full recompilation will result in the error to be detected.
+
+In order to mitigate this issue you could use the following workaround by explicitly declaring the type of the variable you store the method result in (IntelliJ provides a quickfix for this: "Specify type explicitly"):
+
+**component.ts**
+```typescript
+import { computeValue } from './utils';
+// !! See the new import making the dependency explicit
+import { IComputationResult } from './types';
+
+export function componentLogic(): void {
+    // does some things...
+    // !! See the explicit variable type
+    const result: IComputationResult = computeValue('my complex input');
+    
+    console.log(result.status, result.content);
+}
+```
