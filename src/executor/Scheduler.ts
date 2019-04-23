@@ -18,6 +18,12 @@ interface ISchedulingResult {
 }
 
 export class Scheduler {
+    private static readonly WATCH_PATTERNS = {
+        'ts': 'ts|htm?(l)',
+        'less': 'less',
+        'css': 'css'
+    };
+
     private readonly tsJobs: JobTracker;
     private readonly lessJobs: JobTracker;
     private readonly compressCssJobs: JobTracker;
@@ -234,7 +240,8 @@ export class Scheduler {
 
         const plugin = this.getPlugin(pluginName);
         const watchDir = path.join(plugin.assetsDir, type);
-        const glob = Scheduler.convertToUnixPath(`${watchDir}/**/*.${type}`);
+        const pattern = Scheduler.WATCH_PATTERNS[type];
+        const glob = Scheduler.convertToUnixPath(`${watchDir}/**/*.(${pattern})`);
         const watcher = chokidar.watch(glob);
         this.watchers[type].set(pluginName, watcher);
 
