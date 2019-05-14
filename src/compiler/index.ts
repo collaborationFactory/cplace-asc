@@ -3,10 +3,11 @@
  */
 
 import {LessCompiler} from './LessCompiler';
-import {TypescriptCompiler} from './TypescriptCompiler';
+import {TypescriptCompiler_Cplace} from './TypescriptCompiler_Cplace';
 import {CompilationResult, ICompiler, ICompilerConstructor, ICompileRequest, ICompileResponse, ProcessState} from './interfaces';
 import {cerr, enableDebug} from '../utils';
 import {CompressCssCompiler} from './CompressCssCompiler';
+import {TypescriptCompiler_E2E} from "./TypescriptCompiler_E2E";
 
 /* ==================
  *      This file will be called as main process by `ExecutorService` as specified by
@@ -49,7 +50,9 @@ if (require.main === module) {
 
         let CompilerConstructor: ICompilerConstructor;
         if (request.ts) {
-            CompilerConstructor = TypescriptCompiler;
+            CompilerConstructor = TypescriptCompiler_Cplace;
+        } else if (request.tsE2E) {
+            CompilerConstructor = TypescriptCompiler_E2E;
         } else if (request.less) {
             CompilerConstructor = LessCompiler;
         } else if (request.compressCss) {

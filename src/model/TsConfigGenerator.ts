@@ -7,15 +7,14 @@ import * as fs from 'fs';
 import CplacePlugin from './CplacePlugin';
 import {cerr, debug} from '../utils';
 
-const PLATFORM_PLUGIN = 'cf.cplace.platform';
 
 interface IExtraTypes {
     definitions: string[];
 }
 
 export class TsConfigGenerator {
-    // @todo: maybe define a ts config interface
     private tsConfig: any;
+    public static readonly PLATFORM_PLUGIN = 'cf.cplace.platform';
 
     constructor(private readonly plugin: CplacePlugin,
                 private readonly dependencies: CplacePlugin[],
@@ -29,11 +28,11 @@ export class TsConfigGenerator {
             !this.localOnly && this.plugin.repo !== 'main' ? path.join('..', 'main') : ''
         );
 
-        const relPathToPlatform = path.join(relRepoRootPrefix, CplacePlugin.getPluginPathRelativeToRepo(this.plugin.repo, PLATFORM_PLUGIN, 'main', this.localOnly));
+        const relPathToPlatform = path.join(relRepoRootPrefix, CplacePlugin.getPluginPathRelativeToRepo(this.plugin.repo, TsConfigGenerator.PLATFORM_PLUGIN, 'main', this.localOnly));
         const relPathToPlatformTs = path.join(relPathToPlatform, 'assets', 'ts');
 
         let defaultPaths = {
-            ...TsConfigGenerator.getPathDependency(PLATFORM_PLUGIN, relPathToPlatformTs),
+            ...TsConfigGenerator.getPathDependency(TsConfigGenerator.PLATFORM_PLUGIN, relPathToPlatformTs),
             '*': [
                 '*',
                 `${pathToMain}/node_modules/@types/*`,
@@ -49,7 +48,7 @@ export class TsConfigGenerator {
         };
         const {paths, refs} = this.dependencies.reduce((acc, dependency) => {
             // we do not add platform paths and references here as some modules might not have direct dependency on platform
-            if (dependency.pluginName === PLATFORM_PLUGIN) {
+            if (dependency.pluginName === TsConfigGenerator.PLATFORM_PLUGIN) {
                 return acc;
             }
 
@@ -92,7 +91,7 @@ export class TsConfigGenerator {
             ]
         };
 
-        if (this.plugin.pluginName !== PLATFORM_PLUGIN) {
+        if (this.plugin.pluginName !== TsConfigGenerator.PLATFORM_PLUGIN) {
             this.tsConfig.compilerOptions.paths = paths;
             this.tsConfig.references = refs;
         }

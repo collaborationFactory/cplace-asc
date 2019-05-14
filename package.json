@@ -10,7 +10,7 @@
     "test": "echo \"SSSSHhhhhh... no test specified\"",
     "dev:tsc": "tsc",
     "clean": "rimraf dist/ *.tgz",
-    "prepare": "npm run clean && npm run dev:tsc"
+    "prepare": "npm run clean && npm run dev:tsc && chmod +x ./dist/index.js"
   },
   "bin": {
     "cplace-asc": "dist/index.js"

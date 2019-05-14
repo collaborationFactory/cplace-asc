@@ -15,7 +15,7 @@ import * as fs from 'fs';
 import * as copyFiles from 'copyfiles';
 import * as glob from 'glob';
 
-export class TypescriptCompiler implements ICompiler {
+export class TypescriptCompiler_Cplace implements ICompiler {
     private static readonly ENTRY = 'app.js';
     private static readonly DEST_DIR = 'generated_js';
     private static readonly STATIC_IMPORT_EXTENSIONS = 'html|htm';
@@ -84,7 +84,7 @@ export class TypescriptCompiler implements ICompiler {
     private runWebpack() {
         return new Promise((resolve, reject) => {
             // remove previously generated webpack bundle if exists (so it does not append)
-            const bundleFile = path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR, 'tsc.js');
+            const bundleFile = path.resolve(this.assetsPath, TypescriptCompiler_Cplace.DEST_DIR, 'tsc.js');
             if (fs.existsSync(bundleFile)) {
                 fs.unlinkSync(bundleFile);
             }
@@ -104,9 +104,9 @@ export class TypescriptCompiler implements ICompiler {
 
     private getWebpackConfig(): Configuration {
         const config: Configuration = {
-            context: path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR),
+            context: path.resolve(this.assetsPath, TypescriptCompiler_Cplace.DEST_DIR),
             entry: {
-                tsc: './' + TypescriptCompiler.ENTRY
+                tsc: './' + TypescriptCompiler_Cplace.ENTRY
             },
             externals: this.externals,
             mode: 'development',
@@ -118,12 +118,12 @@ export class TypescriptCompiler implements ICompiler {
                         use: [{
                             loader: path.resolve(__filename, '../contextInjectorLoader.js'),
                             options: {
-                                entry: TypescriptCompiler.ENTRY
+                                entry: TypescriptCompiler_Cplace.ENTRY
                             }
                         }]
                     },
                     {
-                        test: new RegExp(`\.(${TypescriptCompiler.STATIC_IMPORT_EXTENSIONS})$`),
+                        test: new RegExp(`\.(${TypescriptCompiler_Cplace.STATIC_IMPORT_EXTENSIONS})$`),
                         use: [{
                             loader: path.resolve(__filename, '../../../node_modules/raw-loader')
                         }]
@@ -132,7 +132,7 @@ export class TypescriptCompiler implements ICompiler {
             },
             output: {
                 filename: '[name].js',
-                path: path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR),
+                path: path.resolve(this.assetsPath, TypescriptCompiler_Cplace.DEST_DIR),
                 pathinfo: true,
                 /**
                  * The plugin will be exported as a webpackContext with exported name in the app.ts.
@@ -187,8 +187,8 @@ export class TypescriptCompiler implements ICompiler {
 
     private async copyStaticFiles(): Promise<void> {
         const tsAssetsPath = path.resolve(this.assetsPath, 'ts');
-        const srcGlob = `${tsAssetsPath}/**/*.+(${TypescriptCompiler.STATIC_IMPORT_EXTENSIONS})`;
-        const dest = path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR) + path.sep;
+        const srcGlob = `${tsAssetsPath}/**/*.+(${TypescriptCompiler_Cplace.STATIC_IMPORT_EXTENSIONS})`;
+        const dest = path.resolve(this.assetsPath, TypescriptCompiler_Cplace.DEST_DIR) + path.sep;
         const upLength = tsAssetsPath.split(path.sep).length;
         const options = {
             up: upLength,
@@ -208,7 +208,7 @@ export class TypescriptCompiler implements ICompiler {
     }
 
     private getHashFilePath(): string {
-        return path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR, TypescriptCompiler.HASH_FILE);
+        return path.resolve(this.assetsPath, TypescriptCompiler_Cplace.DEST_DIR, TypescriptCompiler_Cplace.HASH_FILE);
     }
 
     private readCompilationHash(): string | null {
@@ -221,7 +221,7 @@ export class TypescriptCompiler implements ICompiler {
     }
 
     private computeAndUpdateCompilationHash(): Promise<string> {
-        const generatedJsPath = path.resolve(this.assetsPath, TypescriptCompiler.DEST_DIR);
+        const generatedJsPath = path.resolve(this.assetsPath, TypescriptCompiler_Cplace.DEST_DIR);
         const hashPath = this.getHashFilePath();
 
         return new Promise((resolve, reject) => {
