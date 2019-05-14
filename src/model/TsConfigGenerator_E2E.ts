@@ -28,11 +28,12 @@ export class TsConfigGenerator_E2E implements ITSConfigGenerator {
             compilerOptions: {
                 target: 'es5',
                 module: 'commonjs',
-                outDir: "../generated_e2e",
+                baseUrl: '.',
+                outDir: '../generated_e2e',
                 esModuleInterop: true
             },
             include: [
-                "./specs/**/*.ts"
+                './specs/**/*.ts'
             ]
         };
 
