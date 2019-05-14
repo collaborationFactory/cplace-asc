@@ -20,6 +20,7 @@ interface ISchedulingResult {
 export class Scheduler {
     private static readonly WATCH_PATTERNS = {
         'ts': 'ts|htm?(l)',
+        'tsE2E': 'ts',
         'less': 'less',
         'css': 'css'
     };
@@ -31,6 +32,7 @@ export class Scheduler {
 
     private watchers = {
         'ts': new Map<string, FSWatcher>(),
+        'tsE2E': new Map<string, FSWatcher>(),
         'less': new Map<string, FSWatcher>(),
         'css': new Map<string, FSWatcher>()
     };
@@ -265,7 +267,10 @@ export class Scheduler {
         }
 
         const plugin = this.getPlugin(pluginName);
-        const watchDir = path.join(plugin.assetsDir, type);
+        let watchDir = path.join(plugin.assetsDir, type);
+        if (type === 'tsE2E') {
+            watchDir = path.join(plugin.assetsDir, 'e2e');
+        }
         const pattern = Scheduler.WATCH_PATTERNS[type];
         const glob = Scheduler.convertToUnixPath(`${watchDir}/**/*.(${pattern})`);
         const watcher = chokidar.watch(glob);
@@ -273,6 +278,9 @@ export class Scheduler {
 
         let jobTracker;
         switch (type) {
+            case 'tsE2E':
+                jobTracker = this.tsE2EJobs;
+                break;
             case 'ts':
                 jobTracker = this.tsJobs;
                 break;
