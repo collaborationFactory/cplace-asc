@@ -192,7 +192,7 @@ export class AssetsCompiler {
             }
             if (project.hasTypeScriptE2EAssets) {
                 if (!this.runConfig.production) {
-                    project.generateTsE2EConfig(p => projects.get(p), this.runConfig.localOnly)
+                    project.generateTsE2EConfig(p => projects.get(p), false, this.runConfig.localOnly)
                 }
             }
         });
