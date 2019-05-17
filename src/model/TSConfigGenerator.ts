@@ -5,7 +5,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import CplacePlugin from './CplacePlugin';
-import {cerr, debug} from '../utils';
+import {debug} from '../utils';
 import {ConfigGenerator, ITSConfigGenerator} from "../compiler/interfaces";
 import {TsConfigGenerator_Cplace} from "./TsConfigGenerator_Cplace";
 
@@ -22,9 +22,6 @@ export class TSConfigGenerator implements ITSConfigGenerator {
                 protected readonly dependencies: CplacePlugin[],
                 protected readonly localOnly: boolean,
                 protected readonly isProduction: boolean) {
-        dependencies.forEach((dependency) => {
-            console.log('dependency.pluginName '+dependency.pluginName)
-        });
         this.pathToMain = TSConfigGenerator.pathToMain(this.localOnly, this.plugin.repo);
         this.relPathToPlatform = path.join(ConfigGenerator.REL_REPO_ROOT_PREFIX, CplacePlugin.getPluginPathRelativeToRepo(this.plugin.repo, ConfigGenerator.PLATFORM_PLUGIN, 'main', this.localOnly));
         if (this instanceof TsConfigGenerator_Cplace) {
@@ -51,9 +48,6 @@ export class TSConfigGenerator implements ITSConfigGenerator {
     }
 
     protected saveConfig(): void {
-        /* this is done sync for now, 'cause when a error occurs later in the execution
-           and is not caught, it will fail the file generation
-         */
         const content = JSON.stringify(this.tsConfig, null, 4);
         fs.writeFileSync(
             this.getTSConfigPath(),

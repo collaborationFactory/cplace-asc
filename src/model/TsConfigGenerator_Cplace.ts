@@ -5,7 +5,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import CplacePlugin from './CplacePlugin';
-import {cerr, debug} from '../utils';
+import {cerr} from '../utils';
 import {ConfigGenerator} from "../compiler/interfaces";
 import {TSConfigGenerator} from "./TSConfigGenerator";
 
@@ -20,7 +20,9 @@ export class TsConfigGenerator_Cplace extends TSConfigGenerator {
         let defaultPaths = {
             ...TSConfigGenerator.getPathDependency(ConfigGenerator.PLATFORM_PLUGIN, this.relPathToPlatformTs),
             '*': [
-                '*'
+                '*',
+                `${this.pathToMain}/node_modules/@types/*`,
+                `${this.pathToMain}/cf.cplace.platform/assets/@cplaceTypes/*`
             ]
         };
 
