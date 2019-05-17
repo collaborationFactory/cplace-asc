@@ -7,14 +7,15 @@ import * as fs from 'fs';
 import CplacePlugin from './CplacePlugin';
 import {cerr} from '../utils';
 import {ConfigGenerator} from "../compiler/interfaces";
-import {TSConfigGenerator} from "./TSConfigGenerator";
+import {AbstractTSConfigGenerator} from "./AbstractTSConfigGenerator";
+import {CplaceTypescriptCompiler} from '../compiler/CplaceTypescriptCompiler';
 
 
 interface IExtraTypes {
     definitions: string[];
 }
 
-export class CplaceTsConfigGenerator extends TSConfigGenerator {
+export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
 
     constructor(plugin: CplacePlugin,
                 dependencies: CplacePlugin[],
@@ -24,49 +25,9 @@ export class CplaceTsConfigGenerator extends TSConfigGenerator {
     }
 
     public createConfigAndGetPath(): string {
-        let defaultPaths = {
-            ...TSConfigGenerator.getPathDependency(ConfigGenerator.PLATFORM_PLUGIN, this.relPathToPlatformTs),
-            '*': [
-                '*',
-                `${this.pathToMain}/node_modules/@types/*`,
-                `${this.pathToMain}/cf.cplace.platform/assets/@cplaceTypes/*`
-            ]
-        };
+        const {paths, refs} = this.getPathsAndRefs();
 
-        const defaultPathsAndRefs = {
-            paths: defaultPaths,
-            refs: [{
-                path: this.relPathToPlatformTs
-            }]
-        };
-        const {paths, refs} = this.dependencies.reduce((acc, dependency) => {
-            // we do not add platform paths and references here as some modules might not have direct dependency on platform
-            if (dependency.pluginName === ConfigGenerator.PLATFORM_PLUGIN) {
-                return acc;
-            }
-
-            const relPathToDependency = path.join(
-                ConfigGenerator.REL_REPO_ROOT_PREFIX,
-                dependency.getPluginPathRelativeFromRepo(this.plugin.repo, this.localOnly)
-            );
-            const relPathToDependencyTs = path.join(relPathToDependency, 'assets', 'ts');
-
-            const newPath = CplaceTsConfigGenerator.getPathDependency(dependency.pluginName, relPathToDependencyTs);
-            const newRef = {path: relPathToDependencyTs};
-
-            return {
-                paths: {
-                    ...acc.paths,
-                    ...newPath
-                },
-                refs: [
-                    ...acc.refs,
-                    newRef
-                ]
-            };
-        }, defaultPathsAndRefs);
-
-        const extraTypes = CplaceTsConfigGenerator.checkExtraTypes(this.plugin, this.dependencies);
+        const extraTypes = CplaceTSConfigGenerator.checkExtraTypes(this.plugin, this.dependencies);
         const additionalIncludes = extraTypes === null ? [] : extraTypes.definitions;
 
         this.tsConfig = {
@@ -74,7 +35,7 @@ export class CplaceTsConfigGenerator extends TSConfigGenerator {
             compilerOptions: {
                 rootDir: '.',
                 baseUrl: '.',
-                outDir: '../generated_js',
+                outDir: `../${CplaceTypescriptCompiler.DEST_DIR}`,
                 sourceMap: !this.isProduction,
                 declarationMap: !this.isProduction
             },
@@ -85,16 +46,16 @@ export class CplaceTsConfigGenerator extends TSConfigGenerator {
         };
 
         if (this.plugin.pluginName !== ConfigGenerator.PLATFORM_PLUGIN) {
+            paths['*'].push(
+                `${this.pathToMain}/node_modules/@types/*`,
+                `${this.pathToMain}/cf.cplace.platform/assets/@cplaceTypes/*`
+            );
             this.tsConfig.compilerOptions.paths = paths;
             this.tsConfig.references = refs;
         }
 
         this.saveConfig();
         return this.getTSConfigPath();
-    }
-
-    public getTSConfigPath(): string {
-        return path.join(this.plugin.assetsDir, 'ts', ConfigGenerator.TS_CONFIG_JSON);
     }
 
     private static checkExtraTypes(plugin: CplacePlugin, dependencies: CplacePlugin[]): IExtraTypes | null {

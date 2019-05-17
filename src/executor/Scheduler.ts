@@ -83,7 +83,6 @@ export class Scheduler {
         }
         const nextTsE2EPlugin = tsE2ESchedulingResult.scheduledPlugin;
 
-
         const tsSchedulingResult = this.getAndScheduleNextJob(this.tsJobs, 'ts', 'ts');
         if (tsSchedulingResult.backoff) {
             return;

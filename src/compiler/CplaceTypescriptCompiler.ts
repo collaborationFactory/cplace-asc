@@ -3,23 +3,19 @@
  */
 
 import * as path from 'path';
-import * as crypto from 'crypto';
 import {CReplacePlugin} from './CReplacePlugin';
-import * as spawn from 'cross-spawn';
 import * as webpack from 'webpack';
 import {Configuration, ExternalsElement} from 'webpack';
-import {CompilationResult, ICompiler} from './interfaces';
 import {isFromLibrary} from '../model/utils';
-import {cgreen, debug, formatDuration, GREEN_CHECK, isDebugEnabled} from '../utils';
+import {debug, isDebugEnabled} from '../utils';
 import * as fs from 'fs';
 import * as copyFiles from 'copyfiles';
-import * as glob from 'glob';
+import {AbstractTypescriptCompiler} from './AbstractTypescriptCompiler';
 
-export class CplaceTypescriptCompiler implements ICompiler {
+export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
+    public static readonly DEST_DIR = 'generated_js';
     private static readonly ENTRY = 'app.js';
-    private static readonly DEST_DIR = 'generated_js';
     private static readonly STATIC_IMPORT_EXTENSIONS = 'html|htm';
-    private static readonly HASH_FILE = 'typings.hash';
 
     private readonly externals: ExternalsElement[] = [{
         d3: 'd3',
@@ -28,57 +24,24 @@ export class CplaceTypescriptCompiler implements ICompiler {
         draggable: 'Draggable'
     }, this.resolveWebpackExternal.bind(this)];
 
-    constructor(private readonly pluginName: string,
-                private readonly assetsPath: string,
-                private readonly mainRepoDir: string,
-                private readonly isProduction: boolean) {
+    constructor(pluginName: string,
+                assetsPath: string,
+                mainRepoDir: string,
+                isProduction: boolean) {
+        super(pluginName, assetsPath, mainRepoDir, isProduction, 'ts', CplaceTypescriptCompiler.DEST_DIR);
     }
 
     public static getJavaScriptOutputDir(assetsPath: string): string {
         return path.resolve(assetsPath, this.DEST_DIR);
     }
 
-    async compile(): Promise<CompilationResult> {
-        const start = new Date().getTime();
-        console.log(`⟲ [${this.pluginName}] starting TypeScript compilation...`);
-        this.runTsc();
-        await this.copyStaticFiles();
-        let end = new Date().getTime();
-        console.log(cgreen`⇢`, `[${this.pluginName}] TypeScript compiled, starting bundling... (${formatDuration(end - start)})`);
-        await this.runWebpack();
-        end = new Date().getTime();
-        console.log(GREEN_CHECK, `[${this.pluginName}] TypeScript finished (${formatDuration(end - start)})`);
-
-        try {
-            const oldHash = this.readCompilationHash();
-            const newHash = await this.computeAndUpdateCompilationHash();
-            debug(`(TypescriptCompiler) [${this.pluginName}] Old hash: ${oldHash} - New hash: ${newHash}`);
-            if (newHash && oldHash === newHash) {
-                console.log(cgreen`⇢`, `[${this.pluginName}] TypeScript API did not change, no recompilation of dependants required`);
-                return CompilationResult.UNCHANGED;
-            }
-        } catch (e) {
-            debug(`(TypescriptCompiler) [${this.pluginName}] Failed to get and compute hashes: ${e}`);
-        }
-        return CompilationResult.CHANGED;
+    protected getJobName(): string {
+        return 'cplace TypeScript (UI)';
     }
 
-    private runTsc(): void {
-        const tsAssetsPath = path.resolve(this.assetsPath, 'ts');
-        const tscExecutable = this.getTscExecutable();
-        let args = ['--project', tsAssetsPath];
-        if (isDebugEnabled()) {
-            args.push('--extendedDiagnostics');
-        }
-        debug(`(TypescriptCompiler) [${this.pluginName}] executing command '${tscExecutable} ${args.join(' ')}'`);
-        const result = spawn.sync(tscExecutable, args, {
-            stdio: [process.stdin, process.stdout, process.stderr]
-        });
-
-        debug(`(TypescriptCompiler) [${this.pluginName}] tsc return code: ${result.status}`);
-        if (result.status !== 0) {
-            throw Error(`[${this.pluginName}] TypeScript compilation failed...`);
-        }
+    protected async doPostProcessing(): Promise<void> {
+        await this.copyStaticFiles();
+        await this.runWebpack();
     }
 
     private runWebpack() {
@@ -175,16 +138,6 @@ export class CplaceTypescriptCompiler implements ICompiler {
         callback();
     }
 
-    private getTscExecutable(): string {
-        return path.resolve(
-            this.mainRepoDir,
-            'node_modules',
-            'typescript',
-            'bin',
-            'tsc'
-        );
-    }
-
     private async copyStaticFiles(): Promise<void> {
         const tsAssetsPath = path.resolve(this.assetsPath, 'ts');
         const srcGlob = `${tsAssetsPath}/**/*.+(${CplaceTypescriptCompiler.STATIC_IMPORT_EXTENSIONS})`;
@@ -202,47 +155,6 @@ export class CplaceTypescriptCompiler implements ICompiler {
                     reject(error);
                 } else {
                     resolve();
-                }
-            });
-        });
-    }
-
-    private getHashFilePath(): string {
-        return path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, CplaceTypescriptCompiler.HASH_FILE);
-    }
-
-    private readCompilationHash(): string | null {
-        const hashPath = this.getHashFilePath();
-        if (fs.existsSync(hashPath)) {
-            return fs.readFileSync(hashPath, {encoding: 'utf8'});
-        } else {
-            return null;
-        }
-    }
-
-    private computeAndUpdateCompilationHash(): Promise<string> {
-        const generatedJsPath = path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR);
-        const hashPath = this.getHashFilePath();
-
-        return new Promise((resolve, reject) => {
-            const hash = crypto.createHash('sha256');
-            glob(`${generatedJsPath}/**/*.d.ts`, {}, (err, files) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-
-                files.forEach(f => {
-                    const data = fs.readFileSync(f);
-                    hash.update(data);
-                });
-
-                const newHash = hash.digest('hex');
-                try {
-                    fs.writeFileSync(hashPath, newHash, {encoding: 'utf8'});
-                    resolve(newHash);
-                } catch (e) {
-                    reject(e);
                 }
             });
         });

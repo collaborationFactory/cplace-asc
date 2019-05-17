@@ -4,13 +4,13 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
-import {CplaceTsConfigGenerator} from './CplaceTsConfigGenerator';
+import {CplaceTSConfigGenerator} from './CplaceTSConfigGenerator';
 import {cerr, debug, GREEN_CHECK} from '../utils';
 import {ImlParser} from './ImlParser';
 import * as rimraf from 'rimraf';
 import {CplaceTypescriptCompiler} from '../compiler/CplaceTypescriptCompiler';
 import {CompressCssCompiler} from '../compiler/CompressCssCompiler';
-import {E2ETsConfigGenerator} from "./E2ETsConfigGenerator";
+import {E2ETSConfigGenerator} from "./E2ETSConfigGenerator";
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined
@@ -85,7 +85,7 @@ export default class CplacePlugin {
             })
             .filter(p => p.hasTypeScriptAssets);
 
-        const tsConfigGenerator = new CplaceTsConfigGenerator(this, dependenciesWithTypeScript, localOnly, isProduction);
+        const tsConfigGenerator = new CplaceTSConfigGenerator(this, dependenciesWithTypeScript, localOnly, isProduction);
         const tsconfigPath = tsConfigGenerator.createConfigAndGetPath();
 
         if (!fs.existsSync(tsconfigPath)) {
@@ -100,8 +100,8 @@ export default class CplacePlugin {
         if (!this.hasTypeScriptE2EAssets) {
             throw Error(`[${this.pluginName}] plugin does not have TypeScript E2E assets`);
         }
-        const tsConfigGenerator_E2E = new E2ETsConfigGenerator(this, [], localOnly, isProduction);
-        const tsconfigPath = tsConfigGenerator_E2E.createConfigAndGetPath();
+        const tsConfigGenerator = new E2ETSConfigGenerator(this, [], localOnly, isProduction);
+        const tsconfigPath = tsConfigGenerator.createConfigAndGetPath();
 
         if (!fs.existsSync(tsconfigPath)) {
             console.error(cerr`[${this.pluginName}] Could not generate tsconfig E2E file...`);
