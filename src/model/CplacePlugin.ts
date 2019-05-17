@@ -4,13 +4,13 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
-import {TsConfigGenerator_Cplace} from './TsConfigGenerator_Cplace';
+import {CplaceTsConfigGenerator} from './CplaceTsConfigGenerator';
 import {cerr, debug, GREEN_CHECK} from '../utils';
 import {ImlParser} from './ImlParser';
 import * as rimraf from 'rimraf';
-import {TypescriptCompiler_Cplace} from '../compiler/TypescriptCompiler_Cplace';
+import {CplaceTypescriptCompiler} from '../compiler/CplaceTypescriptCompiler';
 import {CompressCssCompiler} from '../compiler/CompressCssCompiler';
-import {TsConfigGenerator_E2E} from "./TsConfigGenerator_E2E";
+import {E2ETsConfigGenerator} from "./E2ETsConfigGenerator";
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined
@@ -85,7 +85,7 @@ export default class CplacePlugin {
             })
             .filter(p => p.hasTypeScriptAssets);
 
-        const tsConfigGenerator = new TsConfigGenerator_Cplace(this, dependenciesWithTypeScript, localOnly, isProduction);
+        const tsConfigGenerator = new CplaceTsConfigGenerator(this, dependenciesWithTypeScript, localOnly, isProduction);
         const tsconfigPath = tsConfigGenerator.createConfigAndGetPath();
 
         if (!fs.existsSync(tsconfigPath)) {
@@ -100,7 +100,7 @@ export default class CplacePlugin {
         if (!this.hasTypeScriptE2EAssets) {
             throw Error(`[${this.pluginName}] plugin does not have TypeScript E2E assets`);
         }
-        const tsConfigGenerator_E2E = new TsConfigGenerator_E2E(this, [], localOnly, isProduction);
+        const tsConfigGenerator_E2E = new E2ETsConfigGenerator(this, [], localOnly, isProduction);
         const tsconfigPath = tsConfigGenerator_E2E.createConfigAndGetPath();
 
         if (!fs.existsSync(tsconfigPath)) {
@@ -118,7 +118,7 @@ export default class CplacePlugin {
             promises.push(this.removeDir(generatedCss));
         }
         if (this.hasTypeScriptAssets) {
-            const generatedJs = TypescriptCompiler_Cplace.getJavaScriptOutputDir(this.assetsDir);
+            const generatedJs = CplaceTypescriptCompiler.getJavaScriptOutputDir(this.assetsDir);
             promises.push(this.removeDir(generatedJs));
         }
         await Promise.all(promises);

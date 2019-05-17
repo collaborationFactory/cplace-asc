@@ -10,17 +10,13 @@ import {cgreen, debug, formatDuration, GREEN_CHECK, isDebugEnabled} from '../uti
 import * as fs from 'fs';
 import * as glob from 'glob';
 
-export class TypescriptCompiler_E2E implements ICompiler {
+export class E2ETypescriptCompiler implements ICompiler {
     private static readonly DEST_DIR = 'generated_e2e';
     private static readonly HASH_FILE = 'typings.hash';
 
     constructor(private readonly pluginName: string,
                 private readonly assetsPath: string,
                 private readonly mainRepoDir: string) {
-    }
-
-    public static getJavaScriptOutputDir(assetsPath: string): string {
-        return path.resolve(assetsPath, this.DEST_DIR);
     }
 
     async compile(): Promise<CompilationResult> {
@@ -73,7 +69,7 @@ export class TypescriptCompiler_E2E implements ICompiler {
     }
 
     private getHashFilePath(): string {
-        return path.resolve(this.assetsPath, TypescriptCompiler_E2E.DEST_DIR, TypescriptCompiler_E2E.HASH_FILE);
+        return path.resolve(this.assetsPath, E2ETypescriptCompiler.DEST_DIR, E2ETypescriptCompiler.HASH_FILE);
     }
 
     private readCompilationHash(): string | null {
@@ -86,7 +82,7 @@ export class TypescriptCompiler_E2E implements ICompiler {
     }
 
     private computeAndUpdateCompilationHash(): Promise<string> {
-        const generatedJsPath = path.resolve(this.assetsPath, TypescriptCompiler_E2E.DEST_DIR);
+        const generatedJsPath = path.resolve(this.assetsPath, E2ETypescriptCompiler.DEST_DIR);
         const hashPath = this.getHashFilePath();
 
         return new Promise((resolve, reject) => {

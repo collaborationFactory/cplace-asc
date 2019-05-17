@@ -36,11 +36,6 @@ export interface ICompiler {
     compile(): Promise<CompilationResult>;
 }
 
-export interface ITSConfigGenerator {
-    createConfigAndGetPath(): string;
-    getTSConfigPath(): string;
-}
-
 export enum ConfigGenerator {
     PLATFORM_PLUGIN = 'cf.cplace.platform',
     PLATFORM_PLUGIN_E2E = 'cf.cplace.platformE2E',

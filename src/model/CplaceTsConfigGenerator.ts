@@ -14,7 +14,14 @@ interface IExtraTypes {
     definitions: string[];
 }
 
-export class TsConfigGenerator_Cplace extends TSConfigGenerator {
+export class CplaceTsConfigGenerator extends TSConfigGenerator {
+
+    constructor(plugin: CplacePlugin,
+                dependencies: CplacePlugin[],
+                localOnly: boolean,
+                isProduction: boolean) {
+        super(plugin, dependencies, localOnly, isProduction, 'ts');
+    }
 
     public createConfigAndGetPath(): string {
         let defaultPaths = {
@@ -44,7 +51,7 @@ export class TsConfigGenerator_Cplace extends TSConfigGenerator {
             );
             const relPathToDependencyTs = path.join(relPathToDependency, 'assets', 'ts');
 
-            const newPath = TsConfigGenerator_Cplace.getPathDependency(dependency.pluginName, relPathToDependencyTs);
+            const newPath = CplaceTsConfigGenerator.getPathDependency(dependency.pluginName, relPathToDependencyTs);
             const newRef = {path: relPathToDependencyTs};
 
             return {
@@ -59,7 +66,7 @@ export class TsConfigGenerator_Cplace extends TSConfigGenerator {
             };
         }, defaultPathsAndRefs);
 
-        const extraTypes = TsConfigGenerator_Cplace.checkExtraTypes(this.plugin, this.dependencies);
+        const extraTypes = CplaceTsConfigGenerator.checkExtraTypes(this.plugin, this.dependencies);
         const additionalIncludes = extraTypes === null ? [] : extraTypes.definitions;
 
         this.tsConfig = {

@@ -6,31 +6,23 @@ import * as path from 'path';
 import * as fs from 'fs';
 import CplacePlugin from './CplacePlugin';
 import {debug} from '../utils';
-import {ConfigGenerator, ITSConfigGenerator} from "../compiler/interfaces";
-import {TsConfigGenerator_Cplace} from "./TsConfigGenerator_Cplace";
+import {ConfigGenerator} from "../compiler/interfaces";
 
 
-export class TSConfigGenerator implements ITSConfigGenerator {
+export abstract class TSConfigGenerator {
     protected tsConfig: any;
-    protected pathToMain: string;
-    protected relPathToPlatform: string;
-    protected relPathToPlatformTs: string;
-    protected dependencyTs: string;
-
+    protected readonly pathToMain: string;
+    protected readonly relPathToPlatform: string;
+    protected readonly relPathToPlatformTs: string;
 
     constructor(protected readonly plugin: CplacePlugin,
                 protected readonly dependencies: CplacePlugin[],
                 protected readonly localOnly: boolean,
-                protected readonly isProduction: boolean) {
+                protected readonly isProduction: boolean,
+                srcFolderName: string) {
         this.pathToMain = TSConfigGenerator.pathToMain(this.localOnly, this.plugin.repo);
         this.relPathToPlatform = path.join(ConfigGenerator.REL_REPO_ROOT_PREFIX, CplacePlugin.getPluginPathRelativeToRepo(this.plugin.repo, ConfigGenerator.PLATFORM_PLUGIN, 'main', this.localOnly));
-        if (this instanceof TsConfigGenerator_Cplace) {
-            this.relPathToPlatformTs = path.join(this.relPathToPlatform, 'assets', 'ts');
-            this.dependencyTs = ConfigGenerator.PLATFORM_PLUGIN
-        } else {
-            this.relPathToPlatformTs = path.join(this.relPathToPlatform, 'assets', 'e2e');
-            this.dependencyTs = ConfigGenerator.PLATFORM_PLUGIN_E2E
-        }
+        this.relPathToPlatformTs = path.join(this.relPathToPlatform, 'assets', srcFolderName);
     }
 
     public static pathToMain(localOnly: boolean, repo: string): string {
@@ -39,13 +31,9 @@ export class TSConfigGenerator implements ITSConfigGenerator {
         );
     }
 
-    createConfigAndGetPath(): string {
-        return "";
-    }
+    public abstract createConfigAndGetPath(): string;
 
-    getTSConfigPath(): string {
-        return "";
-    }
+    public abstract getTSConfigPath(): string;
 
     protected saveConfig(): void {
         const content = JSON.stringify(this.tsConfig, null, 4);

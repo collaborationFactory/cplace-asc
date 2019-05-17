@@ -6,8 +6,16 @@ import * as path from 'path';
 import * as fs from 'fs';
 import {ConfigGenerator} from "../compiler/interfaces";
 import {TSConfigGenerator} from "./TSConfigGenerator";
+import CplacePlugin from './CplacePlugin';
 
-export class TsConfigGenerator_E2E extends TSConfigGenerator {
+export class E2ETsConfigGenerator extends TSConfigGenerator {
+
+    constructor(plugin: CplacePlugin,
+                dependencies: CplacePlugin[],
+                localOnly: boolean,
+                isProduction: boolean) {
+        super(plugin, dependencies, localOnly, isProduction, 'e2e');
+    }
 
     public createConfigAndGetPath(): string {
         this.tsConfig = {
