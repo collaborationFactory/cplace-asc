@@ -4,12 +4,14 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
-import {TsConfigGenerator} from './TsConfigGenerator';
+import * as glob from 'glob';
+import {CplaceTSConfigGenerator} from './CplaceTSConfigGenerator';
 import {cerr, debug, GREEN_CHECK} from '../utils';
 import {ImlParser} from './ImlParser';
 import * as rimraf from 'rimraf';
-import {TypescriptCompiler} from '../compiler/TypescriptCompiler';
+import {CplaceTypescriptCompiler} from '../compiler/CplaceTypescriptCompiler';
 import {CompressCssCompiler} from '../compiler/CompressCssCompiler';
+import {E2ETSConfigGenerator} from "./E2ETSConfigGenerator";
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined
@@ -31,6 +33,7 @@ export default class CplacePlugin {
     public readonly assetsDir: string;
 
     public readonly hasTypeScriptAssets: boolean;
+    public readonly hasTypeScriptE2EAssets: boolean;
     public readonly hasLessAssets: boolean;
     public readonly hasCompressCssAssets: boolean;
 
@@ -50,6 +53,12 @@ export default class CplacePlugin {
         this.repo = path.basename(path.dirname(path.resolve(pluginDir)));
         this.assetsDir = path.resolve(pluginDir, 'assets');
         this.hasTypeScriptAssets = fs.existsSync(path.resolve(this.assetsDir, 'ts'));
+        this.hasTypeScriptE2EAssets = false;
+        const e2ePath: string = path.resolve(this.assetsDir, 'e2e');
+        if (fs.existsSync(e2ePath)) {
+            this.hasTypeScriptE2EAssets = glob.sync(`${e2ePath}/**/*.ts`).length > 0;
+        }
+
         this.hasLessAssets = fs.existsSync(path.resolve(this.assetsDir, 'less'));
         this.hasCompressCssAssets = fs.existsSync(path.resolve(this.assetsDir, 'css', CompressCssCompiler.ENTRY_FILE_NAME));
     }
@@ -82,7 +91,7 @@ export default class CplacePlugin {
             })
             .filter(p => p.hasTypeScriptAssets);
 
-        const tsConfigGenerator = new TsConfigGenerator(this, dependenciesWithTypeScript, localOnly, isProduction);
+        const tsConfigGenerator = new CplaceTSConfigGenerator(this, dependenciesWithTypeScript, localOnly, isProduction);
         const tsconfigPath = tsConfigGenerator.createConfigAndGetPath();
 
         if (!fs.existsSync(tsconfigPath)) {
@@ -93,6 +102,30 @@ export default class CplacePlugin {
         }
     }
 
+    public generateTsE2EConfig(pluginResolver: ICplacePluginResolver, isProduction: boolean, localOnly: boolean): void {
+        if (!this.hasTypeScriptE2EAssets) {
+            throw Error(`[${this.pluginName}] plugin does not have TypeScript E2E assets`);
+        }
+        const dependenciesWithE2ETypeScript = this.dependencies
+            .map(pluginName => {
+                const plugin = pluginResolver(pluginName);
+                if (!plugin) {
+                    throw Error(`[${this.pluginName}] could not resolve dependency ${this.pluginName}`);
+                }
+                return plugin;
+            })
+            .filter(p => p.hasTypeScriptE2EAssets);
+        const tsConfigGenerator = new E2ETSConfigGenerator(this, dependenciesWithE2ETypeScript, localOnly, isProduction);
+        const tsconfigPath = tsConfigGenerator.createConfigAndGetPath();
+
+        if (!fs.existsSync(tsconfigPath)) {
+            console.error(cerr`[${this.pluginName}] Could not generate tsconfig E2E file...`);
+            throw Error(`[${this.pluginName}] tsconfig E2E generation failed`);
+        } else {
+            console.log(`${GREEN_CHECK} [${this.pluginName}] wrote tsconfig E2E...`);
+        }
+    }
+
     public async cleanGeneratedOutput(): Promise<void> {
         const promises: Promise<void>[] = [];
         if (this.hasLessAssets || this.hasCompressCssAssets) {
@@ -100,7 +133,7 @@ export default class CplacePlugin {
             promises.push(this.removeDir(generatedCss));
         }
         if (this.hasTypeScriptAssets) {
-            const generatedJs = TypescriptCompiler.getJavaScriptOutputDir(this.assetsDir);
+            const generatedJs = CplaceTypescriptCompiler.getJavaScriptOutputDir(this.assetsDir);
             promises.push(this.removeDir(generatedJs));
         }
         await Promise.all(promises);

@@ -151,29 +151,32 @@ export class AssetsCompiler {
         }
     }
 
+    private static getRepoRoot(runConfig: IAssetsCompilerConfiguration) {
+        return process.cwd();
+    }
+
     private setupProjects(): Map<string, CplacePlugin> {
         let knownRepoDependencies: string[];
         if (this.runConfig.localOnly) {
             knownRepoDependencies = [];
             debug(`(AssetsCompiler) Ignoring repo dependencies since localOnly execution...`);
         } else {
-            knownRepoDependencies = AssetsCompiler.getRepoDependencies();
+            knownRepoDependencies = AssetsCompiler.getRepoDependencies(this.runConfig);
             debug(`(AssetsCompiler) Detected repo dependencies: ${knownRepoDependencies.join(', ')}`);
         }
 
         const projects = new Map<string, CplacePlugin>();
-        const files = fs.readdirSync(process.cwd());
+        const files = fs.readdirSync(AssetsCompiler.getRepoRoot(this.runConfig));
 
         files.forEach(file => {
-            const filePath = path.join(process.cwd(), file);
+            const filePath = path.join(AssetsCompiler.getRepoRoot(this.runConfig), file);
             if (fs.lstatSync(filePath).isDirectory()) {
                 const potentialPluginName = path.basename(file);
                 if ((this.runConfig.rootPlugins.length === 0 || this.runConfig.rootPlugins.indexOf(potentialPluginName) !== -1)
                     && AssetsCompiler.directoryLooksLikePlugin(filePath, potentialPluginName)) {
                     AssetsCompiler.addProjectDependenciesRecursively(
                         projects, knownRepoDependencies,
-                        potentialPluginName, filePath,
-                        this.runConfig.production);
+                        potentialPluginName, filePath, this.runConfig);
                 }
             }
         });
@@ -181,6 +184,11 @@ export class AssetsCompiler {
         projects.forEach(project => {
             if (project.hasTypeScriptAssets) {
                 project.generateTsConfig(p => projects.get(p), this.runConfig.production, this.runConfig.localOnly);
+            }
+            if (project.hasTypeScriptE2EAssets) {
+                if (!this.runConfig.production) {
+                    project.generateTsE2EConfig(p => projects.get(p), false, this.runConfig.localOnly)
+                }
             }
         });
 
@@ -191,9 +199,9 @@ export class AssetsCompiler {
     private getMainRepoPath(): string | null {
         let mainRepoPath = '';
         if (this.runConfig.localOnly) {
-            mainRepoPath = path.resolve(process.cwd());
+            mainRepoPath = path.resolve(AssetsCompiler.getRepoRoot(this.runConfig));
         } else {
-            mainRepoPath = path.resolve(path.join(process.cwd(), '..', AssetsCompiler.CPLACE_REPO_NAME));
+            mainRepoPath = path.resolve(path.join(AssetsCompiler.getRepoRoot(this.runConfig), '..', AssetsCompiler.CPLACE_REPO_NAME));
         }
 
         if (!fs.existsSync(mainRepoPath)
@@ -212,22 +220,21 @@ export class AssetsCompiler {
     private static addProjectDependenciesRecursively(projects: Map<string, CplacePlugin>,
                                                      repoDependencies: string[],
                                                      pluginName: string,
-                                                     pluginPath: string,
-                                                     excludeTestDependencies: boolean) {
+                                                     pluginPath: string, runConfig: IAssetsCompilerConfiguration) {
         if (projects.has(pluginName)) {
             return;
         }
 
         const project = new CplacePlugin(pluginName, pluginPath);
-        project.parseDependencies(excludeTestDependencies);
+        project.parseDependencies(runConfig.production);
         projects.set(pluginName, project);
 
         project.dependencies.forEach(depName => {
             if (projects.has(depName)) {
                 return;
             }
-            const pluginPath = this.findPluginPath(depName, repoDependencies);
-            this.addProjectDependenciesRecursively(projects, repoDependencies, depName, pluginPath, excludeTestDependencies);
+            const pluginPath = this.findPluginPath(depName, repoDependencies, runConfig);
+            this.addProjectDependenciesRecursively(projects, repoDependencies, depName, pluginPath, runConfig);
         });
     }
 
@@ -243,8 +250,8 @@ export class AssetsCompiler {
         }
     }
 
-    private static getRepoDependencies(): string[] {
-        if (path.basename(process.cwd()) === 'main') {
+    private static getRepoDependencies(runConfig: IAssetsCompilerConfiguration): string[] {
+        if (path.basename(AssetsCompiler.getRepoRoot(runConfig)) === 'main') {
             return [];
         }
 
@@ -263,10 +270,10 @@ export class AssetsCompiler {
         }
     }
 
-    private static findPluginPath(pluginName: string, repoDependencies: string[]): string {
+    private static findPluginPath(pluginName: string, repoDependencies: string[], runconfig: IAssetsCompilerConfiguration): string {
         let relativePath = pluginName;
-        if (fs.existsSync(relativePath)) {
-            return relativePath;
+        if (fs.existsSync(path.join(AssetsCompiler.getRepoRoot(runconfig), relativePath))) {
+            return path.join(AssetsCompiler.getRepoRoot(runconfig), relativePath);
         }
         for (const repoName of repoDependencies) {
             relativePath = path.join('..', repoName, pluginName);

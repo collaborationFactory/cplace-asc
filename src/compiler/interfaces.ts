@@ -6,6 +6,7 @@ export interface ICompileRequest {
     verbose?: boolean;
     less?: boolean;
     ts?: boolean;
+    tsE2E?: boolean;
     compressCss?: boolean;
 }
 
@@ -34,3 +35,4 @@ export enum CompilationResult {
 export interface ICompiler {
     compile(): Promise<CompilationResult>;
 }
+

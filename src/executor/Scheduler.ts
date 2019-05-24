@@ -20,16 +20,19 @@ interface ISchedulingResult {
 export class Scheduler {
     private static readonly WATCH_PATTERNS = {
         'ts': 'ts|htm?(l)',
+        'tsE2E': 'ts',
         'less': 'less',
         'css': 'css'
     };
 
     private readonly tsJobs: JobTracker;
+    private readonly tsE2EJobs: JobTracker;
     private readonly lessJobs: JobTracker;
     private readonly compressCssJobs: JobTracker;
 
     private watchers = {
         'ts': new Map<string, FSWatcher>(),
+        'tsE2E': new Map<string, FSWatcher>(),
         'less': new Map<string, FSWatcher>(),
         'css': new Map<string, FSWatcher>()
     };
@@ -45,6 +48,7 @@ export class Scheduler {
                 private readonly watchFiles: boolean,
                 private readonly updateDetails?: IUpdateDetails) {
         this.tsJobs = this.createTsJobTracker();
+        this.tsE2EJobs = this.createTsE2EJobTracker();
         this.lessJobs = this.createLessJobTracker();
         this.compressCssJobs = this.createCompressCssJobTracker();
     }
@@ -73,10 +77,17 @@ export class Scheduler {
             return;
         }
 
+        const tsE2ESchedulingResult = this.getAndScheduleNextJob(this.tsE2EJobs, 'tsE2E', 'tsE2E');
+        if (tsE2ESchedulingResult.backoff) {
+            return;
+        }
+        const nextTsE2EPlugin = tsE2ESchedulingResult.scheduledPlugin;
+
         const tsSchedulingResult = this.getAndScheduleNextJob(this.tsJobs, 'ts', 'ts');
         if (tsSchedulingResult.backoff) {
             return;
         }
+
         const nextTsPlugin = tsSchedulingResult.scheduledPlugin;
 
         const lessSchedulingResult = this.getAndScheduleNextJob(this.lessJobs, 'less', 'less');
@@ -91,7 +102,7 @@ export class Scheduler {
         }
         const nextCompressCssPlugin = compressCssSchedulingResult.scheduledPlugin;
 
-        if (nextTsPlugin === null && nextLessPlugin === null && nextCompressCssPlugin === null) {
+        if (nextTsPlugin === null && nextTsE2EPlugin == null && nextLessPlugin === null && nextCompressCssPlugin === null) {
             if (!this.watchFiles && !this.completed) {
                 printUpdateDetails(this.updateDetails);
                 this.completed = true;
@@ -110,8 +121,8 @@ export class Scheduler {
     }
 
     private getAndScheduleNextJob(jobTracker: JobTracker,
-                                  compileType: 'ts' | 'less' | 'compressCss',
-                                  watchType: 'ts' | 'less' | 'css'): ISchedulingResult {
+                                  compileType: 'ts' | 'less' | 'compressCss' | 'tsE2E',
+                                  watchType: 'ts' | 'less' | 'css' | 'tsE2E'): ISchedulingResult {
         const nextPlugin = jobTracker.getNextKey();
         if (nextPlugin) {
             const plugin = this.getPlugin(nextPlugin);
@@ -189,6 +200,22 @@ export class Scheduler {
         return new JobTracker(jobs);
     }
 
+    private createTsE2EJobTracker(): JobTracker {
+        const tsE2EPlugins: CplacePlugin[] = [];
+        this.plugins.forEach(plugin => {
+            if (plugin.hasTypeScriptE2EAssets) {
+                tsE2EPlugins.push(plugin);
+            }
+        });
+
+        const jobs: JobDetails[] = tsE2EPlugins.map(plugin => new JobDetails(
+            plugin.pluginName,
+            this.filterTypeScriptE2EPlugins(plugin.dependencies),
+            this.filterTypeScriptE2EPlugins(plugin.dependents)
+        ));
+        return new JobTracker(jobs);
+    }
+
     private createLessJobTracker(): JobTracker {
         const lessPlugins: CplacePlugin[] = [];
         this.plugins.forEach(plugin => {
@@ -226,6 +253,13 @@ export class Scheduler {
             .map(p => p.pluginName);
     }
 
+    private filterTypeScriptE2EPlugins(plugins: string[]): string[] {
+        return plugins
+            .map(p => this.getPlugin(p))
+            .filter(p => p.hasTypeScriptE2EAssets)
+            .map(p => p.pluginName);
+    }
+
     private filterLessPlugins(plugins: string[]): string[] {
         return plugins
             .map(p => this.getPlugin(p))
@@ -233,20 +267,20 @@ export class Scheduler {
             .map(p => p.pluginName);
     }
 
-    private registerWatch(pluginName: string, type: 'ts' | 'less' | 'css'): void {
+    private registerWatch(pluginName: string, type: 'ts' | 'less' | 'css' | 'tsE2E'): void {
         if (!this.watchFiles) {
             return;
         }
 
         const plugin = this.getPlugin(pluginName);
-        const watchDir = path.join(plugin.assetsDir, type);
-        const pattern = Scheduler.WATCH_PATTERNS[type];
-        const glob = Scheduler.convertToUnixPath(`${watchDir}/**/*.(${pattern})`);
-        const watcher = chokidar.watch(glob);
-        this.watchers[type].set(pluginName, watcher);
 
+        let watchDir = path.join(plugin.assetsDir, type);
         let jobTracker;
         switch (type) {
+            case 'tsE2E':
+                watchDir = path.join(plugin.assetsDir, 'e2e');
+                jobTracker = this.tsE2EJobs;
+                break;
             case 'ts':
                 jobTracker = this.tsJobs;
                 break;
@@ -257,6 +291,11 @@ export class Scheduler {
                 jobTracker = this.compressCssJobs;
                 break;
         }
+
+        const pattern = Scheduler.WATCH_PATTERNS[type];
+        const glob = Scheduler.convertToUnixPath(`${watchDir}/**/*.(${pattern})`);
+        const watcher = chokidar.watch(glob);
+        this.watchers[type].set(pluginName, watcher);
 
         let ready = false;
         let debounce: Timeout;
