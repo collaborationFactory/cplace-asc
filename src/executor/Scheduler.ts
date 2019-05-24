@@ -210,8 +210,8 @@ export class Scheduler {
 
         const jobs: JobDetails[] = tsE2EPlugins.map(plugin => new JobDetails(
             plugin.pluginName,
-            [],
-            []
+            this.filterTypeScriptE2EPlugins(plugin.dependencies),
+            this.filterTypeScriptE2EPlugins(plugin.dependents)
         ));
         return new JobTracker(jobs);
     }
@@ -253,6 +253,13 @@ export class Scheduler {
             .map(p => p.pluginName);
     }
 
+    private filterTypeScriptE2EPlugins(plugins: string[]): string[] {
+        return plugins
+            .map(p => this.getPlugin(p))
+            .filter(p => p.hasTypeScriptE2EAssets)
+            .map(p => p.pluginName);
+    }
+
     private filterLessPlugins(plugins: string[]): string[] {
         return plugins
             .map(p => this.getPlugin(p))
@@ -266,18 +273,12 @@ export class Scheduler {
         }
 
         const plugin = this.getPlugin(pluginName);
-        let watchDir = path.join(plugin.assetsDir, type);
-        if (type === 'tsE2E') {
-            watchDir = path.join(plugin.assetsDir, 'e2e');
-        }
-        const pattern = Scheduler.WATCH_PATTERNS[type];
-        const glob = Scheduler.convertToUnixPath(`${watchDir}/**/*.(${pattern})`);
-        const watcher = chokidar.watch(glob);
-        this.watchers[type].set(pluginName, watcher);
 
+        let watchDir = path.join(plugin.assetsDir, type);
         let jobTracker;
         switch (type) {
             case 'tsE2E':
+                watchDir = path.join(plugin.assetsDir, 'e2e');
                 jobTracker = this.tsE2EJobs;
                 break;
             case 'ts':
@@ -290,6 +291,11 @@ export class Scheduler {
                 jobTracker = this.compressCssJobs;
                 break;
         }
+
+        const pattern = Scheduler.WATCH_PATTERNS[type];
+        const glob = Scheduler.convertToUnixPath(`${watchDir}/**/*.(${pattern})`);
+        const watcher = chokidar.watch(glob);
+        this.watchers[type].set(pluginName, watcher);
 
         let ready = false;
         let debounce: Timeout;

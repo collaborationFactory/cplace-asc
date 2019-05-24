@@ -36,9 +36,3 @@ export interface ICompiler {
     compile(): Promise<CompilationResult>;
 }
 
-export enum ConfigGenerator {
-    PLATFORM_PLUGIN = 'cf.cplace.platform',
-    PLATFORM_PLUGIN_E2E = 'cf.cplace.platformE2E',
-    REL_REPO_ROOT_PREFIX = '../../..',
-    TS_CONFIG_JSON = 'tsconfig.json'
-}

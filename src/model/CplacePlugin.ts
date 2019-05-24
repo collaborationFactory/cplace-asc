@@ -4,6 +4,7 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
+import * as glob from 'glob';
 import {CplaceTSConfigGenerator} from './CplaceTSConfigGenerator';
 import {cerr, debug, GREEN_CHECK} from '../utils';
 import {ImlParser} from './ImlParser';
@@ -52,7 +53,12 @@ export default class CplacePlugin {
         this.repo = path.basename(path.dirname(path.resolve(pluginDir)));
         this.assetsDir = path.resolve(pluginDir, 'assets');
         this.hasTypeScriptAssets = fs.existsSync(path.resolve(this.assetsDir, 'ts'));
-        this.hasTypeScriptE2EAssets = fs.existsSync(path.resolve(this.assetsDir, 'e2e/specs'));
+        this.hasTypeScriptE2EAssets = false;
+        const e2ePath: string = path.resolve(this.assetsDir, 'e2e');
+        if (fs.existsSync(e2ePath)) {
+            this.hasTypeScriptE2EAssets = glob.sync(`${e2ePath}/**/*.ts`).length > 0;
+        }
+
         this.hasLessAssets = fs.existsSync(path.resolve(this.assetsDir, 'less'));
         this.hasCompressCssAssets = fs.existsSync(path.resolve(this.assetsDir, 'css', CompressCssCompiler.ENTRY_FILE_NAME));
     }
@@ -100,7 +106,16 @@ export default class CplacePlugin {
         if (!this.hasTypeScriptE2EAssets) {
             throw Error(`[${this.pluginName}] plugin does not have TypeScript E2E assets`);
         }
-        const tsConfigGenerator = new E2ETSConfigGenerator(this, [], localOnly, isProduction);
+        const dependenciesWithE2ETypeScript = this.dependencies
+            .map(pluginName => {
+                const plugin = pluginResolver(pluginName);
+                if (!plugin) {
+                    throw Error(`[${this.pluginName}] could not resolve dependency ${this.pluginName}`);
+                }
+                return plugin;
+            })
+            .filter(p => p.hasTypeScriptE2EAssets);
+        const tsConfigGenerator = new E2ETSConfigGenerator(this, dependenciesWithE2ETypeScript, localOnly, isProduction);
         const tsconfigPath = tsConfigGenerator.createConfigAndGetPath();
 
         if (!fs.existsSync(tsconfigPath)) {

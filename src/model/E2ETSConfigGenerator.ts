@@ -2,7 +2,6 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 
-import {ConfigGenerator} from "../compiler/interfaces";
 import {AbstractTSConfigGenerator} from "./AbstractTSConfigGenerator";
 import CplacePlugin from './CplacePlugin';
 import {E2ETypescriptCompiler} from '../compiler/E2ETypescriptCompiler';
@@ -30,7 +29,7 @@ export class E2ETSConfigGenerator extends AbstractTSConfigGenerator {
             ]
         };
 
-        if (this.plugin.pluginName !== ConfigGenerator.PLATFORM_PLUGIN) {
+        if (this.plugin.pluginName !== this.platformPlugin) {
             this.tsConfig.compilerOptions.paths = paths;
         }
 

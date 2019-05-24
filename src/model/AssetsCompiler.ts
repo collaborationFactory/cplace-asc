@@ -44,11 +44,6 @@ export interface IAssetsCompilerConfiguration {
      * Indicates whether the compiler should be run in production mode
      */
     production: boolean;
-
-    /**
-     *  Points to the Cplace Repository
-     */
-    workDir: string;
 }
 
 /**
@@ -157,7 +152,7 @@ export class AssetsCompiler {
     }
 
     private static getCplaceRoot(runConfig: IAssetsCompilerConfiguration) {
-        return runConfig.workDir === null ? process.cwd() : runConfig.workDir;
+        return process.cwd();
     }
 
     private setupProjects(): Map<string, CplacePlugin> {

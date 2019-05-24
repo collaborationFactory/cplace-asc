@@ -28,7 +28,6 @@ function run(updateDetails?: IUpdateDetails) {
         --localonly, -l         Enable to not scan other directories than CWD for plugins
         --verbose, -v           Enable verbose logging
         --production, -P        Enable production mode (ignores test dependencies)
-        --workDir, -d           Directory of Cplace Project
 
 `, {
         flags: {
@@ -71,11 +70,6 @@ function run(updateDetails?: IUpdateDetails) {
                 type: 'boolean',
                 alias: 'P',
                 default: false
-            },
-            workDir: {
-                type: 'string',
-                alias: 'd',
-                default: null
             }
         }
     });
@@ -113,8 +107,7 @@ function run(updateDetails?: IUpdateDetails) {
         clean: cli.flags.clean,
         maxParallelism: !!cli.flags.threads ? cli.flags.threads : os.cpus().length - 1,
         localOnly: cli.flags.localonly,
-        production: cli.flags.production,
-        workDir: cli.flags.workDir
+        production: cli.flags.production
     };
 
     console.log(getAvailableStats());

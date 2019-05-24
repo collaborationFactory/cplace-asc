@@ -6,7 +6,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 import CplacePlugin from './CplacePlugin';
 import {cerr} from '../utils';
-import {ConfigGenerator} from "../compiler/interfaces";
 import {AbstractTSConfigGenerator} from "./AbstractTSConfigGenerator";
 import {CplaceTypescriptCompiler} from '../compiler/CplaceTypescriptCompiler';
 
@@ -45,7 +44,7 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
             ]
         };
 
-        if (this.plugin.pluginName !== ConfigGenerator.PLATFORM_PLUGIN) {
+        if (this.plugin.pluginName !== this.platformPlugin) {
             paths['*'].push(
                 `${this.pathToMain}/node_modules/@types/*`,
                 `${this.pathToMain}/cf.cplace.platform/assets/@cplaceTypes/*`
