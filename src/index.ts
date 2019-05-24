@@ -27,7 +27,7 @@ function run(updateDetails?: IUpdateDetails) {
         --threads, -t           Maximum number of threads to run in parallel
         --localonly, -l         Enable to not scan other directories than CWD for plugins
         --verbose, -v           Enable verbose logging
-        --production, -P        Enable production mode (ignores test dependencies)
+        --production, -P        Enable production mode (ignores test dependencies and E2E)
 
 `, {
         flags: {

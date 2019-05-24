@@ -151,7 +151,7 @@ export class AssetsCompiler {
         }
     }
 
-    private static getCplaceRoot(runConfig: IAssetsCompilerConfiguration) {
+    private static getRepoRoot(runConfig: IAssetsCompilerConfiguration) {
         return process.cwd();
     }
 
@@ -166,10 +166,10 @@ export class AssetsCompiler {
         }
 
         const projects = new Map<string, CplacePlugin>();
-        const files = fs.readdirSync(AssetsCompiler.getCplaceRoot(this.runConfig));
+        const files = fs.readdirSync(AssetsCompiler.getRepoRoot(this.runConfig));
 
         files.forEach(file => {
-            const filePath = path.join(AssetsCompiler.getCplaceRoot(this.runConfig), file);
+            const filePath = path.join(AssetsCompiler.getRepoRoot(this.runConfig), file);
             if (fs.lstatSync(filePath).isDirectory()) {
                 const potentialPluginName = path.basename(file);
                 if ((this.runConfig.rootPlugins.length === 0 || this.runConfig.rootPlugins.indexOf(potentialPluginName) !== -1)
@@ -199,9 +199,9 @@ export class AssetsCompiler {
     private getMainRepoPath(): string | null {
         let mainRepoPath = '';
         if (this.runConfig.localOnly) {
-            mainRepoPath = path.resolve(AssetsCompiler.getCplaceRoot(this.runConfig));
+            mainRepoPath = path.resolve(AssetsCompiler.getRepoRoot(this.runConfig));
         } else {
-            mainRepoPath = path.resolve(path.join(AssetsCompiler.getCplaceRoot(this.runConfig), '..', AssetsCompiler.CPLACE_REPO_NAME));
+            mainRepoPath = path.resolve(path.join(AssetsCompiler.getRepoRoot(this.runConfig), '..', AssetsCompiler.CPLACE_REPO_NAME));
         }
 
         if (!fs.existsSync(mainRepoPath)
@@ -250,8 +250,8 @@ export class AssetsCompiler {
         }
     }
 
-    private static getRepoDependencies(runconfig: IAssetsCompilerConfiguration): string[] {
-        if (path.basename(AssetsCompiler.getCplaceRoot(runconfig)) === 'main') {
+    private static getRepoDependencies(runConfig: IAssetsCompilerConfiguration): string[] {
+        if (path.basename(AssetsCompiler.getRepoRoot(runConfig)) === 'main') {
             return [];
         }
 
@@ -272,8 +272,8 @@ export class AssetsCompiler {
 
     private static findPluginPath(pluginName: string, repoDependencies: string[], runconfig: IAssetsCompilerConfiguration): string {
         let relativePath = pluginName;
-        if (fs.existsSync(path.join(AssetsCompiler.getCplaceRoot(runconfig), relativePath))) {
-            return path.join(AssetsCompiler.getCplaceRoot(runconfig), relativePath);
+        if (fs.existsSync(path.join(AssetsCompiler.getRepoRoot(runconfig), relativePath))) {
+            return path.join(AssetsCompiler.getRepoRoot(runconfig), relativePath);
         }
         for (const repoName of repoDependencies) {
             relativePath = path.join('..', repoName, pluginName);
