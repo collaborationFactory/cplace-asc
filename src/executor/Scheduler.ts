@@ -113,7 +113,7 @@ export class Scheduler {
                 console.log();
                 printUpdateDetails(this.updateDetails);
             }
-        } else if (nextTsPlugin || nextLessPlugin || nextCompressCssPlugin) {
+        } else if (nextTsPlugin || nextTsE2EPlugin || nextLessPlugin || nextCompressCssPlugin) {
             if (this.executor.hasCapacity()) {
                 this.scheduleNext();
             }
