@@ -7,6 +7,7 @@ import * as path from 'path';
 import CplacePlugin from './CplacePlugin';
 import {ExecutorService, Scheduler} from '../executor';
 import {cerr, cgreen, csucc, debug, formatDuration, IUpdateDetails} from '../utils';
+import {NPMResolver} from "./NPMResolver";
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -93,6 +94,8 @@ export class AssetsCompiler {
                 await plugin.cleanGeneratedOutput();
             }
         }
+
+        new NPMResolver(mainRepoPath);
 
         if (this.runConfig.onlyPreprocessing) {
             console.log();
