@@ -6,6 +6,11 @@ import * as path from "path";
 import * as fs from "fs";
 import * as crypto from "crypto";
 import * as spawn from 'cross-spawn';
+import * as chokidar from "chokidar";
+import {FSWatcher} from "chokidar";
+import {Scheduler} from "../executor";
+import {cerr, cgreen, cred} from "../utils";
+import Timeout = NodeJS.Timeout;
 
 export class NPMResolver {
     private static readonly PACKAGE_LOCK_HASH = 'package-lock.hash';
@@ -13,54 +18,119 @@ export class NPMResolver {
     private static readonly PACKAGE_JSON = 'package.json';
     private static readonly NODE_MODULES = 'node_modules';
     private mainRepo: string;
-    private hasHashFile: boolean;
     private readonly hashFilePath: string;
+    private watchers: FSWatcher[];
 
-    constructor(mainRepo: string) {
+    constructor(mainRepo: string, private watch: boolean) {
         this.mainRepo = mainRepo;
-        if (this.getPackageVersion() === '2.0.0') {
-            console.log(`(NPM) package.json version is 2.0.0 -> checking if npm install is needed`);
-            if (this.hasNoNodeModules()) {
-                console.log(`(NPM) There seems to be no installed Node Modules`);
-                this.doNpmInstall();
-            } else {
-                this.hashFilePath = this.getHashFilePath();
-                this.hasHashFile = fs.existsSync(this.hashFilePath);
-                if (this.hasHashFile) {
-                    if (this.packageLockWasUpdated()) {
-                        console.log(`(NPM) package-lock.json was updated`);
-                        this.doNpmInstall();
-                    }
-                } else {
-                    this.createHashFile();
-                    this.doNpmInstall();
-                }
+        this.hashFilePath = this.getHashFilePath();
+        this.watchers = [];
+    }
+
+    public async resolve(): Promise<void> {
+        if (!this.shouldResolveNpmModules()) {
+            console.log(cgreen`⇢`, `[NPM] package.json:v1.0.0 -> node_modules checked in`);
+        } else {
+            console.log(cgreen`⇢`, `[NPM] package.json:>v2.0.0 -> checking for npm install`);
+            this.checkAndInstall();
+            if (this.watch) {
+                this.registerWatchers();
             }
         }
-        console.log(`(NPM) package.json version is 1.0.0 -> no npm install needed`);
-        this.hashFilePath = '';
-        this.hasHashFile = false;
+        return Promise.resolve();
+    }
+
+    public stop(): void {
+        this.watchers.forEach(watcher => {
+            watcher.close();
+        });
+    }
+
+    private shouldResolveNpmModules(): boolean {
+        return this.getPackageVersion() !== '1.0.0';
+    }
+
+    private registerWatchers() {
+        // packageLockWatcher
+        const packageJsonWatcher = chokidar.watch([this.getPackageLockPath()]);
+        this.watchers.push(packageJsonWatcher);
+        packageJsonWatcher
+            .on('change', () => {
+                this.checkAndInstall();
+            })
+            .on('error', (e) => {
+                console.error(cerr`✗`, `[NPM] error while watching package-lock.json: ${e}`);
+                packageJsonWatcher.close();
+            });
+
+        // nodeModulesWatcher
+        const glob = Scheduler.convertToUnixPath(`${this.getNodeModulesPath()}`);
+        const nodeModulesWatcher = chokidar.watch(glob);
+        this.watchers.push(nodeModulesWatcher);
+        let ready: boolean = false;
+        let debounce: Timeout;
+
+        const handleEvent = () => {
+            if (!ready) {
+                return;
+            }
+            debounce && clearTimeout(debounce);
+            debounce = setTimeout(() => {
+                if (!fs.existsSync(this.getNodeModulesPath())) {
+                    console.log(cerr`✗`, `[NPM] node_modules folder has been removed - restart cplace-asc`);
+                    process.exit();
+                } else {
+                    this.checkAndInstall();
+                }
+            }, 500);
+        };
+        nodeModulesWatcher
+            .on('ready', () => ready = true)
+            .on('add', handleEvent)
+            .on('change', handleEvent)
+            .on('unlink', handleEvent)
+            .on('unlinkDir', handleEvent)
+            .on('error', (e) => {
+                console.error(cerr`✗`, `[NPM] node_modules watcher failed: ${e}`);
+                nodeModulesWatcher.close();
+            });
+    }
+
+    private checkAndInstall() {
+        if (this.hasNoNodeModules()) {
+            console.log(cgreen`⇢`, `[NPM] node_modules don't exist...`);
+            this.doNpmInstallAndCreateHash();
+        } else {
+            if (fs.existsSync(this.hashFilePath)) {
+                if (this.packageLockWasUpdated()) {
+                    console.log(cgreen`⇢`, `[NPM] package-lock.json was updated...`);
+                    this.doNpmInstallAndCreateHash();
+                }
+            } else {
+                this.doNpmInstallAndCreateHash();
+            }
+        }
     }
 
     private packageLockWasUpdated(): boolean {
         const oldHash = fs.readFileSync(this.hashFilePath, {encoding: 'utf8'});
         if (oldHash === this.getHash4PackageLock()) {
-            console.log(`(NPM) node_modules are up to date`);
+            console.log(cgreen`✓`, `[NPM] node_modules are up to date`);
             return false;
         }
         return true;
     }
 
-    private doNpmInstall() {
-        console.log(`(NPM) executing 'npm install'`);
+    private doNpmInstallAndCreateHash() {
+        console.log(`⟲ [NPM] executing npm install`);
         const result = spawn.sync('npm', ['install'], {
             stdio: [process.stdin, process.stdout, process.stderr]
         });
         if (result.status !== 0) {
-            console.log(`(NPM) npm install ran into: ${result.error} and failed`);
-            throw Error(`(NPM) npm install failed...`);
+            console.log(cred`✗`, `[NPM] npm install ran into: ${result.error} and failed`);
+            throw Error(`✗ [NPM] npm install failed...`);
         }
-        console.log(`(NPM) npm install return code: ${result.status}`);
+        console.log(cgreen`⇢`, `[NPM] npm install successful`);
         this.createHashFile();
     }
 
@@ -92,12 +162,15 @@ export class NPMResolver {
 
     private getPackageVersion(): string {
         const packagePath = this.getPackagePath();
-        if (fs.existsSync(packagePath)) {
+        if (!fs.existsSync(packagePath)) {
+            console.error(cerr`✗`, `[NPM] Could not find package.json in repo ${this.mainRepo} - aborting...`);
+            throw Error(cerr`✗` + `[NPM] Could not find package.json in repo ${this.mainRepo} - aborting...`);
+        } else {
             const packageJson_String = fs.readFileSync(packagePath, 'utf8');
             const packageJson = JSON.parse(packageJson_String);
             return packageJson.version
         }
-        throw Error(`(NPM) Package-JSON is not provided, please add it`);
+
     }
 
     private getHashFilePath(): string {
