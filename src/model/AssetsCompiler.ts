@@ -7,6 +7,7 @@ import * as path from 'path';
 import CplacePlugin from './CplacePlugin';
 import {ExecutorService, Scheduler} from '../executor';
 import {cerr, cgreen, csucc, debug, formatDuration, IUpdateDetails} from '../utils';
+import {NPMResolver} from "./NPMResolver";
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -68,6 +69,11 @@ export class AssetsCompiler {
      */
     private scheduler: Scheduler | null = null;
 
+    /**
+     * NPMResolver to manage node_modules
+     */
+    private npmResolver: NPMResolver | null = null;
+
     constructor(private readonly runConfig: IAssetsCompilerConfiguration) {
         this.projects = this.setupProjects();
     }
@@ -93,6 +99,9 @@ export class AssetsCompiler {
                 await plugin.cleanGeneratedOutput();
             }
         }
+
+        this.npmResolver = new NPMResolver(mainRepoPath, this.runConfig.watchFiles);
+        await this.npmResolver.resolve();
 
         if (this.runConfig.onlyPreprocessing) {
             console.log();
@@ -140,6 +149,9 @@ export class AssetsCompiler {
     public async shutdown(): Promise<void> {
         if (!!this.scheduler) {
             this.scheduler.stop();
+        }
+        if (!!this.npmResolver) {
+            this.npmResolver.stop();
         }
 
         if (!!this.executor) {
