@@ -28,15 +28,12 @@ export class NPMResolver {
     }
 
     public async resolve(): Promise<void> {
-        if (!this.shouldResolveNpmModules()) {
-            console.log(cgreen`⇢`, `[NPM] package.json:v1.0.0 -> node_modules checked in`);
-        } else {
-            console.log(cgreen`⇢`, `[NPM] package.json:>v2.0.0 -> checking for npm install`);
-            this.checkAndInstall();
-            if (this.watch) {
-                this.registerWatchers();
-            }
+        this.checkAndInstall();
+
+        if (this.watch) {
+            this.registerWatchers();
         }
+
         return Promise.resolve();
     }
 
@@ -59,7 +56,7 @@ export class NPMResolver {
                 this.checkAndInstall();
             })
             .on('error', (e) => {
-                console.error(cerr`✗`, `[NPM] error while watching package-lock.json: ${e}`);
+                console.error(cerr`[NPM] error while watching package-lock.json: ${e}`);
                 packageJsonWatcher.close();
             });
 
@@ -77,7 +74,7 @@ export class NPMResolver {
             debounce && clearTimeout(debounce);
             debounce = setTimeout(() => {
                 if (!fs.existsSync(this.getNodeModulesPath())) {
-                    console.log(cerr`✗`, `[NPM] node_modules folder has been removed - restart cplace-asc`);
+                    console.log(cerr`[NPM] node_modules folder has been removed - restart cplace-asc`);
                     process.exit();
                 } else {
                     this.checkAndInstall();
@@ -86,17 +83,22 @@ export class NPMResolver {
         };
         nodeModulesWatcher
             .on('ready', () => ready = true)
-            .on('add', handleEvent)
-            .on('change', handleEvent)
             .on('unlink', handleEvent)
             .on('unlinkDir', handleEvent)
             .on('error', (e) => {
-                console.error(cerr`✗`, `[NPM] node_modules watcher failed: ${e}`);
+                console.error(cerr`[NPM] node_modules watcher failed: ${e}`);
                 nodeModulesWatcher.close();
             });
     }
 
     private checkAndInstall() {
+        if (!this.shouldResolveNpmModules()) {
+            console.log(cgreen`⇢`, `[NPM] package.json:v1.0.0 -> node_modules checked in`);
+            return;
+        } else {
+            console.log(cgreen`⇢`, `[NPM] package.json:>v2.0.0 -> checking for npm install`);
+        }
+
         if (this.hasNoNodeModules()) {
             console.log(cgreen`⇢`, `[NPM] node_modules don't exist...`);
             this.doNpmInstallAndCreateHash();
@@ -163,8 +165,8 @@ export class NPMResolver {
     private getPackageVersion(): string {
         const packagePath = this.getPackagePath();
         if (!fs.existsSync(packagePath)) {
-            console.error(cerr`✗`, `[NPM] Could not find package.json in repo ${this.mainRepo} - aborting...`);
-            throw Error(cerr`✗` + `[NPM] Could not find package.json in repo ${this.mainRepo} - aborting...`);
+            console.error(cerr`[NPM] Could not find package.json in repo ${this.mainRepo} - aborting...`);
+            throw Error(cerr`[NPM] Could not find package.json in repo ${this.mainRepo} - aborting...`);
         } else {
             const packageJson_String = fs.readFileSync(packagePath, 'utf8');
             const packageJson = JSON.parse(packageJson_String);
