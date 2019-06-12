@@ -28,6 +28,11 @@ export class NPMResolver {
     }
 
     public async resolve(): Promise<void> {
+        if (!fs.existsSync(this.getPackagePath())) {
+            console.warn(cred`!`, `[NPM] package.json file not found, skipping resolution...`);
+            return Promise.resolve();
+        }
+
         this.checkAndInstall();
 
         if (this.watch) {

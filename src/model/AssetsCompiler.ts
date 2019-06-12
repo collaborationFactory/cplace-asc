@@ -100,8 +100,8 @@ export class AssetsCompiler {
             }
         }
 
-        //this.npmResolver = new NPMResolver(mainRepoPath, this.runConfig.watchFiles);
-        //await this.npmResolver.resolve();
+        this.npmResolver = new NPMResolver(mainRepoPath, this.runConfig.watchFiles);
+        await this.npmResolver.resolve();
 
         if (this.runConfig.onlyPreprocessing) {
             console.log();
