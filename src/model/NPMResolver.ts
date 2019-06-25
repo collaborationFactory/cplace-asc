@@ -131,7 +131,8 @@ export class NPMResolver {
     private doNpmInstallAndCreateHash() {
         console.log(`⟲ [NPM] executing npm install`);
         const result = spawn.sync('npm', ['install'], {
-            stdio: [process.stdin, process.stdout, process.stderr]
+            stdio: [process.stdin, process.stdout, process.stderr],
+            cwd: this.mainRepo
         });
         if (result.status !== 0) {
             console.log(cred`✗`, `[NPM] npm install ran into: ${result.error} and failed`);
