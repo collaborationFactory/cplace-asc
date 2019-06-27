@@ -77,11 +77,14 @@ export class Scheduler {
             return;
         }
 
-        const tsE2ESchedulingResult = this.getAndScheduleNextJob(this.tsE2EJobs, 'tsE2E', 'tsE2E');
-        if (tsE2ESchedulingResult.backoff) {
-            return;
+        let nextTsE2EPlugin: string | null | undefined = null;
+        if (!this.isProduction) {
+            const tsE2ESchedulingResult = this.getAndScheduleNextJob(this.tsE2EJobs, 'tsE2E', 'tsE2E');
+            if (tsE2ESchedulingResult.backoff) {
+                return;
+            }
+            nextTsE2EPlugin = tsE2ESchedulingResult.scheduledPlugin;
         }
-        const nextTsE2EPlugin = tsE2ESchedulingResult.scheduledPlugin;
 
         const tsSchedulingResult = this.getAndScheduleNextJob(this.tsJobs, 'ts', 'ts');
         if (tsSchedulingResult.backoff) {
