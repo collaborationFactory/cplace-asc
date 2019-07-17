@@ -52,14 +52,14 @@ export default class CplacePlugin {
 
         this.repo = path.basename(path.dirname(path.resolve(pluginDir)));
         this.assetsDir = path.resolve(pluginDir, 'assets');
-        this.hasTypeScriptAssets = fs.existsSync(path.resolve(this.assetsDir, 'ts'));
+        this.hasTypeScriptAssets = fs.existsSync(path.resolve(this.assetsDir, 'app.ts'));
         this.hasTypeScriptE2EAssets = false;
         const e2ePath: string = path.resolve(this.assetsDir, 'e2e');
         if (fs.existsSync(e2ePath)) {
             this.hasTypeScriptE2EAssets = glob.sync(`${e2ePath}/**/*.ts`).length > 0;
         }
 
-        this.hasLessAssets = fs.existsSync(path.resolve(this.assetsDir, 'less'));
+        this.hasLessAssets = (glob.sync(`${this.assetsDir}/*.less`).length > 0 || glob.sync(`${this.assetsDir}/**/*.less`).length > 0);
         this.hasCompressCssAssets = fs.existsSync(path.resolve(this.assetsDir, 'css', CompressCssCompiler.ENTRY_FILE_NAME));
     }
 
