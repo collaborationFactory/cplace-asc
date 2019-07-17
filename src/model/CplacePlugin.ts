@@ -52,7 +52,7 @@ export default class CplacePlugin {
 
         this.repo = path.basename(path.dirname(path.resolve(pluginDir)));
         this.assetsDir = path.resolve(pluginDir, 'assets');
-        this.hasTypeScriptAssets = fs.existsSync(path.resolve(this.assetsDir, 'app.ts'));
+        this.hasTypeScriptAssets = fs.existsSync(path.resolve(this.assetsDir, 'ts', 'app.ts'));
         this.hasTypeScriptE2EAssets = false;
         const e2ePath: string = path.resolve(this.assetsDir, 'e2e');
         if (fs.existsSync(e2ePath)) {
