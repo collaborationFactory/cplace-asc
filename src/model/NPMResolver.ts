@@ -4,12 +4,14 @@
 
 import * as path from "path";
 import * as fs from "fs";
+import {existsSync} from "fs";
 import * as crypto from "crypto";
 import * as spawn from 'cross-spawn';
 import * as chokidar from "chokidar";
 import {FSWatcher} from "chokidar";
 import {Scheduler} from "../executor";
 import {cerr, cgreen, cred} from "../utils";
+import rimraf = require("rimraf");
 import Timeout = NodeJS.Timeout;
 
 export class NPMResolver {
@@ -33,7 +35,7 @@ export class NPMResolver {
             return Promise.resolve();
         }
 
-        this.checkAndInstall();
+        await this.checkAndInstall();
 
         if (this.watch) {
             this.registerWatchers();
@@ -98,6 +100,13 @@ export class NPMResolver {
 
     private checkAndInstall() {
         if (!this.shouldResolveNpmModules()) {
+            if (existsSync(path.join('node_modules', 'webdriverio'))) {
+                rimraf.sync(path.join(NPMResolver.NODE_MODULES));
+                spawn.sync('git', ['checkout', 'HEAD', 'node_modules'], {
+                    stdio: [process.stdin, process.stdout, process.stderr],
+                    cwd: this.mainRepo
+                });
+            }
             console.log(cgreen`⇢`, `[NPM] package.json:v1.0.0 -> node_modules checked in`);
             return;
         } else {
