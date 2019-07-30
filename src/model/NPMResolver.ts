@@ -102,7 +102,7 @@ export class NPMResolver {
         if (!this.shouldResolveNpmModules()) {
             if (existsSync(path.join('node_modules', 'webdriverio'))) {
                 rimraf.sync(path.join(NPMResolver.NODE_MODULES));
-                spawn.sync('git', ['checkout', 'HEAD', 'node_modules'], {
+                spawn.sync('git', ['checkout', '--', 'node_modules'], {
                     stdio: [process.stdin, process.stdout, process.stderr],
                     cwd: this.mainRepo
                 });
