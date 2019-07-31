@@ -10,7 +10,7 @@ import * as spawn from 'cross-spawn';
 import * as chokidar from "chokidar";
 import {FSWatcher} from "chokidar";
 import {Scheduler} from "../executor";
-import {cerr, cgreen, cred} from "../utils";
+import {cerr, cgreen, cred, debug} from "../utils";
 import rimraf = require("rimraf");
 import Timeout = NodeJS.Timeout;
 
@@ -99,9 +99,43 @@ export class NPMResolver {
     }
 
     private checkAndInstall() {
+
+        function sleepBusy(ms) {
+            const waitTill = new Date(new Date().getTime() + ms);
+            while (waitTill > new Date()) {
+                // busy busy!
+            }
+        }
+
         if (!this.shouldResolveNpmModules()) {
+            // clean up the checked-in node_modules if required
             if (existsSync(path.join('node_modules', 'webdriverio'))) {
+                console.log("Deleting the node_modules folder...");
                 rimraf.sync(path.join(NPMResolver.NODE_MODULES));
+
+                // Fun on Windows! rmdirSync can return before the folder is actually deleted completely.
+                debug("Deleted, try to recreate...");
+                let delCount = 0;
+                while (true) {
+                    if (delCount > 20) {
+                        throw "Waited too long for the node_modules folder to be deleted. Giving up.";
+                    }
+                    try {
+                        fs.mkdirSync(NPMResolver.NODE_MODULES);
+                    } catch (e) {
+                        debug(e);
+                        debug("Wait a little...");
+                        sleepBusy(1000);
+                        delCount++;
+                        continue;
+                    }
+                    debug("Delete again...");
+                    rimraf.sync(path.join(NPMResolver.NODE_MODULES));
+                    break;
+                }
+            }
+            if (!existsSync(NPMResolver.NODE_MODULES)){
+                console.log("Checkout the node_modules from Git");
                 spawn.sync('git', ['checkout', '--', 'node_modules'], {
                     stdio: [process.stdin, process.stdout, process.stderr],
                     cwd: this.mainRepo
