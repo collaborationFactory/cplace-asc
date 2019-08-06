@@ -179,6 +179,9 @@ export class Scheduler {
         this.watchers.ts.forEach(watcher => {
             watcher.close();
         });
+        this.watchers.tsE2E.forEach(watcher => {
+            watcher.close();
+        });
         this.watchers.less.forEach(watcher => {
             watcher.close();
         });

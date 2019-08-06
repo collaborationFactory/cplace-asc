@@ -4,12 +4,14 @@
 
 import * as path from "path";
 import * as fs from "fs";
+import {existsSync} from "fs";
 import * as crypto from "crypto";
 import * as spawn from 'cross-spawn';
 import * as chokidar from "chokidar";
 import {FSWatcher} from "chokidar";
 import {Scheduler} from "../executor";
-import {cerr, cgreen, cred} from "../utils";
+import {cerr, cgreen, cred, debug, sleepBusy} from "../utils";
+import rimraf = require("rimraf");
 import Timeout = NodeJS.Timeout;
 
 export class NPMResolver {
@@ -98,6 +100,39 @@ export class NPMResolver {
 
     private checkAndInstall() {
         if (!this.shouldResolveNpmModules()) {
+            // clean up the checked-in node_modules if required
+            if (existsSync(path.join(NPMResolver.NODE_MODULES, 'webdriverio'))) {
+                console.log(cgreen`⇢`, "Deleting the node_modules folder...");
+                rimraf.sync(path.join(NPMResolver.NODE_MODULES));
+
+                // Fun on Windows! rmdirSync can return before the folder is actually deleted completely.
+                debug("Deleted, try to recreate...");
+                let delCount = 0;
+                while (true) {
+                    if (delCount > 20) {
+                        throw "Waited too long for the node_modules folder to be deleted. Giving up.";
+                    }
+                    try {
+                        fs.mkdirSync(NPMResolver.NODE_MODULES);
+                    } catch (e) {
+                        debug(e);
+                        debug("Wait a little...");
+                        sleepBusy(1000);
+                        delCount++;
+                        continue;
+                    }
+                    debug("Delete again...");
+                    rimraf.sync(path.join(NPMResolver.NODE_MODULES));
+                    break;
+                }
+            }
+            if (!existsSync(NPMResolver.NODE_MODULES)) {
+                console.log(cgreen`⇢`, "Checkout the node_modules from Git");
+                spawn.sync('git', ['checkout', '--', NPMResolver.NODE_MODULES], {
+                    stdio: [process.stdin, process.stdout, process.stderr],
+                    cwd: this.mainRepo
+                });
+            }
             console.log(cgreen`⇢`, `[NPM] package.json:v1.0.0 -> node_modules checked in`);
             return;
         } else {
