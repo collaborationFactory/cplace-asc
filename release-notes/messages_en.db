@@ -1,0 +1,4 @@
+772b76eaf47cb04e9eedfe74b07059dc01365ebd:Make cplace asc invulnerable to switch of branches
+a8d29b186bd79eabab95cc35060b5775da819d50:Assets compiler ignores empty assets/ts or assets/less folders [PR cplace-asc#27]
+aa5b29f3405be6e57739ecad21776618b5b79189:Add proper resolution of packages for project repos
+d94ddc19b10242db692cdec8a88ede66f1c96119:Updated npm dependencies
