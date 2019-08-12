@@ -30,6 +30,10 @@ export class E2ETSConfigGenerator extends AbstractTSConfigGenerator {
         };
 
         if (this.plugin.pluginName !== this.platformPlugin) {
+            paths['*'].push(
+                `${this.pathToMain}/node_modules/@types/*`,
+                `${this.pathToMain}/node_modules/*`,
+            );
             this.tsConfig.compilerOptions.paths = paths;
         }
 
