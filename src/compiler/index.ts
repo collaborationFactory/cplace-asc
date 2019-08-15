@@ -4,7 +4,14 @@
 
 import {LessCompiler} from './LessCompiler';
 import {CplaceTypescriptCompiler} from './CplaceTypescriptCompiler';
-import {CompilationResult, ICompiler, ICompilerConstructor, ICompileRequest, ICompileResponse, ProcessState} from './interfaces';
+import {
+    CompilationResult,
+    ICompiler,
+    ICompilerConstructor,
+    ICompileRequest,
+    ICompileResponse,
+    ProcessState
+} from './interfaces';
 import {cerr, enableDebug} from '../utils';
 import {CompressCssCompiler} from './CompressCssCompiler';
 import {E2ETypescriptCompiler} from "./E2ETypescriptCompiler";
@@ -66,6 +73,7 @@ if (require.main === module) {
         try {
             compiler = new CompilerConstructor(
                 request.pluginName,
+                request.dependencyPaths,
                 request.assetsPath,
                 request.mainRepoDir,
                 request.isProduction

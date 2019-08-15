@@ -15,6 +15,7 @@ export class LessCompiler implements ICompiler {
     private readonly pathToEntryFile: string = '';
 
     constructor(private readonly pluginName: string,
+                private readonly dependencyPaths: string[],
                 private readonly assetsPath: string,
                 private readonly mainRepoDir: string,
                 private readonly isProduction: boolean) {

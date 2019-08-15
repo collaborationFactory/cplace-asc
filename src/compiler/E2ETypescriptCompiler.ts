@@ -8,9 +8,10 @@ export class E2ETypescriptCompiler extends AbstractTypescriptCompiler {
     public static readonly DEST_DIR = 'generated_e2e';
 
     constructor(pluginName: string,
+                dependencyPaths: string[],
                 assetsPath: string,
                 mainRepoDir: string) {
-        super(pluginName, assetsPath, mainRepoDir, false, 'e2e', E2ETypescriptCompiler.DEST_DIR);
+        super(pluginName, dependencyPaths, assetsPath, mainRepoDir, false, 'e2e', E2ETypescriptCompiler.DEST_DIR);
     }
 
     protected getJobName(): string {

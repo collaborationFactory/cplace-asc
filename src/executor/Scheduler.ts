@@ -131,6 +131,7 @@ export class Scheduler {
             const plugin = this.getPlugin(nextPlugin);
             const compileRequest: ICompileRequest = {
                 pluginName: plugin.pluginName,
+                dependencyPaths: plugin.dependencies.map(d => this.plugins.get(d)!.pluginDir),
                 assetsPath: plugin.assetsDir,
                 mainRepoDir: this.mainRepoDir,
                 isProduction: this.isProduction,
