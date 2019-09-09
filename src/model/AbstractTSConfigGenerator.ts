@@ -16,6 +16,7 @@ export abstract class AbstractTSConfigGenerator {
     protected readonly platformPlugin = 'cf.cplace.platform';
     private readonly relRepoRootPrefix = '../../..';
     protected readonly tsConfigJson = 'tsconfig.json';
+    protected mainFolderName = '';
 
 
     constructor(protected readonly plugin: CplacePlugin,
@@ -23,15 +24,28 @@ export abstract class AbstractTSConfigGenerator {
                 protected readonly localOnly: boolean,
                 protected readonly isProduction: boolean,
                 protected readonly srcFolderName: string) {
-        this.pathToMain = AbstractTSConfigGenerator.pathToMain(this.localOnly, this.plugin.repo, this.relRepoRootPrefix);
-        this.relPathToPlatform = path.join(this.relRepoRootPrefix, CplacePlugin.getPluginPathRelativeToRepo(this.plugin.repo, this.platformPlugin, 'main', this.localOnly));
+        this.pathToMain = this.getRelativePathToMain(this.localOnly, this.plugin.repo, this.relRepoRootPrefix);
+        this.relPathToPlatform = path.join(this.relRepoRootPrefix, CplacePlugin.getPluginPathRelativeToRepo(this.plugin.repo, this.platformPlugin, this.mainFolderName, localOnly));
         this.relPathToPlatformTs = path.join(this.relPathToPlatform, 'assets', this.srcFolderName);
     }
 
-    public static pathToMain(localOnly: boolean, repo: string, relRepoRootPrefix: string): string {
-        return path.join(relRepoRootPrefix,
-            !localOnly && repo !== 'main' ? path.join('..', 'main') : ''
-        );
+    public getRelativePathToMain(localOnly: boolean, repo: string, relRepoRootPrefix: string) {
+        let workingDir: string = process.cwd();
+        workingDir = path.resolve(workingDir);
+        if (path.basename(workingDir) === 'main' || path.basename(workingDir) === 'cplace') {
+            this.mainFolderName = path.basename(workingDir);
+        }
+
+        const expectedMain = path.resolve(workingDir, '..', 'main');
+        const expectedCplace = path.resolve(workingDir, '..', 'cplace');
+
+        if (fs.existsSync(expectedMain)) {
+            this.mainFolderName = path.basename(expectedMain);
+        } else if (fs.existsSync(expectedCplace)) {
+            this.mainFolderName = path.basename(expectedCplace);
+        }
+        debug(`main/cplace Repository folder was found in ${this.mainFolderName}`);
+        return path.join(relRepoRootPrefix, !localOnly && repo !== this.mainFolderName ? path.join('..', this.mainFolderName) : '');
     }
 
     public abstract createConfigAndGetPath(): string;

@@ -51,7 +51,6 @@ export interface IAssetsCompilerConfiguration {
  * This represents the main execution logic for the whole compilation process
  */
 export class AssetsCompiler {
-    public static readonly CPLACE_REPO_NAME = 'main';
     public static readonly PLATFORM_PLUGIN_NAME = 'cf.cplace.platform';
 
     /**
@@ -213,11 +212,16 @@ export class AssetsCompiler {
         if (this.runConfig.localOnly) {
             mainRepoPath = path.resolve(AssetsCompiler.getRepoRoot(this.runConfig));
         } else {
-            mainRepoPath = path.resolve(path.join(AssetsCompiler.getRepoRoot(this.runConfig), '..', AssetsCompiler.CPLACE_REPO_NAME));
+            if (fs.existsSync(path.resolve(path.join(AssetsCompiler.getRepoRoot(this.runConfig), '..', 'main')))) {
+                mainRepoPath = path.resolve(path.join(AssetsCompiler.getRepoRoot(this.runConfig), '..', 'main'));
+            } else if (fs.existsSync(path.resolve(path.join(AssetsCompiler.getRepoRoot(this.runConfig), '..', 'cplace')))) {
+                mainRepoPath = path.resolve(path.join(AssetsCompiler.getRepoRoot(this.runConfig), '..', 'cplace'));
+            } else {
+                return null;
+            }
         }
 
-        if (!fs.existsSync(mainRepoPath)
-            || !fs.existsSync(path.join(mainRepoPath, AssetsCompiler.PLATFORM_PLUGIN_NAME))) {
+        if (!fs.existsSync(path.join(mainRepoPath, AssetsCompiler.PLATFORM_PLUGIN_NAME))) {
             return null;
         }
 
@@ -263,7 +267,7 @@ export class AssetsCompiler {
     }
 
     private static getRepoDependencies(runConfig: IAssetsCompilerConfiguration): string[] {
-        if (path.basename(AssetsCompiler.getRepoRoot(runConfig)) === 'main') {
+        if (path.basename(AssetsCompiler.getRepoRoot(runConfig)) === 'main' || path.basename(AssetsCompiler.getRepoRoot(runConfig)) === 'cplace') {
             return [];
         }
 
@@ -291,6 +295,14 @@ export class AssetsCompiler {
             relativePath = path.join('..', repoName, pluginName);
             if (fs.existsSync(relativePath)) {
                 return relativePath;
+            }
+            // Resolve main Repository to folder called cplace
+            if (repoName === 'main') {
+                const repoAlternative = 'cplace';
+                relativePath = path.join('..', repoAlternative, pluginName);
+                if (fs.existsSync(relativePath)) {
+                    return relativePath;
+                }
             }
         }
         console.error(cerr`Could not locate plugin ${pluginName}`);
