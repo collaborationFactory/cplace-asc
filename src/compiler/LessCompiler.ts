@@ -29,9 +29,6 @@ export class LessCompiler implements ICompiler {
         }
         if (!this.pathToEntryFile) {
             throw Error(`[${this.pluginName}] cannot determine path to LESS entry file`);
-        } else if (path.basename(mainRepoDir) === 'cplace') {
-            console.log(cerr`Sry if main Repository is called 'cplace' LESS Compilation won't work, please rename your folder to 'main'`);
-            throw Error(`Sry if main Repository is called 'cplace' LESS Compilation won't work, please rename your folder to 'main'`);
         }
     }
 

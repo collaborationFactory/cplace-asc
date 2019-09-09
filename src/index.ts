@@ -5,8 +5,9 @@
 
 import {getAvailableStats} from './model/utils';
 import {AssetsCompiler, IAssetsCompilerConfiguration} from './model/AssetsCompiler';
-import {cerr, checkForUpdate, debug, enableDebug, isDebugEnabled, IUpdateDetails} from './utils';
+import {cerr, checkForUpdate, cwarn, debug, enableDebug, isDebugEnabled, IUpdateDetails} from './utils';
 import * as os from 'os';
+import * as path from "path";
 import meow = require('meow');
 
 checkNodeVersion();
@@ -85,6 +86,10 @@ function run(updateDetails?: IUpdateDetails) {
     if (cli.flags.production && cli.flags.onlypre) {
         console.error(cerr`--production and --onlypre cannot be enabled simultaneously`);
         process.exit(1);
+    }
+    const mainRepoPath = AssetsCompiler.getMainRepoPath(cli.flags.localOnly);
+    if (mainRepoPath && (path.basename(mainRepoPath) !== 'main') && (!cli.flags.onlypre)) {
+        console.warn(cwarn`Sry main Repository is not called 'main' LESS Compilation might fail, please rename your folder to 'main'`);
     }
     if (cli.flags.threads !== null) {
         const t = parseInt(cli.flags.threads);

@@ -24,6 +24,15 @@ export function cred(templateStrings: TemplateStringsArray, ...values: any) {
     return result;
 }
 
+export function cwarn(templateStrings: TemplateStringsArray, ...values: any) {
+    let result = `\x1b[0;33m`;
+    templateStrings.forEach((v, i) => {
+        result += v + (values[i] || '');
+    });
+    result += `\x1b[0m`;
+    return result;
+}
+
 export function cerr(templateStrings: TemplateStringsArray, ...values: any) {
     let result = `✗ `;
     templateStrings.forEach((v, i) => {
