@@ -51,7 +51,6 @@ export interface IAssetsCompilerConfiguration {
  * This represents the main execution logic for the whole compilation process
  */
 export class AssetsCompiler {
-    public static readonly CPLACE_REPO_NAME = 'main';
     public static readonly PLATFORM_PLUGIN_NAME = 'cf.cplace.platform';
 
     /**
@@ -84,7 +83,7 @@ export class AssetsCompiler {
             return new Promise<void>(resolve => resolve());
         }
 
-        const mainRepoPath = this.getMainRepoPath();
+        const mainRepoPath = AssetsCompiler.getMainRepoPath(this.runConfig.localOnly);
         if (mainRepoPath === null) {
             debug(`(AssetsCompiler) Main repo cannot be found...`);
             return new Promise<void>((resolve, reject) => reject(
@@ -163,25 +162,21 @@ export class AssetsCompiler {
         }
     }
 
-    private static getRepoRoot(runConfig: IAssetsCompilerConfiguration) {
-        return process.cwd();
-    }
-
     private setupProjects(): Map<string, CplacePlugin> {
         let knownRepoDependencies: string[];
         if (this.runConfig.localOnly) {
             knownRepoDependencies = [];
             debug(`(AssetsCompiler) Ignoring repo dependencies since localOnly execution...`);
         } else {
-            knownRepoDependencies = AssetsCompiler.getRepoDependencies(this.runConfig);
+            knownRepoDependencies = AssetsCompiler.getRepoDependencies();
             debug(`(AssetsCompiler) Detected repo dependencies: ${knownRepoDependencies.join(', ')}`);
         }
 
         const projects = new Map<string, CplacePlugin>();
-        const files = fs.readdirSync(AssetsCompiler.getRepoRoot(this.runConfig));
+        const files = fs.readdirSync(process.cwd());
 
         files.forEach(file => {
-            const filePath = path.join(AssetsCompiler.getRepoRoot(this.runConfig), file);
+            const filePath = path.join(process.cwd(), file);
             if (fs.lstatSync(filePath).isDirectory()) {
                 const potentialPluginName = path.basename(file);
                 if ((this.runConfig.rootPlugins.length === 0 || this.runConfig.rootPlugins.indexOf(potentialPluginName) !== -1)
@@ -208,16 +203,21 @@ export class AssetsCompiler {
         return projects;
     }
 
-    private getMainRepoPath(): string | null {
+    public static getMainRepoPath(localonly: boolean): string | null {
         let mainRepoPath = '';
-        if (this.runConfig.localOnly) {
-            mainRepoPath = path.resolve(AssetsCompiler.getRepoRoot(this.runConfig));
+        if (localonly) {
+            mainRepoPath = path.resolve(process.cwd());
         } else {
-            mainRepoPath = path.resolve(path.join(AssetsCompiler.getRepoRoot(this.runConfig), '..', AssetsCompiler.CPLACE_REPO_NAME));
+            if (fs.existsSync(path.resolve(path.join(process.cwd(), '..', 'main')))) {
+                mainRepoPath = path.resolve(path.join(process.cwd(), '..', 'main'));
+            } else if (fs.existsSync(path.resolve(path.join(process.cwd(), '..', 'cplace')))) {
+                mainRepoPath = path.resolve(path.join(process.cwd(), '..', 'cplace'));
+            } else {
+                return null;
+            }
         }
 
-        if (!fs.existsSync(mainRepoPath)
-            || !fs.existsSync(path.join(mainRepoPath, AssetsCompiler.PLATFORM_PLUGIN_NAME))) {
+        if (!fs.existsSync(path.join(mainRepoPath, AssetsCompiler.PLATFORM_PLUGIN_NAME))) {
             return null;
         }
 
@@ -245,7 +245,7 @@ export class AssetsCompiler {
             if (projects.has(depName)) {
                 return;
             }
-            const pluginPath = this.findPluginPath(depName, repoDependencies, runConfig);
+            const pluginPath = this.findPluginPath(depName, repoDependencies);
             this.addProjectDependenciesRecursively(projects, repoDependencies, depName, pluginPath, runConfig);
         });
     }
@@ -262,8 +262,8 @@ export class AssetsCompiler {
         }
     }
 
-    private static getRepoDependencies(runConfig: IAssetsCompilerConfiguration): string[] {
-        if (path.basename(AssetsCompiler.getRepoRoot(runConfig)) === 'main') {
+    private static getRepoDependencies(): string[] {
+        if (path.basename(process.cwd()) === 'main' || path.basename(process.cwd()) === 'cplace') {
             return [];
         }
 
@@ -282,15 +282,23 @@ export class AssetsCompiler {
         }
     }
 
-    private static findPluginPath(pluginName: string, repoDependencies: string[], runconfig: IAssetsCompilerConfiguration): string {
+    private static findPluginPath(pluginName: string, repoDependencies: string[]): string {
         let relativePath = pluginName;
-        if (fs.existsSync(path.join(AssetsCompiler.getRepoRoot(runconfig), relativePath))) {
-            return path.join(AssetsCompiler.getRepoRoot(runconfig), relativePath);
+        if (fs.existsSync(path.join(process.cwd(), relativePath))) {
+            return path.join(process.cwd(), relativePath);
         }
         for (const repoName of repoDependencies) {
             relativePath = path.join('..', repoName, pluginName);
             if (fs.existsSync(relativePath)) {
                 return relativePath;
+            }
+            // Resolve main Repository to folder called cplace
+            if (repoName === 'main') {
+                const repoAlternative = 'cplace';
+                relativePath = path.join('..', repoAlternative, pluginName);
+                if (fs.existsSync(relativePath)) {
+                    return relativePath;
+                }
             }
         }
         console.error(cerr`Could not locate plugin ${pluginName}`);
