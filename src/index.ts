@@ -88,7 +88,7 @@ function run(updateDetails?: IUpdateDetails) {
         process.exit(1);
     }
     const mainRepoPath = AssetsCompiler.getMainRepoPath(cli.flags.localOnly);
-    if (mainRepoPath && (path.basename(mainRepoPath) !== 'main') && (!cli.flags.onlypre)) {
+    if (mainRepoPath && (path.basename(mainRepoPath) !== 'main') && (!cli.flags.onlypre) && (!cli.flags.localOnly)) {
         console.warn(cwarn`Sry main Repository is not called 'main' LESS Compilation might fail, please rename your folder to 'main'`);
     }
     if (cli.flags.threads !== null) {
