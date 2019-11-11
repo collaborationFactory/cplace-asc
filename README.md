@@ -95,6 +95,22 @@ $ cplace-asc --help
 ### TypeScript
 For each plugin there must be one main entry file `assets/ts/app.ts` which will be used as entry point for bundling. As such any other source file must be imported (transitively) by that file.
 
+If you have additional dependencies to typings files that are placed locally in your plugin you have to include an `extra-types.json` file. This file can have the following strucutre:
+
+```json
+{
+    "declarations": [
+        "relative/path/to/typings/file",
+        "..."
+    ],
+    "externals": {
+        "nameOfImport": "_variableName"
+    }
+}
+```
+
+As you can see you can specify the relative path (taken from the location of the `extra-types.json` file) to any typings definitions (`.d.ts`) file which will then be taken into account by the TypeScript compiler. Furthermore, in order for Webpack to complete the bundling process you most likely will also have to specify the externals that this typings file provides. These are given in the `externals` object. The key must equal to the name of the import in TypeScript (e.g. for `import * as myXs from 'xs'` the key would be `xs`). The value is equal to the global variable name to be resolved by Webpack.
+
 ### LESS
 For each plugin there must be one main entry file: either `assets/less/plugin.less` *or* `assets/less/cplace.less`. The generated CSS file will be called `assets/generated_css/plugin.css` *or* `assets/generated_css/cplace.css` respectively.
 

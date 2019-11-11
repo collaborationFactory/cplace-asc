@@ -11,24 +11,26 @@ import {debug, isDebugEnabled} from '../utils';
 import * as fs from 'fs';
 import * as copyFiles from 'copyfiles';
 import {AbstractTypescriptCompiler} from './AbstractTypescriptCompiler';
+import {CplaceTSConfigGenerator} from "../model/CplaceTSConfigGenerator";
 
 export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
     public static readonly DEST_DIR = 'generated_js';
     private static readonly ENTRY = 'app.js';
     private static readonly STATIC_IMPORT_EXTENSIONS = 'html|htm';
 
-    private readonly externals: ExternalsElement[] = [{
+    private static readonly DEFAULT_EXTERNALS = {
         d3: 'd3',
         moment: 'moment',
         underscore: '_',
         draggable: 'Draggable'
-    }, this.resolveWebpackExternal.bind(this)];
+    };
 
     constructor(pluginName: string,
+                dependencyPaths: string[],
                 assetsPath: string,
                 mainRepoDir: string,
                 isProduction: boolean) {
-        super(pluginName, assetsPath, mainRepoDir, isProduction, 'ts', CplaceTypescriptCompiler.DEST_DIR);
+        super(pluginName, dependencyPaths, assetsPath, mainRepoDir, isProduction, 'ts', CplaceTypescriptCompiler.DEST_DIR);
     }
 
     public static getJavaScriptOutputDir(assetsPath: string): string {
@@ -71,7 +73,7 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
             entry: {
                 tsc: './' + CplaceTypescriptCompiler.ENTRY
             },
-            externals: this.externals,
+            externals: this.populateWebpackExternals(),
             mode: 'development',
             module: {
                 rules: [
@@ -128,6 +130,16 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
         }
 
         return config;
+    }
+
+    private populateWebpackExternals(): ExternalsElement[] {
+        const pluginDir = path.dirname(this.assetsPath);
+        const extraTypes = CplaceTSConfigGenerator.getExtraTypes(pluginDir, this.dependencyPaths);
+
+        return [{
+            ...CplaceTypescriptCompiler.DEFAULT_EXTERNALS,
+            ...(extraTypes ? extraTypes.externals : {})
+        }, this.resolveWebpackExternal.bind(this)];
     }
 
     private resolveWebpackExternal(context: string, request: string, callback: Function) {

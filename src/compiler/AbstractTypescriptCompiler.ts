@@ -14,6 +14,7 @@ export abstract class AbstractTypescriptCompiler implements ICompiler {
     private static readonly HASH_FILE = 'typings.hash';
 
     protected constructor(protected readonly pluginName: string,
+                protected readonly dependencyPaths: string[],
                 protected readonly assetsPath: string,
                 protected readonly mainRepoDir: string,
                 protected readonly isProduction: boolean,

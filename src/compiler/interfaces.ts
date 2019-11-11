@@ -1,5 +1,6 @@
 export interface ICompileRequest {
     pluginName: string;
+    dependencyPaths: string[];
     assetsPath: string;
     mainRepoDir: string;
     isProduction: boolean;
@@ -22,6 +23,7 @@ export interface ICompileResponse {
 
 export interface ICompilerConstructor {
     new(pluginName: string,
+        dependencyPaths: string[],
         assetsPath: string,
         mainRepoDir: string,
         isProduction: boolean): ICompiler;

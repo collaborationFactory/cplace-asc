@@ -12,6 +12,7 @@ import {CplaceTypescriptCompiler} from '../compiler/CplaceTypescriptCompiler';
 
 interface IExtraTypes {
     definitions: string[];
+    externals: { [importName: string]: string };
 }
 
 export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
@@ -26,7 +27,10 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
     public createConfigAndGetPath(): string {
         const {paths, refs} = this.getPathsAndRefs();
 
-        const extraTypes = CplaceTSConfigGenerator.checkExtraTypes(this.plugin, this.dependencies);
+        const extraTypes = CplaceTSConfigGenerator.getExtraTypes(
+            this.plugin.pluginDir,
+            this.dependencies.map(d => d.pluginDir)
+        );
         const additionalIncludes = extraTypes === null ? [] : extraTypes.definitions;
 
         this.tsConfig = {
@@ -57,8 +61,10 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
         return this.getTSConfigPath();
     }
 
-    private static checkExtraTypes(plugin: CplacePlugin, dependencies: CplacePlugin[]): IExtraTypes | null {
-        const typesPath = path.resolve(plugin.assetsDir, 'ts', 'extra-types.json');
+public static getExtraTypes(pluginDir: string, dependencyPaths: string[]): IExtraTypes | null {
+        const pluginName = path.basename(pluginDir);
+        const assetsDir = CplacePlugin.getAssetsDir(pluginDir);
+        const typesPath = path.resolve(assetsDir, 'ts', 'extra-types.json');
         let result: IExtraTypes;
 
         if (fs.existsSync(typesPath)) {
@@ -66,12 +72,13 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
             try {
                 result = JSON.parse(content);
             } catch (e) {
-                console.error(cerr`[${plugin.pluginName}] Cannot read extra types: ${typesPath}`);
+                console.error(cerr`[${pluginName}] Cannot read extra types: ${typesPath}`);
                 return null;
             }
         } else {
             result = {
-                definitions: []
+                definitions: [],
+                externals: {}
             };
         }
 
@@ -79,17 +86,25 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
             result.definitions = [];
         } else {
             result.definitions = result.definitions.map(p => path.resolve(
-                plugin.assetsDir, 'ts', p
+                assetsDir, 'ts', p
             ));
         }
 
-        dependencies
+        if (!result.externals) {
+            result.externals = {};
+        }
+
+        dependencyPaths
             .map(dep => {
-                return this.checkExtraTypes(dep, []);
+                return this.getExtraTypes(dep, []);
             })
             .forEach(r => {
                 if (r !== null) {
-                    result.definitions = [...result.definitions, ...r.definitions]
+                    result.definitions = [...result.definitions, ...r.definitions];
+                    result.externals = {
+                        ...result.externals,
+                        ...r.externals
+                    };
                 }
             });
 
