@@ -11,9 +11,9 @@ export interface IImlModuleDependency {
 export class ImlParser {
     private _module: any;
 
-    constructor(private pathToIml: string) {
-        if (!fs.existsSync(pathToIml)) {
-            throw Error(`IML ${pathToIml} does not exist`);
+    constructor(private readonly pathToIml: string) {
+        if (!fs.existsSync(this.pathToIml)) {
+            throw Error(`IML ${this.pathToIml} does not exist`);
         }
         this.parseFile();
     }

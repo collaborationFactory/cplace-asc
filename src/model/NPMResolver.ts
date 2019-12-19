@@ -11,6 +11,7 @@ import * as chokidar from "chokidar";
 import {FSWatcher} from "chokidar";
 import {Scheduler} from "../executor";
 import {cerr, cgreen, cred, debug, sleepBusy} from "../utils";
+import {PackageVersion} from "./PackageVersion";
 import rimraf = require("rimraf");
 import Timeout = NodeJS.Timeout;
 
@@ -50,8 +51,31 @@ export class NPMResolver {
         });
     }
 
+    public getPackageVersion(): PackageVersion {
+        const packagePath = this.getPackagePath();
+        if (!fs.existsSync(packagePath)) {
+            console.error(cerr`[NPM] Could not find package.json in repo ${this.mainRepo} - aborting...`);
+            throw Error(cerr`[NPM] Could not find package.json in repo ${this.mainRepo} - aborting...`);
+        }
+
+        const packageJson_String = fs.readFileSync(packagePath, 'utf8');
+        const packageJson = JSON.parse(packageJson_String);
+        const versionString = packageJson.version as string;
+        const versionParts = versionString.split('.');
+        if (versionParts.length !== 3) {
+            console.error(cerr`[NPM] Expected package.json "version" to consist of 3 parts`);
+            throw new Error(`[NPM] Expected package.json "version" to consist of 3 parts`);
+        }
+
+        return {
+            major: parseInt(versionParts[0]),
+            minor: parseInt(versionParts[1]),
+            patch: parseInt(versionParts[2])
+        };
+    }
+
     private shouldResolveNpmModules(): boolean {
-        return this.getPackageVersion() !== '1.0.0';
+        return this.getPackageVersion().major !== 1;
     }
 
     private registerWatchers() {
@@ -201,19 +225,6 @@ export class NPMResolver {
             return true;
         }
         return false;
-    }
-
-    private getPackageVersion(): string {
-        const packagePath = this.getPackagePath();
-        if (!fs.existsSync(packagePath)) {
-            console.error(cerr`[NPM] Could not find package.json in repo ${this.mainRepo} - aborting...`);
-            throw Error(cerr`[NPM] Could not find package.json in repo ${this.mainRepo} - aborting...`);
-        } else {
-            const packageJson_String = fs.readFileSync(packagePath, 'utf8');
-            const packageJson = JSON.parse(packageJson_String);
-            return packageJson.version
-        }
-
     }
 
     private getHashFilePath(): string {
