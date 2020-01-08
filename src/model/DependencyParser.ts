@@ -40,6 +40,6 @@ class PluginDescriptorDependencyParser implements DependencyParser {
         if (pluginName !== pluginDescriptor.name) {
             throw new Error(`[DependencyParser] Expected plugin name ${pluginName} does not match descriptor plugin name: ${pluginDescriptor.name}`);
         }
-        return [...pluginDescriptor.dependencies];
+        return pluginDescriptor.dependencies ? [...pluginDescriptor.dependencies] : [];
     }
 }

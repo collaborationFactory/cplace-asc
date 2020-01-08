@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as fs from "fs";
+import {cerr} from "../utils";
 
 export interface PluginDescriptor {
     /**
@@ -9,11 +10,11 @@ export interface PluginDescriptor {
     /**
      * List of plugin names this plugin depends on
      */
-    readonly dependencies: string[];
+    readonly dependencies?: string[];
 }
 
 export class PluginDescriptorParser {
-    public static readonly DESCRIPTOR_FILE_NAME = 'plugin-descriptor.json';
+    public static readonly DESCRIPTOR_FILE_NAME = 'pluginDescriptor.json';
 
     private readonly pathToDescriptor: string;
     private readonly descriptor: PluginDescriptor;
@@ -21,7 +22,8 @@ export class PluginDescriptorParser {
     constructor(private pluginDir: string) {
         this.pathToDescriptor = path.join(pluginDir, PluginDescriptorParser.DESCRIPTOR_FILE_NAME);
         if (!fs.existsSync(this.pathToDescriptor)) {
-            throw Error(`IML ${this.pathToDescriptor} does not exist`);
+            console.error(cerr`(PluginDescriptor) Failed to find plugin descriptor for ${path.basename(pluginDir)}`);
+            throw Error(`PluginDescriptor ${this.pathToDescriptor} does not exist`);
         }
         this.descriptor = this.parseFile();
     }
