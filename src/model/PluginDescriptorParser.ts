@@ -8,9 +8,13 @@ export interface PluginDescriptor {
      */
     readonly name: string;
     /**
-     * List of plugin names this plugin depends on
+     * List of plugin names this plugin depends on for production
      */
     readonly dependencies?: string[];
+    /**
+     * List of plugin names this plugin depends on for production
+     */
+    readonly testDependencies?: string[];
 }
 
 export class PluginDescriptorParser {
