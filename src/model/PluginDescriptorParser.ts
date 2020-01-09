@@ -24,12 +24,20 @@ export class PluginDescriptorParser {
     private readonly descriptor: PluginDescriptor;
 
     constructor(private pluginDir: string) {
-        this.pathToDescriptor = path.join(pluginDir, PluginDescriptorParser.DESCRIPTOR_FILE_NAME);
+        this.pathToDescriptor = PluginDescriptorParser.getPathToDescriptor(pluginDir);
         if (!fs.existsSync(this.pathToDescriptor)) {
             console.error(cerr`(PluginDescriptor) Failed to find plugin descriptor for ${path.basename(pluginDir)}`);
             throw Error(`PluginDescriptor ${this.pathToDescriptor} does not exist`);
         }
         this.descriptor = this.parseFile();
+    }
+
+    public static getPathToDescriptor(pluginDir) {
+        return path.join(pluginDir, PluginDescriptorParser.DESCRIPTOR_FILE_NAME);
+    }
+
+    public static doesPluginDescriptorExist(pluginDir: string): boolean {
+        return fs.existsSync(this.getPathToDescriptor(pluginDir));
     }
 
     public getPluginDescriptor(): PluginDescriptor {

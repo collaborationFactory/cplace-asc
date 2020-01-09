@@ -1,3 +1,5 @@
+import * as path from "path";
+
 declare function require(name: string): any;
 
 const fs = require('fs');
@@ -16,6 +18,10 @@ export class ImlParser {
             throw Error(`IML ${this.pathToIml} does not exist`);
         }
         this.parseFile();
+    }
+
+    public static doesImlExist(directory: string, pluginName: string): boolean {
+        return fs.existsSync(path.join(directory, `${pluginName}.iml`));
     }
 
     public getReferencedModules(): IImlModuleDependency[] {
