@@ -1,6 +1,6 @@
 {
   "name": "@cplace/asc",
-  "version": "0.11.0-beta",
+  "version": "0.11.0-beta.1",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
