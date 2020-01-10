@@ -89,7 +89,7 @@ function run(updateDetails?: IUpdateDetails) {
         process.exit(1);
     }
 
-    const mainRepoPath = AssetsCompiler.getMainRepoPath(cli.flags.localOnly);
+    const mainRepoPath = AssetsCompiler.getMainRepoPath(cli.flags.localonly);
     if (mainRepoPath === null) {
         console.error(cerr`Failed to find path to main repository with cf.cplace.platform plugin...`);
         process.exit(1);
