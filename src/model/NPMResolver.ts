@@ -11,15 +11,15 @@ import * as chokidar from "chokidar";
 import {FSWatcher} from "chokidar";
 import {Scheduler} from "../executor";
 import {cerr, cgreen, cred, debug, sleepBusy} from "../utils";
+import {PackageVersion} from "./PackageVersion";
 import rimraf = require("rimraf");
 import Timeout = NodeJS.Timeout;
 
 export class NPMResolver {
     private static readonly PACKAGE_LOCK_HASH = 'package-lock.hash';
     private static readonly PACKAGE_LOCK_JSON = 'package-lock.json';
-    private static readonly PACKAGE_JSON = 'package.json';
     private static readonly NODE_MODULES = 'node_modules';
-    private mainRepo: string;
+    private readonly mainRepo: string;
     private readonly hashFilePath: string;
     private watchers: FSWatcher[];
 
@@ -30,8 +30,8 @@ export class NPMResolver {
     }
 
     public async resolve(): Promise<void> {
-        if (!fs.existsSync(this.getPackagePath())) {
-            console.warn(cred`!`, `[NPM] package.json file not found, skipping resolution...`);
+        if (!PackageVersion.getOrNull()) {
+            console.warn(cred`!`, `(NPM) package.json file not found, skipping resolution...`);
             return Promise.resolve();
         }
 
@@ -51,7 +51,7 @@ export class NPMResolver {
     }
 
     private shouldResolveNpmModules(): boolean {
-        return this.getPackageVersion() !== '1.0.0';
+        return PackageVersion.get().major !== 1;
     }
 
     private registerWatchers() {
@@ -63,7 +63,7 @@ export class NPMResolver {
                 this.checkAndInstall();
             })
             .on('error', (e) => {
-                console.error(cerr`[NPM] error while watching package-lock.json: ${e}`);
+                console.error(cerr`(NPM) error while watching package-lock.json: ${e}`);
                 packageJsonWatcher.close();
             });
 
@@ -81,7 +81,7 @@ export class NPMResolver {
             debounce && clearTimeout(debounce);
             debounce = setTimeout(() => {
                 if (!fs.existsSync(this.getNodeModulesPath())) {
-                    console.log(cerr`[NPM] node_modules folder has been removed - restart cplace-asc`);
+                    console.log(cerr`(NPM) node_modules folder has been removed - restart cplace-asc`);
                     process.exit();
                 } else {
                     this.checkAndInstall();
@@ -93,7 +93,7 @@ export class NPMResolver {
             .on('unlink', handleEvent)
             .on('unlinkDir', handleEvent)
             .on('error', (e) => {
-                console.error(cerr`[NPM] node_modules watcher failed: ${e}`);
+                console.error(cerr`(NPM) node_modules watcher failed: ${e}`);
                 nodeModulesWatcher.close();
             });
     }
@@ -133,19 +133,19 @@ export class NPMResolver {
                     cwd: this.mainRepo
                 });
             }
-            console.log(cgreen`⇢`, `[NPM] package.json:v1.0.0 -> node_modules checked in`);
+            console.log(cgreen`⇢`, `(NPM) package.json:v1.0.0 -> node_modules checked in`);
             return;
         } else {
-            console.log(cgreen`⇢`, `[NPM] package.json:>v2.0.0 -> checking for npm install`);
+            console.log(cgreen`⇢`, `(NPM) package.json:>v2.0.0 -> checking for npm install`);
         }
 
         if (this.hasNoNodeModules()) {
-            console.log(cgreen`⇢`, `[NPM] node_modules don't exist...`);
+            console.log(cgreen`⇢`, `(NPM) node_modules don't exist...`);
             this.doNpmInstallAndCreateHash();
         } else {
             if (fs.existsSync(this.hashFilePath)) {
                 if (this.packageLockWasUpdated()) {
-                    console.log(cgreen`⇢`, `[NPM] package-lock.json was updated...`);
+                    console.log(cgreen`⇢`, `(NPM) package-lock.json was updated...`);
                     this.doNpmInstallAndCreateHash();
                 }
             } else {
@@ -157,23 +157,23 @@ export class NPMResolver {
     private packageLockWasUpdated(): boolean {
         const oldHash = fs.readFileSync(this.hashFilePath, {encoding: 'utf8'});
         if (oldHash === this.getHash4PackageLock()) {
-            console.log(cgreen`✓`, `[NPM] node_modules are up to date`);
+            console.log(cgreen`✓`, `(NPM) node_modules are up to date`);
             return false;
         }
         return true;
     }
 
     private doNpmInstallAndCreateHash() {
-        console.log(`⟲ [NPM] executing npm install`);
+        console.log(`⟲ (NPM) executing npm install`);
         const result = spawn.sync('npm', ['install'], {
             stdio: [process.stdin, process.stdout, process.stderr],
             cwd: this.mainRepo
         });
         if (result.status !== 0) {
-            console.log(cred`✗`, `[NPM] npm install ran into: ${result.error} and failed`);
-            throw Error(`✗ [NPM] npm install failed...`);
+            console.log(cred`✗`, `(NPM) npm install ran into: ${result.error} and failed`);
+            throw Error(`✗ (NPM) npm install failed...`);
         }
-        console.log(cgreen`⇢`, `[NPM] npm install successful`);
+        console.log(cgreen`⇢`, `(NPM) npm install successful`);
         this.createHashFile();
     }
 
@@ -203,19 +203,6 @@ export class NPMResolver {
         return false;
     }
 
-    private getPackageVersion(): string {
-        const packagePath = this.getPackagePath();
-        if (!fs.existsSync(packagePath)) {
-            console.error(cerr`[NPM] Could not find package.json in repo ${this.mainRepo} - aborting...`);
-            throw Error(cerr`[NPM] Could not find package.json in repo ${this.mainRepo} - aborting...`);
-        } else {
-            const packageJson_String = fs.readFileSync(packagePath, 'utf8');
-            const packageJson = JSON.parse(packageJson_String);
-            return packageJson.version
-        }
-
-    }
-
     private getHashFilePath(): string {
         return path.resolve(this.mainRepo, NPMResolver.NODE_MODULES, NPMResolver.PACKAGE_LOCK_HASH);
     }
@@ -226,9 +213,5 @@ export class NPMResolver {
 
     private getPackageLockPath(): string {
         return path.resolve(this.mainRepo, NPMResolver.PACKAGE_LOCK_JSON);
-    }
-
-    private getPackagePath(): string {
-        return path.resolve(this.mainRepo, NPMResolver.PACKAGE_JSON);
     }
 }

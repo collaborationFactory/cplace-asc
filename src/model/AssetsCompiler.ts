@@ -8,6 +8,8 @@ import CplacePlugin from './CplacePlugin';
 import {ExecutorService, Scheduler} from '../executor';
 import {cerr, cgreen, csucc, debug, formatDuration, IUpdateDetails} from '../utils';
 import {NPMResolver} from "./NPMResolver";
+import {ImlParser} from "./ImlParser";
+import {PluginDescriptorParser} from "./PluginDescriptorParser";
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -225,8 +227,9 @@ export class AssetsCompiler {
     }
 
     private static directoryLooksLikePlugin(pluginPath: string, potentialPluginName: string): boolean {
-        return fs.existsSync(path.join(pluginPath, `${potentialPluginName}.iml`)) // IML file
-            && fs.existsSync(path.join(pluginPath, 'src')); // path to src directory - release-notes will be excluded
+        return (
+            ImlParser.doesImlExist(pluginPath, potentialPluginName) || PluginDescriptorParser.doesPluginDescriptorExist(pluginPath)
+        ) && fs.existsSync(path.join(pluginPath, 'src')); // path to src directory - release-notes will be excluded
     }
 
     private static addProjectDependenciesRecursively(projects: Map<string, CplacePlugin>,

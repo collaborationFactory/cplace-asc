@@ -8,6 +8,7 @@ import {AssetsCompiler, IAssetsCompilerConfiguration} from './model/AssetsCompil
 import {cerr, checkForUpdate, cwarn, debug, enableDebug, isDebugEnabled, IUpdateDetails} from './utils';
 import * as os from 'os';
 import * as path from "path";
+import {PackageVersion} from "./model/PackageVersion";
 import meow = require('meow');
 
 checkNodeVersion();
@@ -87,15 +88,23 @@ function run(updateDetails?: IUpdateDetails) {
         console.error(cerr`--production and --onlypre cannot be enabled simultaneously`);
         process.exit(1);
     }
+
     const mainRepoPath = AssetsCompiler.getMainRepoPath(cli.flags.localOnly);
-    if (mainRepoPath && (path.basename(mainRepoPath) !== 'main') && (!cli.flags.onlypre) && (!cli.flags.localOnly)) {
+    if (mainRepoPath === null) {
+        console.error(cerr`Failed to find path to main repository with cf.cplace.platform plugin...`);
+        process.exit(1);
+        return;
+    } else if (path.basename(mainRepoPath) !== 'main' && (!cli.flags.onlypre) && (!cli.flags.localOnly)) {
         console.warn(cwarn`Sry main Repository is not called 'main' LESS Compilation might fail, please rename your folder to 'main'`);
     }
+
+
     if (cli.flags.threads !== null) {
         const t = parseInt(cli.flags.threads);
         if (isNaN(t)) {
             console.error(cerr`Number of --threads|-t must be greater or equal to 0 `);
             process.exit(1);
+            return;
         }
         cli.flags.threads = t;
     }
@@ -104,6 +113,8 @@ function run(updateDetails?: IUpdateDetails) {
         enableDebug();
         debug('Debugging enabled...');
     }
+
+    PackageVersion.initialize(mainRepoPath);
 
     const config: IAssetsCompilerConfiguration = {
         rootPlugins: cli.flags.plugin ? [cli.flags.plugin] : [],

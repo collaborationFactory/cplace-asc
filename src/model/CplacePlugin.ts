@@ -7,11 +7,11 @@ import * as fs from 'fs';
 import * as glob from 'glob';
 import {CplaceTSConfigGenerator} from './CplaceTSConfigGenerator';
 import {cerr, debug, GREEN_CHECK} from '../utils';
-import {ImlParser} from './ImlParser';
 import * as rimraf from 'rimraf';
 import {CplaceTypescriptCompiler} from '../compiler/CplaceTypescriptCompiler';
 import {CompressCssCompiler} from '../compiler/CompressCssCompiler';
 import {E2ETSConfigGenerator} from "./E2ETSConfigGenerator";
+import {getDependencyParser} from "./DependencyParser";
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined
@@ -148,22 +148,9 @@ export default class CplacePlugin {
     }
 
     public parseDependencies(excludeTestDependencies: boolean = false): void {
-        const imlPath = path.join(this.pluginDir, `${this.pluginName}.iml`);
-        if (!fs.existsSync(imlPath)) {
-            throw Error(`[${this.pluginName}] failed to find plugin IML`);
-        }
-
-        new ImlParser(imlPath).getReferencedModules()
-            .filter(module => {
-                const includeDependency = !excludeTestDependencies || !module.isTestScoped;
-                if (!includeDependency) {
-                    debug(`(CplacePlugin) [${this.pluginName}] excluding test dependency: ${module.moduleName}`);
-                }
-                return includeDependency;
-            })
-            .forEach(module => {
-                return this.dependencies.push(module.moduleName);
-            });
+        getDependencyParser()
+            .getPluginDependencies(this.pluginDir, this.pluginName, excludeTestDependencies)
+            .forEach(dependency => this.dependencies.push(dependency));
     }
 
     private async removeDir(path: string): Promise<void> {
