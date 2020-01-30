@@ -18,23 +18,24 @@ export class PackageVersion {
         const packagePath = path.resolve(mainRepo, PackageVersion.PACKAGE_JSON);
         if (!fs.existsSync(packagePath)) {
             console.warn(cwarn`[NPM] Could not find package.json in repo ${mainRepo}...`);
-            return null;
-        }
+            console.warn(cwarn`[NPM] -> Assuming version 1.0.0`);
+            PackageVersion._version = new PackageVersion(1, 0, 0);
+        } else {
+            const packageJson_String = fs.readFileSync(packagePath, 'utf8');
+            const packageJson = JSON.parse(packageJson_String);
+            const versionString = packageJson.version as string;
+            const versionParts = versionString.split('.');
+            if (versionParts.length !== 3) {
+                console.error(cerr`[NPM] Expected package.json "version" to consist of 3 parts`);
+                throw new Error(`[NPM] Expected package.json "version" to consist of 3 parts`);
+            }
 
-        const packageJson_String = fs.readFileSync(packagePath, 'utf8');
-        const packageJson = JSON.parse(packageJson_String);
-        const versionString = packageJson.version as string;
-        const versionParts = versionString.split('.');
-        if (versionParts.length !== 3) {
-            console.error(cerr`[NPM] Expected package.json "version" to consist of 3 parts`);
-            throw new Error(`[NPM] Expected package.json "version" to consist of 3 parts`);
+            PackageVersion._version = new PackageVersion(
+                parseInt(versionParts[0]),
+                parseInt(versionParts[1]),
+                parseInt(versionParts[2])
+            );
         }
-
-        PackageVersion._version = new PackageVersion(
-            parseInt(versionParts[0]),
-            parseInt(versionParts[1]),
-            parseInt(versionParts[2])
-        );
         return PackageVersion._version;
     }
 
