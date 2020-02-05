@@ -114,21 +114,20 @@ function run(updateDetails?: IUpdateDetails) {
         debug('Debugging enabled...');
     }
 
-    PackageVersion.initialize(mainRepoPath);
-
-    const config: IAssetsCompilerConfiguration = {
-        rootPlugins: cli.flags.plugin ? [cli.flags.plugin] : [],
-        watchFiles: cli.flags.watch,
-        onlyPreprocessing: cli.flags.onlypre,
-        clean: cli.flags.clean,
-        maxParallelism: !!cli.flags.threads ? cli.flags.threads : os.cpus().length - 1,
-        localOnly: cli.flags.localonly,
-        production: cli.flags.production
-    };
-
-    console.log(getAvailableStats());
-
     try {
+        PackageVersion.initialize(mainRepoPath);
+
+        const config: IAssetsCompilerConfiguration = {
+            rootPlugins: cli.flags.plugin ? [cli.flags.plugin] : [],
+            watchFiles: cli.flags.watch,
+            onlyPreprocessing: cli.flags.onlypre,
+            clean: cli.flags.clean,
+            maxParallelism: !!cli.flags.threads ? cli.flags.threads : os.cpus().length - 1,
+            localOnly: cli.flags.localonly,
+            production: cli.flags.production
+        };
+
+        console.log(getAvailableStats());
         const assetsCompiler = new AssetsCompiler(config);
         process.on('SIGTERM', () => {
             debug('Shutting down...');
@@ -150,6 +149,7 @@ function run(updateDetails?: IUpdateDetails) {
         if (isDebugEnabled()) {
             console.error(err);
         }
+        process.exit(1);
     }
 }
 
