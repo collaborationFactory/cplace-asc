@@ -47,6 +47,11 @@ export interface IAssetsCompilerConfiguration {
      * Indicates whether the compiler should be run in production mode
      */
     production: boolean;
+
+    /**
+     * Indicates whether parent repositories should be excluded from compilation
+     */
+    noParents: boolean;
 }
 
 /**
@@ -54,6 +59,11 @@ export interface IAssetsCompilerConfiguration {
  */
 export class AssetsCompiler {
     public static readonly PLATFORM_PLUGIN_NAME = 'cf.cplace.platform';
+
+    /**
+     * Name of the repository the compiler was started in
+     */
+    private readonly repositoryName: string;
 
     /**
      * Map of known plugin names to plugin instance
@@ -75,7 +85,8 @@ export class AssetsCompiler {
      */
     private npmResolver: NPMResolver | null = null;
 
-    constructor(private readonly runConfig: IAssetsCompilerConfiguration) {
+    constructor(private readonly runConfig: IAssetsCompilerConfiguration, private readonly repositoryDir: string) {
+        this.repositoryName = path.basename(repositoryDir);
         this.projects = this.setupProjects();
     }
 
@@ -85,7 +96,7 @@ export class AssetsCompiler {
             return new Promise<void>(resolve => resolve());
         }
 
-        const mainRepoPath = AssetsCompiler.getMainRepoPath(this.runConfig.localOnly);
+        const mainRepoPath = AssetsCompiler.getMainRepoPath(this.repositoryDir, this.runConfig.localOnly);
         if (mainRepoPath === null) {
             debug(`(AssetsCompiler) Main repo cannot be found...`);
             return new Promise<void>((resolve, reject) => reject(
@@ -97,7 +108,9 @@ export class AssetsCompiler {
         if (this.runConfig.clean) {
             debug(`(AssetsCompiler) running clean for all plugins...`);
             for (const plugin of this.projects.values()) {
-                await plugin.cleanGeneratedOutput();
+                if (this.isInCompilationScope(plugin)) {
+                    await plugin.cleanGeneratedOutput();
+                }
             }
         }
 
@@ -113,8 +126,13 @@ export class AssetsCompiler {
 
         this.executor = new ExecutorService(this.runConfig.maxParallelism);
         this.scheduler = new Scheduler(
-            this.executor, this.projects, mainRepoPath,
-            this.runConfig.production, this.runConfig.watchFiles,
+            this.executor,
+            this.projects,
+            this.repositoryName,
+            mainRepoPath,
+            this.runConfig.production,
+            this.runConfig.noParents,
+            this.runConfig.watchFiles,
             updateDetails
         );
 
@@ -170,20 +188,21 @@ export class AssetsCompiler {
             knownRepoDependencies = [];
             debug(`(AssetsCompiler) Ignoring repo dependencies since localOnly execution...`);
         } else {
-            knownRepoDependencies = AssetsCompiler.getRepoDependencies();
+            knownRepoDependencies = AssetsCompiler.getRepoDependencies(this.repositoryDir);
             debug(`(AssetsCompiler) Detected repo dependencies: ${knownRepoDependencies.join(', ')}`);
         }
 
         const projects = new Map<string, CplacePlugin>();
-        const files = fs.readdirSync(process.cwd());
+        const files = fs.readdirSync(this.repositoryDir);
 
         files.forEach(file => {
-            const filePath = path.join(process.cwd(), file);
+            const filePath = path.join(this.repositoryDir, file);
             if (fs.lstatSync(filePath).isDirectory()) {
                 const potentialPluginName = path.basename(file);
                 if ((this.runConfig.rootPlugins.length === 0 || this.runConfig.rootPlugins.indexOf(potentialPluginName) !== -1)
                     && AssetsCompiler.directoryLooksLikePlugin(filePath, potentialPluginName)) {
                     AssetsCompiler.addProjectDependenciesRecursively(
+                        this.repositoryDir,
                         projects, knownRepoDependencies,
                         potentialPluginName, filePath, this.runConfig);
                 }
@@ -191,6 +210,10 @@ export class AssetsCompiler {
         });
 
         projects.forEach(project => {
+            if (!this.isInCompilationScope(project)) {
+                return;
+            }
+
             if (project.hasTypeScriptAssets) {
                 project.generateTsConfig(p => projects.get(p), this.runConfig.production, this.runConfig.localOnly);
             }
@@ -205,15 +228,15 @@ export class AssetsCompiler {
         return projects;
     }
 
-    public static getMainRepoPath(localonly: boolean): string | null {
+    public static getMainRepoPath(repositoryDir: string, localonly: boolean): string | null {
         let mainRepoPath = '';
         if (localonly) {
-            mainRepoPath = path.resolve(process.cwd());
+            mainRepoPath = path.resolve(repositoryDir);
         } else {
-            if (fs.existsSync(path.resolve(path.join(process.cwd(), '..', 'main')))) {
-                mainRepoPath = path.resolve(path.join(process.cwd(), '..', 'main'));
-            } else if (fs.existsSync(path.resolve(path.join(process.cwd(), '..', 'cplace')))) {
-                mainRepoPath = path.resolve(path.join(process.cwd(), '..', 'cplace'));
+            if (fs.existsSync(path.resolve(path.join(repositoryDir, '..', 'main')))) {
+                mainRepoPath = path.resolve(path.join(repositoryDir, '..', 'main'));
+            } else if (fs.existsSync(path.resolve(path.join(repositoryDir, '..', 'cplace')))) {
+                mainRepoPath = path.resolve(path.join(repositoryDir, '..', 'cplace'));
             } else {
                 return null;
             }
@@ -232,7 +255,8 @@ export class AssetsCompiler {
         ) && fs.existsSync(path.join(pluginPath, 'src')); // path to src directory - release-notes will be excluded
     }
 
-    private static addProjectDependenciesRecursively(projects: Map<string, CplacePlugin>,
+    private static addProjectDependenciesRecursively(repositoryDir: string,
+                                                     projects: Map<string, CplacePlugin>,
                                                      repoDependencies: string[],
                                                      pluginName: string,
                                                      pluginPath: string, runConfig: IAssetsCompilerConfiguration) {
@@ -248,8 +272,8 @@ export class AssetsCompiler {
             if (projects.has(depName)) {
                 return;
             }
-            const pluginPath = this.findPluginPath(depName, repoDependencies);
-            this.addProjectDependenciesRecursively(projects, repoDependencies, depName, pluginPath, runConfig);
+            const pluginPath = this.findPluginPath(repositoryDir, depName, repoDependencies);
+            this.addProjectDependenciesRecursively(repositoryDir, projects, repoDependencies, depName, pluginPath, runConfig);
         });
     }
 
@@ -265,12 +289,12 @@ export class AssetsCompiler {
         }
     }
 
-    private static getRepoDependencies(): string[] {
-        if (path.basename(process.cwd()) === 'main' || path.basename(process.cwd()) === 'cplace') {
+    private static getRepoDependencies(repositoryDir: string): string[] {
+        if (path.basename(repositoryDir) === 'main' || path.basename(repositoryDir) === 'cplace') {
             return [];
         }
 
-        const parentReposPath = path.join(process.cwd(), 'parent-repos.json');
+        const parentReposPath = path.join(repositoryDir, 'parent-repos.json');
         if (!fs.existsSync(parentReposPath)) {
             debug(`(AssetsCompiler) could not find parent-repos.json: ${parentReposPath}`);
             return [];
@@ -285,10 +309,10 @@ export class AssetsCompiler {
         }
     }
 
-    private static findPluginPath(pluginName: string, repoDependencies: string[]): string {
+    private static findPluginPath(repositoryDir: string, pluginName: string, repoDependencies: string[]): string {
         let relativePath = pluginName;
-        if (fs.existsSync(path.join(process.cwd(), relativePath))) {
-            return path.join(process.cwd(), relativePath);
+        if (fs.existsSync(path.join(repositoryDir, relativePath))) {
+            return path.join(repositoryDir, relativePath);
         }
         for (const repoName of repoDependencies) {
             relativePath = path.join('..', repoName, pluginName);
@@ -306,5 +330,9 @@ export class AssetsCompiler {
         }
         console.error(cerr`Could not locate plugin ${pluginName}`);
         throw Error(`Could not locate plugin ${pluginName}`);
+    }
+
+    private isInCompilationScope(plugin: CplacePlugin): boolean {
+        return !this.runConfig.noParents || plugin.repo === this.repositoryName;
     }
 }

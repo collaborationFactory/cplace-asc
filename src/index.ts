@@ -28,6 +28,7 @@ function run(updateDetails?: IUpdateDetails) {
         --clean, -c             Clean generated output folders at the beginning
         --threads, -t           Maximum number of threads to run in parallel
         --localonly, -l         Enable to not scan other directories than CWD for plugins
+        --noparents, -x         Enable to only run compilation on plugins in current repository (still scans for other sources to be present)
         --verbose, -v           Enable verbose logging
         --production, -P        Enable production mode (ignores test dependencies and E2E)
 
@@ -63,6 +64,11 @@ function run(updateDetails?: IUpdateDetails) {
                 alias: 'l',
                 default: false
             },
+            noparents: {
+                type: 'boolean',
+                alias: 'x',
+                default: false
+            },
             verbose: {
                 type: 'boolean',
                 alias: 'v',
@@ -89,7 +95,7 @@ function run(updateDetails?: IUpdateDetails) {
         process.exit(1);
     }
 
-    const mainRepoPath = AssetsCompiler.getMainRepoPath(cli.flags.localonly);
+    const mainRepoPath = AssetsCompiler.getMainRepoPath(process.cwd(), cli.flags.localonly);
     if (mainRepoPath === null) {
         console.error(cerr`Failed to find path to main repository with cf.cplace.platform plugin...`);
         process.exit(1);
@@ -124,11 +130,12 @@ function run(updateDetails?: IUpdateDetails) {
             clean: cli.flags.clean,
             maxParallelism: !!cli.flags.threads ? cli.flags.threads : os.cpus().length - 1,
             localOnly: cli.flags.localonly,
-            production: cli.flags.production
+            production: cli.flags.production,
+            noParents: cli.flags.noparents
         };
 
         console.log(getAvailableStats());
-        const assetsCompiler = new AssetsCompiler(config);
+        const assetsCompiler = new AssetsCompiler(config, process.cwd());
         process.on('SIGTERM', () => {
             debug('Shutting down...');
             assetsCompiler.shutdown().then(() => {

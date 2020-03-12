@@ -41,10 +41,24 @@ export class Scheduler {
     private finishedResolver?: () => void;
     private finishedRejecter?: (reason: any) => void;
 
+    /**
+     * Creates a new scheduler to run compilation jobs.
+     *
+     * @param executor The executor to run jobs
+     * @param plugins All plugins that are currently in compilation scope
+     * @param rootRepository The name of the repository the compilation is started from
+     * @param mainRepoDir Path to the `main` repository
+     * @param isProduction Whether to compile for production
+     * @param noParents Whether to exclude parent repositories from compilation
+     * @param watchFiles Whether to watch files for changes
+     * @param updateDetails Details of a potentially available version update
+     */
     constructor(private readonly executor: ExecutorService,
                 private readonly plugins: Map<string, CplacePlugin>,
+                private readonly rootRepository: string,
                 private readonly mainRepoDir: string,
                 private readonly isProduction: boolean,
+                private readonly noParents: boolean,
                 private readonly watchFiles: boolean,
                 private readonly updateDetails?: IUpdateDetails) {
         this.tsJobs = this.createTsJobTracker();
@@ -194,7 +208,7 @@ export class Scheduler {
     private createTsJobTracker(): JobTracker {
         const tsPlugins: CplacePlugin[] = [];
         this.plugins.forEach(plugin => {
-            if (plugin.hasTypeScriptAssets) {
+            if (plugin.hasTypeScriptAssets && this.isInCompilationScope(plugin)) {
                 tsPlugins.push(plugin);
             }
         });
@@ -210,7 +224,7 @@ export class Scheduler {
     private createTsE2EJobTracker(): JobTracker {
         const tsE2EPlugins: CplacePlugin[] = [];
         this.plugins.forEach(plugin => {
-            if (plugin.hasTypeScriptE2EAssets) {
+            if (plugin.hasTypeScriptE2EAssets && this.isInCompilationScope(plugin)) {
                 tsE2EPlugins.push(plugin);
             }
         });
@@ -226,7 +240,7 @@ export class Scheduler {
     private createLessJobTracker(): JobTracker {
         const lessPlugins: CplacePlugin[] = [];
         this.plugins.forEach(plugin => {
-            if (plugin.hasLessAssets) {
+            if (plugin.hasLessAssets && this.isInCompilationScope(plugin)) {
                 lessPlugins.push(plugin);
             }
         });
@@ -242,7 +256,7 @@ export class Scheduler {
     private createCompressCssJobTracker(): JobTracker {
         const compressPlugins: CplacePlugin[] = [];
         this.plugins.forEach(plugin => {
-            if (plugin.hasCompressCssAssets) {
+            if (plugin.hasCompressCssAssets && this.isInCompilationScope(plugin)) {
                 compressPlugins.push(plugin);
             }
         });
@@ -253,24 +267,28 @@ export class Scheduler {
         return new JobTracker(jobs);
     }
 
+    private isInCompilationScope(plugin: CplacePlugin): boolean {
+        return !this.noParents || plugin.repo === this.rootRepository;
+    }
+
     private filterTypeScriptPlugins(plugins: string[]): string[] {
         return plugins
             .map(p => this.getPlugin(p))
-            .filter(p => p.hasTypeScriptAssets)
+            .filter(p => p.hasTypeScriptAssets && this.isInCompilationScope(p))
             .map(p => p.pluginName);
     }
 
     private filterTypeScriptE2EPlugins(plugins: string[]): string[] {
         return plugins
             .map(p => this.getPlugin(p))
-            .filter(p => p.hasTypeScriptE2EAssets)
+            .filter(p => p.hasTypeScriptE2EAssets && this.isInCompilationScope(p))
             .map(p => p.pluginName);
     }
 
     private filterLessPlugins(plugins: string[]): string[] {
         return plugins
             .map(p => this.getPlugin(p))
-            .filter(p => p.hasLessAssets)
+            .filter(p => p.hasLessAssets && this.isInCompilationScope(p))
             .map(p => p.pluginName);
     }
 
