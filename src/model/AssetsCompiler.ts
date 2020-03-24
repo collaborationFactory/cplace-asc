@@ -231,18 +231,25 @@ export class AssetsCompiler {
     public static getMainRepoPath(repositoryDir: string, localonly: boolean): string | null {
         let mainRepoPath = '';
         if (localonly) {
+            debug(`(AssetsCompiler) Resolving main repo path [localonly] as: ${repositoryDir}`);
             mainRepoPath = path.resolve(repositoryDir);
         } else {
+            debug(`(AssetsCompiler) Resolving main repo path from root: ${repositoryDir}`);
             if (fs.existsSync(path.resolve(path.join(repositoryDir, '..', 'main')))) {
+                debug(`(AssetsCompiler) Found as "main"`);
                 mainRepoPath = path.resolve(path.join(repositoryDir, '..', 'main'));
             } else if (fs.existsSync(path.resolve(path.join(repositoryDir, '..', 'cplace')))) {
+                debug(`(AssetsCompiler) Found as "cplace"`);
                 mainRepoPath = path.resolve(path.join(repositoryDir, '..', 'cplace'));
             } else {
+                debug(`(AssetsCompiler) Failed to find main/cplace repository...`);
                 return null;
             }
         }
 
+        debug(`(AssetsCompiler) main repo resolved to: ${mainRepoPath}`);
         if (!fs.existsSync(path.join(mainRepoPath, AssetsCompiler.PLATFORM_PLUGIN_NAME))) {
+            debug(`(AssetsCompiler) Failed to find cf.cplace.platform inside: ${mainRepoPath}`);
             return null;
         }
 
