@@ -95,16 +95,6 @@ function run(updateDetails?: IUpdateDetails) {
         process.exit(1);
     }
 
-    const mainRepoPath = AssetsCompiler.getMainRepoPath(process.cwd(), cli.flags.localonly);
-    if (mainRepoPath === null) {
-        console.error(cerr`Failed to find path to main repository with cf.cplace.platform plugin...`);
-        process.exit(1);
-        return;
-    } else if (path.basename(mainRepoPath) !== 'main' && (!cli.flags.onlypre) && (!cli.flags.localonly)) {
-        console.warn(cwarn`Sry main Repository is not called 'main' LESS Compilation might fail, please rename your folder to 'main'`);
-    }
-
-
     if (cli.flags.threads !== null) {
         const t = parseInt(cli.flags.threads);
         if (isNaN(t)) {
@@ -118,6 +108,15 @@ function run(updateDetails?: IUpdateDetails) {
     if (cli.flags.verbose) {
         enableDebug();
         debug('Debugging enabled...');
+    }
+
+    const mainRepoPath = AssetsCompiler.getMainRepoPath(process.cwd(), cli.flags.localonly);
+    if (mainRepoPath === null) {
+        console.error(cerr`Failed to find path to main repository with cf.cplace.platform plugin...`);
+        process.exit(1);
+        return;
+    } else if (path.basename(mainRepoPath) !== 'main' && (!cli.flags.onlypre) && (!cli.flags.localonly)) {
+        console.warn(cwarn`Sry main Repository is not called 'main' LESS Compilation might fail, please rename your folder to 'main'`);
     }
 
     try {
