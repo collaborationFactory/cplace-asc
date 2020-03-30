@@ -22,7 +22,7 @@ function run(updateDetails?: IUpdateDetails) {
         $ cplace-asc
 
     Options:
-        --plugin, -p <plugin>   Run for specified plugin (and dependencies)
+        --plugin, -p <plugins>  Run for specified plugins (and dependencies) - comma separated list of plugin names
         --watch, -w             Enable watching of source files (continuous compilation)
         --onlypre, -o           Run only preprocessing steps (like create tsconfig.json files)
         --clean, -c             Clean generated output folders at the beginning
@@ -122,8 +122,9 @@ function run(updateDetails?: IUpdateDetails) {
     try {
         PackageVersion.initialize(mainRepoPath);
 
+        const plugins = cli.flags.plugin ? cli.flags.plugin.split(',') : [];
         const config: IAssetsCompilerConfiguration = {
-            rootPlugins: cli.flags.plugin ? [cli.flags.plugin] : [],
+            rootPlugins: plugins,
             watchFiles: cli.flags.watch,
             onlyPreprocessing: cli.flags.onlypre,
             clean: cli.flags.clean,
