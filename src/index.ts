@@ -131,7 +131,7 @@ function run(updateDetails?: IUpdateDetails) {
             maxParallelism: !!cli.flags.threads ? cli.flags.threads : os.cpus().length - 1,
             localOnly: cli.flags.localonly,
             production: cli.flags.production,
-            noParents: cli.flags.noparents
+            noParents: cli.flags.noparents || cli.flags.noParents
         };
 
         console.log(getAvailableStats());
