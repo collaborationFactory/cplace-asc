@@ -1,0 +1,21 @@
+name: NPM Release
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    name: Publish package to NPM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "12.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: NPM Install
+        run: npm install
+      - name: NPM Publish
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

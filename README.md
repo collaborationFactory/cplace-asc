@@ -90,6 +90,17 @@ $ cplace-asc --help
 ...
 ```
 
+## Publishing a new version
+
+To publish a new version on the NPM registry take the following steps:
+
+1. Manually bump the version number in `package.json` as desired (major / minor / patch).
+2. Push the update to GitHub.
+3. Create a new Release on GitHub:
+   1. Create _a new tag_ matching the version you want to publish, e.g. `v0.20.3`.
+   2. Put in the proper release notes as description of the Release.
+4. On creating the Release (_not as a draft_) the GitHub workflow will run and publish the package to NPM automatically.
+
 ## Source File Requirements
 
 ### TypeScript
