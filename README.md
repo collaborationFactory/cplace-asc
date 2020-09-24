@@ -1,3 +1,13 @@
+# Document Control / Repository Information
+Item | Value 
+--- | ---
+Owner |	Christian Kaltenbach, Philip Stöhrer, Stefan Stadler
+Team |	none yet
+Project  | none
+Parent |	none
+Developed by |	collaboration Factory AG
+Description |	Unser Kommandozeilen-Werkzeug um Frontend Assets zu bauen.
+
 # cplace-asc
 
 `cplace-asc` is the new cplace assets compiler toolchain used to compile TypeScript and LESS sources into their JavaScript and CSS counterparts as well as compress multiple CSS files into a single file.
