@@ -159,7 +159,7 @@ export class NPMResolver {
     }
 
     private doNpmInstallAndCreateHash() {
-        let result
+        let result;
         if (this.isProduction) {
             console.log(`⟲ (NPM) executing npm install in production mode '--only=prod'`);
             result = spawn.sync('npm', ['install', '--only=prod'], {
