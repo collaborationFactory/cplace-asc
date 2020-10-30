@@ -23,7 +23,7 @@ export class NPMResolver {
     private readonly hashFilePath: string;
     private watchers: FSWatcher[];
 
-    constructor(mainRepo: string, private watch: boolean, private isProduction: boolean) {
+    constructor(mainRepo: string, private watch: boolean) {
         this.mainRepo = mainRepo;
         this.hashFilePath = this.getHashFilePath();
         this.watchers = [];
@@ -159,20 +159,11 @@ export class NPMResolver {
     }
 
     private doNpmInstallAndCreateHash() {
-        let result;
-        if (this.isProduction) {
-            console.log(`⟲ (NPM) executing npm install in production mode '--only=prod'`);
-            result = spawn.sync('npm', ['install', '--only=prod'], {
-                stdio: [process.stdin, process.stdout, process.stderr],
-                cwd: this.mainRepo
-            });
-        } else {
-            console.log(`⟲ (NPM) executing npm install`);
-            result = spawn.sync('npm', ['install'], {
-                stdio: [process.stdin, process.stdout, process.stderr],
-                cwd: this.mainRepo
-            });
-        }
+        console.log(`⟲ (NPM) executing npm install`);
+        const result = spawn.sync('npm', ['install'], {
+            stdio: [process.stdin, process.stdout, process.stderr],
+            cwd: this.mainRepo
+        });
         if (result.status !== 0) {
             console.log(cred`✗`, `(NPM) npm install ran into: ${result.error} and failed`);
             throw Error(`✗ (NPM) npm install failed...`);
