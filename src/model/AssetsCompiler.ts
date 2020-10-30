@@ -218,7 +218,9 @@ export class AssetsCompiler {
                 project.generateTsConfig(p => projects.get(p), this.runConfig.production, this.runConfig.localOnly);
             }
             if (project.hasTypeScriptE2EAssets) {
+                if (!this.runConfig.production) {
                     project.generateTsE2EConfig(p => projects.get(p), false, this.runConfig.localOnly)
+                }
             }
         });
 
