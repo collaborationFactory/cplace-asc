@@ -151,6 +151,7 @@ export class NPMResolver {
 
     private packageLockWasUpdated(): boolean {
         const oldHash = fs.readFileSync(this.hashFilePath, {encoding: 'utf8'});
+        this.installPluginDependencies();
         if (oldHash === this.getHash4PackageLock()) {
             console.log(cgreen`✓`, `(NPM) node_modules are up to date`);
             return false;
@@ -166,12 +167,14 @@ export class NPMResolver {
                 stdio: [process.stdin, process.stdout, process.stderr],
                 cwd: this.mainRepo
             });
+            result = this.installPluginDependencies(result);
         } else {
             console.log(`⟲ (NPM) executing npm install`);
             result = spawn.sync('npm', ['install'], {
                 stdio: [process.stdin, process.stdout, process.stderr],
                 cwd: this.mainRepo
             });
+            result = this.installPluginDependencies(result);
         }
         if (result.status !== 0) {
             console.log(cred`✗`, `(NPM) npm install ran into: ${result.error} and failed`);
@@ -179,6 +182,57 @@ export class NPMResolver {
         }
         console.log(cgreen`⇢`, `(NPM) npm install successful`);
         this.createHashFile();
+    }
+
+    private getPluginName(): string {
+        const pluginArgIndex = process.argv.findIndex(arg => arg === '-p' || arg === '--prefix');
+        let pluginName;
+        if (pluginArgIndex !== -1) {
+            pluginName = process.argv[pluginArgIndex + 1];
+        }
+        return pluginName;
+    }
+
+    private installPluginDependencies(result?: any): any {
+        const pluginName = this.getPluginName();
+        if (pluginName) {
+            console.log(`⟲ (NPM) executing npm install for ${pluginName}`);
+            result = spawn.sync('npm', ['run', pluginName], {
+                stdio: [process.stdin, process.stdout, process.stderr],
+                cwd: this.mainRepo
+            });
+            if (result.status === 0) {
+                this.writeToJavaScriptIncludesToBeCompressedTextFile(pluginName);
+            }
+        }
+        return result;
+    }
+
+    private writeToJavaScriptIncludesToBeCompressedTextFile(pluginName: string): void {
+        const javaScriptIncludesToBeCompressedTextFilePath = `${this.mainRepo}/${pluginName}/assets/javaScriptIncludesToBeCompressed.txt`;
+
+        fs.readFile(javaScriptIncludesToBeCompressedTextFilePath, 'utf8', (err, buff) => {
+
+            const pathToInclude = `/generated_js/vendor.js`;
+            if (buff.includes(pathToInclude)) {
+            // removes included path if already exists
+            const includedPaths = buff.split('\n');
+            const index = includedPaths.indexOf(pathToInclude);
+            includedPaths.splice(index, 1);
+            buff = includedPaths.join('\n');
+            }
+
+            const content = buff + `\n${pathToInclude}`;
+
+            fs.writeFile(javaScriptIncludesToBeCompressedTextFilePath, content, (e) => {
+                if (e) { 
+                    console.log(`Error writing ${pathToInclude} to ${javaScriptIncludesToBeCompressedTextFilePath}`)
+                } else {
+                    console.log(`Path ${pathToInclude} written to ${javaScriptIncludesToBeCompressedTextFilePath}`);
+                }
+            });
+
+        });
     }
 
     private getHash4PackageLock(): string {
