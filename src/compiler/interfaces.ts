@@ -7,6 +7,7 @@ export interface ICompileRequest {
     verbose?: boolean;
     less?: boolean;
     ts?: boolean;
+    yaml?: boolean;
     tsE2E?: boolean;
     compressCss?: boolean;
 }
