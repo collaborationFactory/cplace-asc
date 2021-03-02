@@ -60,7 +60,8 @@ export class YamlCompiler implements ICompiler {
         return YamlCompiler.executePromisesSequentially([
             this.generatePluginTypes.bind(this, plugin),
             this.copyPluginTypes.bind(this, plugin),
-            this.removePluginDist.bind(this, plugin)
+            this.removePluginDist.bind(this, plugin),
+            this.removeGeneratedOpenAPIFiles.bind(this, plugin)
         ]);
     }
 
@@ -114,6 +115,23 @@ export class YamlCompiler implements ICompiler {
         return new Promise((resolve, reject) => {
             const pluginPath = this.getPluginPath(plugin);
             const dist = path.resolve(`${pluginPath}/api/dist/openapi`);
+            rimraf(dist, err => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve(true);
+            });
+        });
+    }
+
+    /**
+     * Removes auto generated OpenAPI files. For deletion it uses rimraf node module.
+     * @param plugin Provided plugin for which auto generated OpenAPI files should be removed.
+     */
+    private removeGeneratedOpenAPIFiles(plugin: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            const dist = path.resolve(`${this.mainRepoDir}/openapitools.json`);
             rimraf(dist, err => {
                 if (err) {
                     reject(err);
