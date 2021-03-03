@@ -5,7 +5,7 @@ import * as rimraf from "rimraf";
 import * as path from "path";
 import {exec} from "child_process";
 
-export class YamlCompiler implements ICompiler {
+export class OpenAPIYamlCompiler implements ICompiler {
 
     constructor(private readonly pluginName: string,
                 private readonly dependencyPaths: string[],
@@ -31,21 +31,21 @@ export class YamlCompiler implements ICompiler {
     }
 
     /**
-     * Compiles yaml
+     * Compiles OpenAPI yaml
      */
     public compile(): Promise<CompilationResult> {
-        console.log(`⟲ [${this.pluginName}] starting YAML compilation...`);
+        console.log(`⟲ [${this.pluginName}] starting OpenAPI YAML compilation...`);
         const start = new Date().getTime();
         return new Promise<CompilationResult>((resolve) => {
             return this.buildPluginTypes(this.pluginName)
                 .then(() => {
                     let end = new Date().getTime();
-                    console.log(GREEN_CHECK, `[${this.pluginName}] YAML finished (${formatDuration(end - start)})`);
+                    console.log(GREEN_CHECK, `[${this.pluginName}] OpenAPI YAML finished (${formatDuration(end - start)})`);
                     resolve(CompilationResult.CHANGED);
                 })
                 .catch((err) => {
                     console.error(cerr`${err}`);
-                    throw Error(`[${this.pluginName}] Failed to write YAML output`);
+                    throw Error(`[${this.pluginName}] Failed to write OpenAPI YAML output`);
                 });
         });
     }
@@ -57,7 +57,7 @@ export class YamlCompiler implements ICompiler {
      * @param plugin Provided plugin
      */
     private buildPluginTypes(plugin: string): Promise<any> {
-        return YamlCompiler.executePromisesSequentially([
+        return OpenAPIYamlCompiler.executePromisesSequentially([
             this.generatePluginTypes.bind(this, plugin),
             this.copyPluginTypes.bind(this, plugin),
             this.removePluginDist.bind(this, plugin),
@@ -73,7 +73,7 @@ export class YamlCompiler implements ICompiler {
     private generatePluginTypes(plugin: string): Promise<any> {
         return new Promise((resolve, reject) => {
             const pluginPath = this.getPluginPath(plugin);
-            const cli = path.resolve(YamlCompiler.getNodeModulesBinPath(), 'openapi-generator-cli');
+            const cli = path.resolve(OpenAPIYamlCompiler.getNodeModulesBinPath(), 'openapi-generator-cli');
             const yaml = path.resolve(`${pluginPath}/api/API.yaml`);
             const dist = path.resolve(`${pluginPath}/api/dist/openapi`);
             const cmd = `${cli} version-manager set 5.0.0 && ${cli} generate -i ${yaml} -g typescript-angular -o ${dist} --additional-properties=ngVersion=6.1.7,npmName=restClient,supportsES6=true,npmVersion=6.9.0,withInterfaces=true`;

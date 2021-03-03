@@ -35,7 +35,7 @@ export default class CplacePlugin {
     public readonly hasTypeScriptAssets: boolean;
     public readonly hasTypeScriptE2EAssets: boolean;
     public readonly hasLessAssets: boolean;
-    public readonly hasYamlAssets: boolean;
+    public readonly hasOpenAPIYamlAssets: boolean;
     public readonly hasCompressCssAssets: boolean;
 
     /**
@@ -59,7 +59,7 @@ export default class CplacePlugin {
         if (fs.existsSync(e2ePath)) {
             this.hasTypeScriptE2EAssets = glob.sync(path.join(e2ePath, '**', '*.ts')).length > 0;
         }
-        this.hasYamlAssets = glob.sync(path.join(this.pluginDir, 'api', '*.yaml')).length > 0;
+        this.hasOpenAPIYamlAssets = glob.sync(path.join(this.pluginDir, 'api', '*.yaml')).length > 0;
         this.hasLessAssets = glob.sync(path.join(this.assetsDir, '**', '*.less')).length > 0;
         this.hasCompressCssAssets = fs.existsSync(path.resolve(this.assetsDir, 'css', CompressCssCompiler.ENTRY_FILE_NAME));
     }

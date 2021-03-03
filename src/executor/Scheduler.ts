@@ -23,13 +23,13 @@ export class Scheduler {
         'tsE2E': 'ts',
         'less': 'less',
         'css': 'css',
-        'yaml': 'yaml'
+        'openAPIYaml': 'yaml'
     };
 
     private readonly tsJobs: JobTracker;
     private readonly tsE2EJobs: JobTracker;
     private readonly lessJobs: JobTracker;
-    private readonly yamlJobs: JobTracker;
+    private readonly openAPIYamlJobs: JobTracker;
     private readonly compressCssJobs: JobTracker;
 
     private watchers = {
@@ -37,7 +37,7 @@ export class Scheduler {
         'tsE2E': new Map<string, FSWatcher>(),
         'less': new Map<string, FSWatcher>(),
         'css': new Map<string, FSWatcher>(),
-        'yaml': new Map<string, FSWatcher>()
+        'openAPIYaml': new Map<string, FSWatcher>()
     };
 
     private completed = false;
@@ -67,7 +67,7 @@ export class Scheduler {
         this.tsJobs = this.createTsJobTracker();
         this.tsE2EJobs = this.createTsE2EJobTracker();
         this.lessJobs = this.createLessJobTracker();
-        this.yamlJobs = this.createYamlJobTracker();
+        this.openAPIYamlJobs = this.createOpenAPIYamlJobTracker();
         this.compressCssJobs = this.createCompressCssJobTracker();
     }
 
@@ -117,11 +117,11 @@ export class Scheduler {
         }
         const nextLessPlugin = lessSchedulingResult.scheduledPlugin;
 
-        const yamlSchedulingResult = this.getAndScheduleNextJob(this.yamlJobs, 'yaml', 'yaml');
-        if (yamlSchedulingResult.backoff) {
+        const openAPIYamlSchedulingResult = this.getAndScheduleNextJob(this.openAPIYamlJobs, 'openAPIYaml', 'openAPIYaml');
+        if (openAPIYamlSchedulingResult.backoff) {
             return;
         }
-        const nextYamlPlugin = yamlSchedulingResult.scheduledPlugin;
+        const nextOpenAPIYamlPlugin = openAPIYamlSchedulingResult.scheduledPlugin;
 
         const compressCssSchedulingResult = this.getAndScheduleNextJob(this.compressCssJobs, 'compressCss', 'css');
         if (compressCssSchedulingResult.backoff) {
@@ -129,7 +129,7 @@ export class Scheduler {
         }
         const nextCompressCssPlugin = compressCssSchedulingResult.scheduledPlugin;
 
-        if (nextTsPlugin === null && nextTsE2EPlugin == null && nextLessPlugin === null && nextCompressCssPlugin === null || nextYamlPlugin === null) {
+        if (nextTsPlugin === null && nextTsE2EPlugin == null && nextLessPlugin === null && nextCompressCssPlugin === null || nextOpenAPIYamlPlugin === null) {
             if (!this.watchFiles && !this.completed) {
                 printUpdateDetails(this.updateDetails);
                 this.completed = true;
@@ -140,7 +140,7 @@ export class Scheduler {
                 console.log();
                 printUpdateDetails(this.updateDetails);
             }
-        } else if (nextTsPlugin || nextTsE2EPlugin || nextLessPlugin || nextCompressCssPlugin || nextYamlPlugin) {
+        } else if (nextTsPlugin || nextTsE2EPlugin || nextLessPlugin || nextCompressCssPlugin || nextOpenAPIYamlPlugin) {
             if (this.executor.hasCapacity()) {
                 this.scheduleNext();
             }
@@ -148,8 +148,8 @@ export class Scheduler {
     }
 
     private getAndScheduleNextJob(jobTracker: JobTracker,
-                                  compileType: 'ts' | 'less' | 'compressCss' | 'tsE2E' | 'yaml',
-                                  watchType: 'ts' | 'less' | 'css' | 'tsE2E' | 'yaml'): ISchedulingResult {
+                                  compileType: 'ts' | 'less' | 'compressCss' | 'tsE2E' | 'openAPIYaml',
+                                  watchType: 'ts' | 'less' | 'css' | 'tsE2E' | 'openAPIYaml'): ISchedulingResult {
         const nextPlugin = jobTracker.getNextKey();
         if (nextPlugin) {
             const plugin = this.getPlugin(nextPlugin);
@@ -213,7 +213,7 @@ export class Scheduler {
         this.watchers.css.forEach(watcher => {
             watcher.close();
         });
-        this.watchers.yaml.forEach(watcher => {
+        this.watchers.openAPIYaml.forEach(watcher => {
             watcher.close();
         });
     }
@@ -266,17 +266,17 @@ export class Scheduler {
         return new JobTracker(jobs);
     }
 
-    private createYamlJobTracker(): JobTracker {
-        const yamlPlugins: CplacePlugin[] = [];
+    private createOpenAPIYamlJobTracker(): JobTracker {
+        const openAPIYamlPlugins: CplacePlugin[] = [];
         this.plugins.forEach(plugin => {
-            if (plugin.hasYamlAssets && this.isInCompilationScope(plugin)) {
-                yamlPlugins.push(plugin);
+            if (plugin.hasOpenAPIYamlAssets && this.isInCompilationScope(plugin)) {
+                openAPIYamlPlugins.push(plugin);
             }
         });
-        const jobs: JobDetails[] = yamlPlugins.map(plugin => new JobDetails(
+        const jobs: JobDetails[] = openAPIYamlPlugins.map(plugin => new JobDetails(
             plugin.pluginName,
-            this.filterYamlPlugins(plugin.dependencies),
-            this.filterYamlPlugins(plugin.dependents)
+            this.filterOpenAPIYamlPlugins(plugin.dependencies),
+            this.filterOpenAPIYamlPlugins(plugin.dependents)
         ));
         return new JobTracker(jobs);
     }
@@ -320,14 +320,14 @@ export class Scheduler {
             .map(p => p.pluginName);
     }
 
-    private filterYamlPlugins(plugins: string[]): string[] {
+    private filterOpenAPIYamlPlugins(plugins: string[]): string[] {
         return plugins
             .map(p => this.getPlugin(p))
-            .filter(p => p.hasYamlAssets && this.isInCompilationScope(p))
+            .filter(p => p.hasOpenAPIYamlAssets && this.isInCompilationScope(p))
             .map(p => p.pluginName);
     }
 
-    private registerWatch(pluginName: string, type: 'ts' | 'less' | 'css' | 'tsE2E' | 'yaml'): void {
+    private registerWatch(pluginName: string, type: 'ts' | 'less' | 'css' | 'tsE2E' | 'openAPIYaml'): void {
         if (!this.watchFiles) {
             return;
         }
@@ -350,9 +350,9 @@ export class Scheduler {
             case 'css':
                 jobTracker = this.compressCssJobs;
                 break;
-            case 'yaml':
+            case 'openAPIYaml':
                 watchDir = path.join(plugin.pluginDir, 'api');
-                jobTracker = this.yamlJobs;
+                jobTracker = this.openAPIYamlJobs;
                 break;
         }
 
