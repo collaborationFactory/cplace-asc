@@ -29,33 +29,35 @@ export class CompressCssCompiler implements ICompiler {
     }
 
     compile(): Promise<CompilationResult> {
-        const generatedCssDir = CompressCssCompiler.getCssOutputDir(this.assetsPath);
-        const outputFile = path.join(generatedCssDir, CompressCssCompiler.OUTPUT_FILE_NAME);
+        return new Promise<CompilationResult>((resolve) => {
+            const generatedCssDir = CompressCssCompiler.getCssOutputDir(this.assetsPath);
+            const outputFile = path.join(generatedCssDir, CompressCssCompiler.OUTPUT_FILE_NAME);
 
-        if (!fs.existsSync(generatedCssDir)) {
-            fs.mkdirSync(generatedCssDir);
-        }
+            if (!fs.existsSync(generatedCssDir)) {
+                fs.mkdirSync(generatedCssDir);
+            }
 
-        const start = new Date().getTime();
-        console.log(`⟲ [${this.pluginName}] starting CSS compression...`);
+            const start = new Date().getTime();
+            console.log(`⟲ [${this.pluginName}] starting CSS compression...`);
 
-        const cleanCssExecutable = this.getCleanCssExecutable();
-        const args = ['-o', outputFile, this.pathToEntryFile, '--source-map'];
-        debug(`(CompressCssCompiler) [${this.pluginName}] executing command '${cleanCssExecutable} ${args.join(' ')}'`);
+            const cleanCssExecutable = this.getCleanCssExecutable();
+            const args = ['-o', outputFile, this.pathToEntryFile, '--source-map'];
+            debug(`(CompressCssCompiler) [${this.pluginName}] executing command '${cleanCssExecutable} ${args.join(' ')}'`);
 
-        const result = spawn.sync(cleanCssExecutable, args, {
-            stdio: [process.stdin, process.stdout, process.stderr]
+            const result = spawn.sync(cleanCssExecutable, args, {
+                stdio: [process.stdin, process.stdout, process.stderr]
+            });
+
+            debug(`(CompressCssCompiler) [${this.pluginName}] clean-css return code: ${result.status}`);
+            if (result.status !== 0) {
+                throw Error(`[${this.pluginName}] CSS compression failed...`);
+            }
+
+            const end = new Date().getTime();
+            console.log(GREEN_CHECK, `[${this.pluginName}] CSS compression finished (${formatDuration(end - start)})`);
+
+            return resolve(CompilationResult.CHANGED);
         });
-
-        debug(`(CompressCssCompiler) [${this.pluginName}] clean-css return code: ${result.status}`);
-        if (result.status !== 0) {
-            throw Error(`[${this.pluginName}] CSS compression failed...`);
-        }
-
-        const end = new Date().getTime();
-        console.log(GREEN_CHECK, `[${this.pluginName}] CSS compression finished (${formatDuration(end - start)})`);
-
-        return new Promise<CompilationResult>(resolve => resolve(CompilationResult.CHANGED));
     }
 
     private getCleanCssExecutable(): string {

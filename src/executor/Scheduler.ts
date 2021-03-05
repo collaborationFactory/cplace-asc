@@ -167,7 +167,7 @@ export class Scheduler {
 
             jobTracker.markProcessing(nextPlugin);
             this.executor
-                .run(compileRequest)
+                .run(compileRequest, this.watchFiles)
                 .then((result?: CompilationResult) => {
                     const compilationResultChanged = result !== CompilationResult.UNCHANGED;
                     const firstCompletion = jobTracker.markCompleted(nextPlugin, compilationResultChanged);

@@ -43,9 +43,23 @@ export class OpenAPIYamlCompiler implements ICompiler {
                 return CompilationResult.CHANGED;
             })
             .catch((err) => {
-                console.error(cerr`${err}`);
-                throw Error(`[${this.pluginName}] Failed to write OpenAPI YAML output`);
+                return this.cleanup(this.pluginName).finally(() => {
+                    console.error(cerr`${err}`);
+                    throw Error(`[${this.pluginName}] Failed to write OpenAPI YAML output`);
+                });
             });
+    }
+
+    /**
+     * Removes generated data
+     * @param plugin Plugin name
+     * @private
+     */
+    private cleanup(plugin: string): Promise<any> {
+        return Promise.all([
+            this.removeGeneratedOpenAPIFiles(plugin),
+            this.removePluginDist(plugin)
+        ]);
     }
 
     /**
@@ -58,11 +72,8 @@ export class OpenAPIYamlCompiler implements ICompiler {
         return OpenAPIYamlCompiler.executePromisesSequentially([
             this.generatePluginTypes.bind(this, plugin),
             this.copyPluginTypes.bind(this, plugin),
-            this.removePluginDist.bind(this, plugin),
-            this.removeGeneratedOpenAPIFiles.bind(this, plugin)
-        ]).catch(err => {
-            console.error(cerr`${err}`);
-        });
+            this.cleanup.bind(this, plugin)
+        ]);
     }
 
     /**
