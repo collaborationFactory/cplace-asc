@@ -15,6 +15,7 @@ import {
 import {cerr, enableDebug} from '../utils';
 import {CompressCssCompiler} from './CompressCssCompiler';
 import {E2ETypescriptCompiler} from "./E2ETypescriptCompiler";
+import {OpenAPIYamlCompiler} from "./OpenAPIYamlCompiler";
 
 /* ==================
  *      This file will be called as main process by `ExecutorService` as specified by
@@ -62,6 +63,8 @@ if (require.main === module) {
             CompilerConstructor = E2ETypescriptCompiler;
         } else if (request.less) {
             CompilerConstructor = LessCompiler;
+        } else if (request.openAPIYaml) {
+            CompilerConstructor = OpenAPIYamlCompiler;
         } else if (request.compressCss) {
             CompilerConstructor = CompressCssCompiler;
         } else {

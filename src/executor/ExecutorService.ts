@@ -4,6 +4,7 @@
 
 import {createPool, Factory, Pool} from 'generic-pool';
 import * as path from 'path';
+import * as node_process from 'process';
 import {ChildProcess, fork} from 'child_process';
 import {CompilationResult, ICompileRequest, ICompileResponse, ProcessState} from '../compiler/interfaces';
 import {debug} from '../utils';
@@ -22,6 +23,7 @@ const Processfactory: Factory<ChildProcess> = {
 export class ExecutorService {
     private readonly pool: Pool<ChildProcess>;
     private running = 0;
+    private pids: Array<number> = [];
 
     constructor(private readonly maxParallelism: number) {
         debug(`(ExecutorService) got maxParallelism: ${maxParallelism}`);
@@ -34,10 +36,13 @@ export class ExecutorService {
         return this.running < this.maxParallelism;
     }
 
-    public run(compileRequest: ICompileRequest): Promise<CompilationResult> {
+    public run(compileRequest: ICompileRequest, watchFiles: boolean): Promise<CompilationResult> {
         this.running++;
         return new Promise<CompilationResult>((resolve, reject) => {
             this.pool.acquire().then((process) => {
+                if (!watchFiles) {
+                    this.pids.push(process.pid);
+                }
                 let resolved = false;
                 const exit = (code) => {
                     if (!resolved) {
@@ -58,7 +63,11 @@ export class ExecutorService {
                         resolve(message.result);
                     } else {
                         this.running--;
-                        reject(2);
+                        if (watchFiles) {
+                            reject(2);
+                        } else {
+                            this.killAllProcesses();
+                        }
                     }
                 });
                 process.once('exit', exit);
@@ -66,6 +75,16 @@ export class ExecutorService {
                 this.running--;
                 throw Error(`failed to acquire process: ${e}`);
             });
+        });
+    }
+
+    /**
+     * Kills all running processes
+     * @private
+     */
+    private killAllProcesses(): void {
+        this.pids.forEach(pid => {
+            node_process.kill(pid);
         });
     }
 

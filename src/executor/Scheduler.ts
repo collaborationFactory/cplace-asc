@@ -22,19 +22,22 @@ export class Scheduler {
         'ts': 'ts|htm?(l)',
         'tsE2E': 'ts',
         'less': 'less',
-        'css': 'css'
+        'css': 'css',
+        'openAPIYaml': 'yaml'
     };
 
     private readonly tsJobs: JobTracker;
     private readonly tsE2EJobs: JobTracker;
     private readonly lessJobs: JobTracker;
+    private readonly openAPIYamlJobs: JobTracker;
     private readonly compressCssJobs: JobTracker;
 
     private watchers = {
         'ts': new Map<string, FSWatcher>(),
         'tsE2E': new Map<string, FSWatcher>(),
         'less': new Map<string, FSWatcher>(),
-        'css': new Map<string, FSWatcher>()
+        'css': new Map<string, FSWatcher>(),
+        'openAPIYaml': new Map<string, FSWatcher>()
     };
 
     private completed = false;
@@ -64,6 +67,7 @@ export class Scheduler {
         this.tsJobs = this.createTsJobTracker();
         this.tsE2EJobs = this.createTsE2EJobTracker();
         this.lessJobs = this.createLessJobTracker();
+        this.openAPIYamlJobs = this.createOpenAPIYamlJobTracker();
         this.compressCssJobs = this.createCompressCssJobTracker();
     }
 
@@ -113,13 +117,19 @@ export class Scheduler {
         }
         const nextLessPlugin = lessSchedulingResult.scheduledPlugin;
 
+        const openAPIYamlSchedulingResult = this.getAndScheduleNextJob(this.openAPIYamlJobs, 'openAPIYaml', 'openAPIYaml');
+        if (openAPIYamlSchedulingResult.backoff) {
+            return;
+        }
+        const nextOpenAPIYamlPlugin = openAPIYamlSchedulingResult.scheduledPlugin;
+
         const compressCssSchedulingResult = this.getAndScheduleNextJob(this.compressCssJobs, 'compressCss', 'css');
         if (compressCssSchedulingResult.backoff) {
             return;
         }
         const nextCompressCssPlugin = compressCssSchedulingResult.scheduledPlugin;
 
-        if (nextTsPlugin === null && nextTsE2EPlugin == null && nextLessPlugin === null && nextCompressCssPlugin === null) {
+        if (nextTsPlugin === null && nextTsE2EPlugin == null && nextLessPlugin === null && nextCompressCssPlugin === null && nextOpenAPIYamlPlugin === null) {
             if (!this.watchFiles && !this.completed) {
                 printUpdateDetails(this.updateDetails);
                 this.completed = true;
@@ -130,7 +140,7 @@ export class Scheduler {
                 console.log();
                 printUpdateDetails(this.updateDetails);
             }
-        } else if (nextTsPlugin || nextTsE2EPlugin || nextLessPlugin || nextCompressCssPlugin) {
+        } else if (nextTsPlugin || nextTsE2EPlugin || nextLessPlugin || nextCompressCssPlugin || nextOpenAPIYamlPlugin) {
             if (this.executor.hasCapacity()) {
                 this.scheduleNext();
             }
@@ -138,8 +148,8 @@ export class Scheduler {
     }
 
     private getAndScheduleNextJob(jobTracker: JobTracker,
-                                  compileType: 'ts' | 'less' | 'compressCss' | 'tsE2E',
-                                  watchType: 'ts' | 'less' | 'css' | 'tsE2E'): ISchedulingResult {
+                                  compileType: 'ts' | 'less' | 'compressCss' | 'tsE2E' | 'openAPIYaml',
+                                  watchType: 'ts' | 'less' | 'css' | 'tsE2E' | 'openAPIYaml'): ISchedulingResult {
         const nextPlugin = jobTracker.getNextKey();
         if (nextPlugin) {
             const plugin = this.getPlugin(nextPlugin);
@@ -157,7 +167,7 @@ export class Scheduler {
 
             jobTracker.markProcessing(nextPlugin);
             this.executor
-                .run(compileRequest)
+                .run(compileRequest, this.watchFiles)
                 .then((result?: CompilationResult) => {
                     const compilationResultChanged = result !== CompilationResult.UNCHANGED;
                     const firstCompletion = jobTracker.markCompleted(nextPlugin, compilationResultChanged);
@@ -201,6 +211,9 @@ export class Scheduler {
             watcher.close();
         });
         this.watchers.css.forEach(watcher => {
+            watcher.close();
+        });
+        this.watchers.openAPIYaml.forEach(watcher => {
             watcher.close();
         });
     }
@@ -253,6 +266,21 @@ export class Scheduler {
         return new JobTracker(jobs);
     }
 
+    private createOpenAPIYamlJobTracker(): JobTracker {
+        const openAPIYamlPlugins: CplacePlugin[] = [];
+        this.plugins.forEach(plugin => {
+            if (plugin.hasOpenAPIYamlAssets && this.isInCompilationScope(plugin)) {
+                openAPIYamlPlugins.push(plugin);
+            }
+        });
+        const jobs: JobDetails[] = openAPIYamlPlugins.map(plugin => new JobDetails(
+            plugin.pluginName,
+            this.filterOpenAPIYamlPlugins(plugin.dependencies),
+            this.filterOpenAPIYamlPlugins(plugin.dependents)
+        ));
+        return new JobTracker(jobs);
+    }
+
     private createCompressCssJobTracker(): JobTracker {
         const compressPlugins: CplacePlugin[] = [];
         this.plugins.forEach(plugin => {
@@ -292,7 +320,14 @@ export class Scheduler {
             .map(p => p.pluginName);
     }
 
-    private registerWatch(pluginName: string, type: 'ts' | 'less' | 'css' | 'tsE2E'): void {
+    private filterOpenAPIYamlPlugins(plugins: string[]): string[] {
+        return plugins
+            .map(p => this.getPlugin(p))
+            .filter(p => p.hasOpenAPIYamlAssets && this.isInCompilationScope(p))
+            .map(p => p.pluginName);
+    }
+
+    private registerWatch(pluginName: string, type: 'ts' | 'less' | 'css' | 'tsE2E' | 'openAPIYaml'): void {
         if (!this.watchFiles) {
             return;
         }
@@ -314,6 +349,10 @@ export class Scheduler {
                 break;
             case 'css':
                 jobTracker = this.compressCssJobs;
+                break;
+            case 'openAPIYaml':
+                watchDir = path.join(plugin.pluginDir, 'api');
+                jobTracker = this.openAPIYamlJobs;
                 break;
         }
 
