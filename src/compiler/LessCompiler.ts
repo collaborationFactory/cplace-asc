@@ -55,40 +55,82 @@ export class LessCompiler implements ICompiler {
                     sourceMapURL: `${filename}.css.map`
                 };
             }
-            less
-                .render(fs.readFileSync(entryFile, 'utf8'), lesscOptions)
-                .catch((err) => {
-                    console.error(cerr`${err}`);
-                    throw Error(`[${this.pluginName}] LESS compilation failed`);
-                })
-                .then((output: any) => {
-                    let end = new Date().getTime();
-                    console.log(cgreen`⇢`, `[${this.pluginName}] LESS compiled, writing output... (${formatDuration(end - start)})`);
+            
+            let lessContent = fs.readFileSync(entryFile, 'utf8');
+            this.appendGlobalCSSVariables(lessContent, lesscOptions)
+                .then((preParsedLessContent) => {
+                    less
+                    .render(preParsedLessContent, lesscOptions)
+                    .catch((err) => {
+                        console.error(cerr`${err}`);
+                        throw Error(`[${this.pluginName}] LESS compilation failed`);
+                    })
+                    .then((output: any) => {
+                        let end = new Date().getTime();
+                        console.log(cgreen`⇢`, `[${this.pluginName}] LESS compiled, writing output... (${formatDuration(end - start)})`);
 
-                    if (!fs.existsSync(lessOutputDir)) {
-                        fs.mkdirSync(lessOutputDir);
-                    }
+                        if (!fs.existsSync(lessOutputDir)) {
+                            fs.mkdirSync(lessOutputDir);
+                        }
 
-                    const promises = [
-                        writeFile(outputFile, output.css, 'utf8')
-                    ];
-                    if (!this.isProduction) {
-                        promises.push(writeFile(sourceMapFile, output.map, 'utf8'));
-                    }
+                        const promises = [
+                            writeFile(outputFile, output.css, 'utf8')
+                        ];
+                        if (!this.isProduction) {
+                            promises.push(writeFile(sourceMapFile, output.map, 'utf8'));
+                        }
 
-                    return Promise
-                        .all(promises)
-                        .then(() => {
-                            let end = new Date().getTime();
-                            console.log(GREEN_CHECK, `[${this.pluginName}] LESS finished (${formatDuration(end - start)})`);
-                            resolve(CompilationResult.CHANGED);
-                        })
-                        .catch((err) => {
-                            console.error(cerr`${err}`);
-                            throw Error(`[${this.pluginName}] Failed to write LESS output`);
-                        });
+                        return Promise
+                            .all(promises)
+                            .then(() => {
+                                let end = new Date().getTime();
+                                console.log(GREEN_CHECK, `[${this.pluginName}] LESS finished (${formatDuration(end - start)})`);
+                                resolve(CompilationResult.CHANGED);
+                            })
+                            .catch((err) => {
+                                console.error(cerr`${err}`);
+                                throw Error(`[${this.pluginName}] Failed to write LESS output`);
+                            });
+                    })
+                    .catch((e) => reject(e));
                 })
                 .catch((e) => reject(e));
         });
+            
+    }
+
+    private appendGlobalCSSVariables(lessContent: string, lesscOptions: Options): Promise<string> {
+        const content = lessContent;
+        return new Promise((res) => {
+            less['parse'](content, lesscOptions, (err, root, _imports, _options) => {
+                if (err) {
+                    throw Error('Unable to pre-parse global css variables')
+                } else {
+                    res(this.parseLESSVariablesToCSS(content, root._variables));
+                }
+            });
+        })
+    }
+
+    private parseLESSVariablesToCSS(lessContent: string, lessVariables: {[key: string]: any} = {}): string {
+        let newContent = lessContent;
+        const lessVars = Object.keys(lessVariables || {}) || [];
+
+        if (lessVars.length) {
+            const variables: string[] = lessVars.filter(it => !!it).map((it: string) => {
+                const key = it.replace('@', '');
+                return `--${key}:${it};`;
+            });
+
+            newContent = `
+                ${newContent}
+                
+                :root {
+                    ${variables.join('\n')}
+                }
+            `;
+        }
+
+        return newContent;
     }
 }
