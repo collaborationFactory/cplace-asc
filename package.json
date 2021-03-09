@@ -1,6 +1,6 @@
 {
   "name": "@cplace/asc",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "description": "cplace assets compiler",
   "repository": "https://github.com/collaborationFactory/cplace-asc",
   "homepage": "https://github.com/collaborationFactory/cplace-asc",
@@ -23,6 +23,7 @@
     "copyfiles": "^2.1.0",
     "cpx": "^1.5.0",
     "cross-spawn": "^6.0.5",
+    "eol-converter-cli": "^1.0.8",
     "generic-pool": "latest",
     "less": "^3.8.1",
     "meow": "^5.0.0",

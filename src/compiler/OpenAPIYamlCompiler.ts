@@ -72,6 +72,7 @@ export class OpenAPIYamlCompiler implements ICompiler {
         return OpenAPIYamlCompiler.executePromisesSequentially([
             this.generatePluginTypes.bind(this, plugin),
             this.copyPluginTypes.bind(this, plugin),
+            this.convertPluginTypesEOL.bind(this, plugin),
             this.cleanup.bind(this, plugin)
         ]);
     }
@@ -97,6 +98,28 @@ export class OpenAPIYamlCompiler implements ICompiler {
             });
             if (vmRes.status !== 0 || genRes.status !== 0) {
                 throw Error(`[${this.pluginName}] OpenAPI YAML compilation failed...`);
+            }
+            resolve(true);
+        });
+    }
+
+    /**
+     * Converts EOL from generated files into CRLF in case platform is Windows
+     * @param plugin Plugin name
+     * @private
+     */
+    private convertPluginTypesEOL(plugin: string): Promise<any> {
+        return new Promise((resolve) => {
+            const isWindows = process.platform === 'win32';
+            if (isWindows) {
+                const files = path.join(plugin, '/assets/ts/api/*.ts');
+                const eolConverter = path.resolve(OpenAPIYamlCompiler.getNodeModulesBinPath(), 'eolConverter');
+                const res = spawn.sync(eolConverter, ['crlf', files], {
+                    stdio: ['pipe', 'pipe', process.stderr]
+                });
+                if (res.status !== 0) {
+                    throw Error(`[${this.pluginName}] OpenAPI YAML compilation failed...`);
+                }
             }
             resolve(true);
         });
