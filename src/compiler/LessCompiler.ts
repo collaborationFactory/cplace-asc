@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {promisify} from 'util';
 import * as less from 'less';
+import * as os from 'os';
 
 import {CompilationResult, ICompiler} from './interfaces';
 import {cerr, cgreen, formatDuration, GREEN_CHECK} from '../utils';
@@ -126,7 +127,7 @@ export class LessCompiler implements ICompiler {
                 ${newContent}
                 
                 :root {
-                    ${variables.join('\n')}
+                    ${variables.join(os.EOL)}
                 }
             `;
         }
