@@ -1,6 +1,6 @@
 {
   "name": "@cplace/asc",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
@@ -2051,6 +2051,20 @@
         "graceful-fs": "^4.1.2",
         "memory-fs": "^0.4.0",
         "tapable": "^1.0.0"
+      }
+    },
+    "eol": {
+      "version": "0.9.1",
+      "resolved": "https://registry.npmjs.org/eol/-/eol-0.9.1.tgz",
+      "integrity": "sha512-Ds/TEoZjwggRoz/Q2O7SE3i4Jm66mqTDfmdHdq/7DKVk3bro9Q8h6WdXKdPqFLMoqxrDK5SVRzHVPOS6uuGtrg=="
+    },
+    "eol-converter-cli": {
+      "version": "1.0.8",
+      "resolved": "https://registry.npmjs.org/eol-converter-cli/-/eol-converter-cli-1.0.8.tgz",
+      "integrity": "sha512-+N4aWl2eAbcJBgcXiPBIkPuKUlpXGts5yPEYo0XnbaKHOqcnPuMOBUqXlwl+139V866iEXUziVOGDebR7z8Tzg==",
+      "requires": {
+        "eol": "^0.9.1",
+        "glob": "^7.1.2"
       }
     },
     "errno": {
