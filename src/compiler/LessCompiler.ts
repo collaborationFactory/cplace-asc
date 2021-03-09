@@ -114,10 +114,10 @@ export class LessCompiler implements ICompiler {
 
     private parseLESSVariablesToCSS(lessContent: string, lessVariables: {[key: string]: any} = {}): string {
         let newContent = lessContent;
-        const lessVars = Object.keys(lessVariables || {}) || [];
+        const lessVars = Object.keys(lessVariables || {});
 
         if (lessVars.length) {
-            const variables: string[] = lessVars.filter(it => !!it).map((it: string) => {
+            const variables: string[] = lessVars.map((it: string) => {
                 const key = it.replace('@', '');
                 return `--${key}:${it};`;
             });
