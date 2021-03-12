@@ -12,6 +12,9 @@ import * as fs from 'fs';
 import * as copyFiles from 'copyfiles';
 import {AbstractTypescriptCompiler} from './AbstractTypescriptCompiler';
 import {CplaceTSConfigGenerator} from "../model/CplaceTSConfigGenerator";
+import {NPMResolver} from "../model/NPMResolver";
+import spawn = require("cross-spawn");
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
     public static readonly DEST_DIR = 'generated_js';
@@ -44,6 +47,7 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
     protected async doPostProcessing(): Promise<void> {
         await this.copyStaticFiles();
         await this.runWebpack();
+        await this.buildPluginVendors();
     }
 
     private runWebpack() {
@@ -165,6 +169,77 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
             copyFiles([srcGlob, dest], options, (error) => {
                 if (error) {
                     reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    private async buildPluginVendors(): Promise<any> {
+        if (!fs.existsSync(path.join(this.assetsPath, 'package.json'))) {
+            return Promise.resolve(true);
+        }
+        return new Promise(async (resolve, reject) => {
+            NPMResolver.installPluginDependencies(this.pluginName, this.assetsPath);
+            this.tscPluginIndex();
+            await this.bundlePluginDependencies();
+            resolve(true);
+        });
+    }
+
+    private tscPluginIndex(): void {
+        const tsc = path.resolve(__dirname, '../../', 'node_modules/.bin/tsc');
+        const index = path.join(this.assetsPath, 'index.ts');
+        if (!fs.existsSync(index)) {
+            throw Error(`[${this.pluginName}] index.ts not found!`);
+        }
+        const res = spawn.sync(tsc, [path.join(this.assetsPath, 'index.ts')]);
+        if (res.status !== 0) {
+            throw Error(`[${this.pluginName}] index.ts TS compilation failed!`);
+        }
+    }
+
+    private getPluginWebpackConfig(): Configuration {
+        return {
+            mode: 'production',
+            entry: path.resolve(this.assetsPath, 'index.js'),
+            output: {
+                path: path.resolve(this.assetsPath, 'generated_js'),
+                filename: 'vendor.js'
+            },
+            resolve: {
+                modules: ['node_modules']
+            },
+            plugins: [
+                new MiniCssExtractPlugin({
+                    filename: path.resolve(this.assetsPath, 'generated_css/vendor.css')
+                })
+            ],
+            module: {
+                rules: [
+                    {
+                        test: /\.(css|less|scss|sass)$/i,
+                        use: [
+                            MiniCssExtractPlugin.loader,
+                            'css-loader',
+                            'less-loader',
+                            'sass-loader'
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+
+    private bundlePluginDependencies(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            const config = this.getPluginWebpackConfig();
+            webpack(config, (err, stats) => {
+                if (err) {
+                    reject(err);
+                } else if (stats.hasErrors()) {
+                    throw Error(stats.toString());
                 } else {
                     resolve();
                 }

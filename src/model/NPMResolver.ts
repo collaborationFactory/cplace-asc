@@ -14,6 +14,7 @@ import {cerr, cgreen, cred, debug, sleepBusy} from "../utils";
 import {PackageVersion} from "./PackageVersion";
 import rimraf = require("rimraf");
 import Timeout = NodeJS.Timeout;
+import {SpawnSyncReturns} from "child_process";
 
 export class NPMResolver {
     private static readonly PACKAGE_LOCK_HASH = 'package-lock.hash';
@@ -27,6 +28,17 @@ export class NPMResolver {
         this.mainRepo = mainRepo;
         this.hashFilePath = this.getHashFilePath();
         this.watchers = [];
+    }
+
+    public static installPluginDependencies(pluginName: string, assetsPath: string): SpawnSyncReturns<Buffer> {
+        console.log(`⟲ (NPM) installing dependencies for ${pluginName}`);
+        const res = spawn.sync('npm', ['install', `--prefix ${assetsPath}`], {
+            stdio: ['pipe', 'pipe', process.stderr]
+        });
+        if (res.status !== 0) {
+            throw Error(`✗ (NPM) installing dependencies for ${pluginName} failed...`);
+        }
+        return res;
     }
 
     public async resolve(): Promise<void> {
@@ -170,6 +182,33 @@ export class NPMResolver {
         }
         console.log(cgreen`⇢`, `(NPM) npm install successful`);
         this.createHashFile();
+    }
+
+    private writeToJavaScriptIncludesToBeCompressedTextFile(pluginName: string): void {
+        const javaScriptIncludesToBeCompressedTextFilePath = `${this.mainRepo}/${pluginName}/assets/javaScriptIncludesToBeCompressed.txt`;
+
+        fs.readFile(javaScriptIncludesToBeCompressedTextFilePath, 'utf8', (err, buff) => {
+
+            const pathToInclude = `/generated_js/vendor.js`;
+            if (buff.includes(pathToInclude)) {
+                // removes included path if already exists
+                const includedPaths = buff.split('\n');
+                const index = includedPaths.indexOf(pathToInclude);
+                includedPaths.splice(index, 1);
+                buff = includedPaths.join('\n');
+            }
+
+            const content = buff + `\n${pathToInclude}`;
+
+            fs.writeFile(javaScriptIncludesToBeCompressedTextFilePath, content, (e) => {
+                if (e) {
+                    console.log(`Error writing ${pathToInclude} to ${javaScriptIncludesToBeCompressedTextFilePath}`)
+                } else {
+                    console.log(`Path ${pathToInclude} written to ${javaScriptIncludesToBeCompressedTextFilePath}`);
+                }
+            });
+
+        });
     }
 
     private getHash4PackageLock(): string {
