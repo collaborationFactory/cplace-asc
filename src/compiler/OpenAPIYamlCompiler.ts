@@ -112,7 +112,7 @@ export class OpenAPIYamlCompiler implements ICompiler {
         return new Promise((resolve) => {
             const isWindows = process.platform === 'win32';
             if (isWindows) {
-                const files = path.join(plugin, '/assets/ts/api/*.ts');
+                const files = path.join(this.getRelativeRepoPath(), `${plugin}`,  '/assets/ts/api/*.ts');
                 const eolConverter = path.resolve(OpenAPIYamlCompiler.getNodeModulesBinPath(), 'eolConverter');
                 const res = spawn.sync(eolConverter, ['crlf', files], {
                     stdio: ['pipe', 'pipe', process.stderr]
@@ -167,7 +167,7 @@ export class OpenAPIYamlCompiler implements ICompiler {
      */
     private removeGeneratedOpenAPIFiles(plugin: string): Promise<any> {
         return new Promise((resolve) => {
-            const dist = path.resolve(`${this.mainRepoDir}/openapitools.json`);
+            const dist = path.resolve(`${process.cwd()}/openapitools.json`);
             rimraf(dist, err => {
                 if (err) {
                     throw Error(`[${this.pluginName}] OpenAPI YAML compilation failed...`);
@@ -178,10 +178,33 @@ export class OpenAPIYamlCompiler implements ICompiler {
     }
 
     /**
+     * Gets relative repository path
+     * @private
+     */
+    private getRelativeRepoPath(): string {
+        const repo = path.basename(this.getRepoPath());
+        const workingDir = path.basename(path.resolve(process.cwd()));
+        return repo !== workingDir ? path.join('..', repo) : '';
+    }
+
+    /**
+     * Gets absolute repo path
+     * @private
+     */
+    private getRepoPath(): string {
+        const workingDir = path.resolve(process.cwd());
+        if (this.assetsPath.includes(workingDir)) {
+            return workingDir;
+        } else {
+            return path.join(this.assetsPath, '../..');
+        }
+    }
+
+    /**
      * Gets the plugin path
      * @param plugin Provided plugin name
      */
     private getPluginPath(plugin): string {
-        return path.resolve(this.mainRepoDir, this.pluginName);
+        return path.resolve(this.getRepoPath(), this.pluginName);
     }
 }
