@@ -7,7 +7,7 @@ import {CReplacePlugin} from './CReplacePlugin';
 import * as webpack from 'webpack';
 import {Configuration, ExternalsElement} from 'webpack';
 import {isFromLibrary} from '../model/utils';
-import {debug, isDebugEnabled} from '../utils';
+import {cgreen, debug, formatDuration, isDebugEnabled} from '../utils';
 import * as fs from 'fs';
 import * as copyFiles from 'copyfiles';
 import {AbstractTypescriptCompiler} from './AbstractTypescriptCompiler';
@@ -15,10 +15,12 @@ import {CplaceTSConfigGenerator} from "../model/CplaceTSConfigGenerator";
 import {NPMResolver} from "../model/NPMResolver";
 import spawn = require("cross-spawn");
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const TerserPlugin = require("terser-webpack-plugin");
 
 export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
     public static readonly DEST_DIR = 'generated_js';
     private static readonly ENTRY = 'app.js';
+    private static readonly JAVASCRIPT_TO_BE_COMPRESSED_PATH = 'javaScriptIncludesToBeCompressed.txt'
     private static readonly STATIC_IMPORT_EXTENSIONS = 'html|htm';
 
     private static readonly DEFAULT_EXTERNALS = {
@@ -176,30 +178,47 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
         });
     }
 
+    /**
+     * Creates plugin vendors
+     * @private
+     */
     private async buildPluginVendors(): Promise<any> {
         if (!fs.existsSync(path.join(this.assetsPath, 'package.json'))) {
             return Promise.resolve(true);
         }
+        console.log(`⟲ [${this.pluginName}] Building vendors...`);
+        const startTime = new Date().getTime();
         return new Promise(async (resolve, reject) => {
-            NPMResolver.installPluginDependencies(this.pluginName, this.assetsPath);
+            NPMResolver.installPluginDependenciesAndCreateHash(this.pluginName, this.assetsPath);
             this.tscPluginIndex();
             await this.bundlePluginDependencies();
+            await this.writeToJavaScriptToBeCompressed(this.assetsPath);
+            const endTime = new Date().getTime();
+            console.log(cgreen`✓`, `[${this.pluginName}] Vendors built (${formatDuration(endTime - startTime)})`);
             resolve(true);
         });
     }
 
+    /**
+     * Compiles plugin index.ts
+     * @private
+     */
     private tscPluginIndex(): void {
         const tsc = path.resolve(__dirname, '../../', 'node_modules/.bin/tsc');
         const index = path.join(this.assetsPath, 'index.ts');
         if (!fs.existsSync(index)) {
-            throw Error(`[${this.pluginName}] index.ts not found!`);
+            throw Error(`✗ [${this.pluginName}] index.ts not found!`);
         }
         const res = spawn.sync(tsc, [path.join(this.assetsPath, 'index.ts')]);
         if (res.status !== 0) {
-            throw Error(`[${this.pluginName}] index.ts TS compilation failed!`);
+            throw Error(`✗ [${this.pluginName}] index.ts TS compilation failed!`);
         }
     }
 
+    /**
+     * Gets plugin webpack config
+     * @private
+     */
     private getPluginWebpackConfig(): Configuration {
         return {
             mode: 'production',
@@ -216,6 +235,20 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                     filename: path.resolve(this.assetsPath, 'generated_css/vendor.css')
                 })
             ],
+            optimization: {
+                minimize: true,
+                minimizer: [
+                    new TerserPlugin({
+                        terserOptions: {
+                            compress: true,
+                            format: {
+                                comments: false,
+                            }
+                        },
+                        parallel: true
+                    })
+                ]
+            },
             module: {
                 rules: [
                     {
@@ -232,17 +265,62 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
         }
     }
 
+    /**
+     * Bundles plugin dependencies
+     * @private
+     */
     private bundlePluginDependencies(): Promise<any> {
+        const startTime = new Date().getTime();
+        console.log(`⟲ [${this.pluginName}] Starting dependencies bundling...`);
         return new Promise<any>((resolve, reject) => {
             const config = this.getPluginWebpackConfig();
             webpack(config, (err, stats) => {
                 if (err) {
-                    reject(err);
+                    reject(`✗ ${err.message}`);
                 } else if (stats.hasErrors()) {
-                    throw Error(stats.toString());
+                    throw Error(`✗ ${stats.toString()}`);
                 } else {
+                    const endTime = new Date().getTime();
+                    console.log(cgreen`✓`, `[${this.pluginName}] Dependencies bundled (${formatDuration(endTime - startTime)})`);
                     resolve();
                 }
+            });
+        });
+    }
+
+    /**
+     * Writes vendor.js import to javaScriptIncludesToBeCompressed.txt
+     * @param assetsPath Provided assets path
+     * @private
+     */
+    private writeToJavaScriptToBeCompressed(assetsPath: string): Promise<any> {
+
+        return new Promise<any>((resolve, reject) => {
+            const javaScriptToBeCompressedPath = path.join(assetsPath, CplaceTypescriptCompiler.JAVASCRIPT_TO_BE_COMPRESSED_PATH);
+
+            fs.readFile(javaScriptToBeCompressedPath, 'utf8', (err, buff) => {
+
+                if (err) {
+                    throw Error(`✗ Error reading ${javaScriptToBeCompressedPath}`);
+                }
+
+                const pathToInclude = `/${CplaceTypescriptCompiler.DEST_DIR}/vendor.js`;
+                if (buff.includes(pathToInclude)) {
+                    // removes included path if already exists
+                    const includedPaths = buff.split('\n');
+                    const index = includedPaths.indexOf(pathToInclude);
+                    includedPaths.splice(index, 1);
+                    buff = includedPaths.join('\n');
+                }
+
+                const content = buff + `\n${pathToInclude}`;
+
+                fs.writeFile(javaScriptToBeCompressedPath, content, (e) => {
+                    if (e) {
+                        throw Error(`✗ Error writing ${pathToInclude} to ${javaScriptToBeCompressedPath}`);
+                    }
+                    resolve(true);
+                });
             });
         });
     }
