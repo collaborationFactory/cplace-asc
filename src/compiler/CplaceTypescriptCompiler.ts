@@ -15,7 +15,6 @@ import {CplaceTSConfigGenerator} from "../model/CplaceTSConfigGenerator";
 import {NPMResolver} from "../model/NPMResolver";
 import spawn = require("cross-spawn");
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const TerserPlugin = require("terser-webpack-plugin");
 
 export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
     public static readonly DEST_DIR = 'generated_js';
@@ -230,25 +229,15 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
             resolve: {
                 modules: ['node_modules']
             },
+            optimization: {
+                minimize: true
+            },
+            devtool: false,
             plugins: [
                 new MiniCssExtractPlugin({
                     filename: path.resolve(this.assetsPath, 'generated_css/vendor.css')
                 })
             ],
-            optimization: {
-                minimize: true,
-                minimizer: [
-                    new TerserPlugin({
-                        terserOptions: {
-                            compress: true,
-                            format: {
-                                comments: false,
-                            }
-                        },
-                        parallel: true
-                    })
-                ]
-            },
             module: {
                 rules: [
                     {
