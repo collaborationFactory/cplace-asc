@@ -37,6 +37,7 @@ export default class CplacePlugin {
     public readonly hasLessAssets: boolean;
     public readonly hasOpenAPIYamlAssets: boolean;
     public readonly hasCompressCssAssets: boolean;
+    public readonly hasVendors: boolean;
 
     /**
      * Plugin dependencies this plugin depends on (parsed from IML), i.e. outgoing dependencies
@@ -53,7 +54,7 @@ export default class CplacePlugin {
 
         this.repo = path.basename(path.dirname(path.resolve(pluginDir)));
         this.assetsDir = CplacePlugin.getAssetsDir(this.pluginDir);
-        this.hasTypeScriptAssets = fs.existsSync(path.resolve(this.assetsDir, 'ts', 'app.ts')) || fs.existsSync(path.resolve(this.assetsDir, 'ts', 'index.ts'))
+        this.hasTypeScriptAssets = fs.existsSync(path.resolve(this.assetsDir, 'ts', 'app.ts'));
         this.hasTypeScriptE2EAssets = false;
         const e2ePath: string = path.resolve(this.assetsDir, 'e2e');
         if (fs.existsSync(e2ePath)) {
@@ -61,6 +62,7 @@ export default class CplacePlugin {
         }
         this.hasOpenAPIYamlAssets = glob.sync(path.join(this.pluginDir, 'api', '*.yaml')).length > 0;
         this.hasLessAssets = glob.sync(path.join(this.assetsDir, '**', '*.less')).length > 0;
+        this.hasVendors = fs.existsSync(path.resolve(this.assetsDir, 'package.json'));
         this.hasCompressCssAssets = fs.existsSync(path.resolve(this.assetsDir, 'css', CompressCssCompiler.ENTRY_FILE_NAME));
     }
 

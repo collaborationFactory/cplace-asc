@@ -14,6 +14,7 @@ import {cerr, cgreen, cred, debug, sleepBusy} from "../utils";
 import {PackageVersion} from "./PackageVersion";
 import rimraf = require("rimraf");
 import Timeout = NodeJS.Timeout;
+import {exec} from "child_process";
 
 export class NPMResolver {
     private static readonly PACKAGE_LOCK_HASH = 'package-lock.hash';
@@ -34,7 +35,7 @@ export class NPMResolver {
      * @param pluginName Plugin name
      * @param assetsPath Assets folder path
      */
-    public static installPluginDependenciesAndCreateHash(pluginName: string, assetsPath: string): void {
+    public static installPluginDependenciesAndCreateHash(pluginName: string, assetsPath: string): Promise<boolean> {
         if (fs.existsSync(NPMResolver.getPluginHashFilePath(assetsPath))) {
             const packageLockUpdated = NPMResolver.packageLockWasUpdated(NPMResolver.getPluginHashFilePath(assetsPath), NPMResolver.getPluginPackageLockPath(assetsPath), pluginName);
             if (packageLockUpdated) {
@@ -42,10 +43,11 @@ export class NPMResolver {
             }
             const hasNodeModules = NPMResolver.getPluginNodeModulesPath(assetsPath);
             if (!hasNodeModules || packageLockUpdated) {
-                NPMResolver.installPluginDependencies(pluginName, assetsPath);
+                return NPMResolver.installPluginDependencies(pluginName, assetsPath);
             }
+            return Promise.resolve(false);
         } else {
-            NPMResolver.installPluginDependencies(pluginName, assetsPath);
+            return NPMResolver.installPluginDependencies(pluginName, assetsPath);
         }
     }
 
@@ -55,16 +57,17 @@ export class NPMResolver {
      * @param assetsPath Assets folder path
      * @private
      */
-    private static installPluginDependencies(pluginName: string, assetsPath: string): void {
-        console.log(`⟲ [${pluginName}] (NPM) installing dependencies...`);
-        const res = spawn.sync('npm', ['install', `--prefix ${assetsPath}`], {
-            stdio: ['pipe', 'pipe', process.stderr]
-        });
-        if (res.status !== 0) {
-            throw Error(`✗ [${pluginName}] (NPM) installing dependencies failed`);
-        }
-        console.log(cgreen`✓`, `[${pluginName}] (NPM) dependencies successfully installed`);
-        NPMResolver.createPluginHashFile(assetsPath);
+    private static installPluginDependencies(pluginName: string, assetsPath: string): Promise<any> {
+        return new Promise<any>(((resolve, reject) => {
+            exec(`npm i --prefix ${assetsPath}`, (err) => {
+                if (err) {
+                    reject(`[${pluginName}] (NPM) installing dependencies failed`);
+                }
+                console.log(cgreen`✓`, `[${pluginName}] (NPM) dependencies successfully installed`);
+                NPMResolver.createPluginHashFile(assetsPath);
+                resolve(true);
+            });
+        }));
     }
 
     /**

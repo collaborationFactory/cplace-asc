@@ -23,7 +23,8 @@ export class Scheduler {
         'tsE2E': 'ts',
         'less': 'less',
         'css': 'css',
-        'openAPIYaml': 'yaml'
+        'openAPIYaml': 'yaml',
+        'vendor': 'package-lock.json|index.ts'
     };
 
     private readonly tsJobs: JobTracker;
@@ -31,13 +32,15 @@ export class Scheduler {
     private readonly lessJobs: JobTracker;
     private readonly openAPIYamlJobs: JobTracker;
     private readonly compressCssJobs: JobTracker;
+    private readonly vendorJobs: JobTracker;
 
     private watchers = {
         'ts': new Map<string, FSWatcher>(),
         'tsE2E': new Map<string, FSWatcher>(),
         'less': new Map<string, FSWatcher>(),
         'css': new Map<string, FSWatcher>(),
-        'openAPIYaml': new Map<string, FSWatcher>()
+        'openAPIYaml': new Map<string, FSWatcher>(),
+        'vendor': new Map<string, FSWatcher>()
     };
 
     private completed = false;
@@ -69,6 +72,7 @@ export class Scheduler {
         this.lessJobs = this.createLessJobTracker();
         this.openAPIYamlJobs = this.createOpenAPIYamlJobTracker();
         this.compressCssJobs = this.createCompressCssJobTracker();
+        this.vendorJobs = this.createVendorJobTracker();
     }
 
     start(): Promise<void> {
@@ -123,13 +127,20 @@ export class Scheduler {
         }
         const nextOpenAPIYamlPlugin = openAPIYamlSchedulingResult.scheduledPlugin;
 
+        const vendorSchedulingResult = this.getAndScheduleNextJob(this.vendorJobs, 'vendor', 'vendor');
+        if (vendorSchedulingResult.backoff) {
+            return;
+        }
+        const nextVendorPlugin = vendorSchedulingResult.scheduledPlugin;
+
         const compressCssSchedulingResult = this.getAndScheduleNextJob(this.compressCssJobs, 'compressCss', 'css');
         if (compressCssSchedulingResult.backoff) {
             return;
         }
         const nextCompressCssPlugin = compressCssSchedulingResult.scheduledPlugin;
 
-        if (nextTsPlugin === null && nextTsE2EPlugin == null && nextLessPlugin === null && nextCompressCssPlugin === null && nextOpenAPIYamlPlugin === null) {
+        if (nextTsPlugin === null && nextTsE2EPlugin == null && nextLessPlugin === null &&
+            nextCompressCssPlugin === null && nextOpenAPIYamlPlugin === null && nextVendorPlugin === null) {
             if (!this.watchFiles && !this.completed) {
                 printUpdateDetails(this.updateDetails);
                 this.completed = true;
@@ -140,7 +151,7 @@ export class Scheduler {
                 console.log();
                 printUpdateDetails(this.updateDetails);
             }
-        } else if (nextTsPlugin || nextTsE2EPlugin || nextLessPlugin || nextCompressCssPlugin || nextOpenAPIYamlPlugin) {
+        } else if (nextTsPlugin || nextTsE2EPlugin || nextLessPlugin || nextCompressCssPlugin || nextOpenAPIYamlPlugin || nextVendorPlugin) {
             if (this.executor.hasCapacity()) {
                 this.scheduleNext();
             }
@@ -148,8 +159,8 @@ export class Scheduler {
     }
 
     private getAndScheduleNextJob(jobTracker: JobTracker,
-                                  compileType: 'ts' | 'less' | 'compressCss' | 'tsE2E' | 'openAPIYaml',
-                                  watchType: 'ts' | 'less' | 'css' | 'tsE2E' | 'openAPIYaml'): ISchedulingResult {
+                                  compileType: 'ts' | 'less' | 'compressCss' | 'tsE2E' | 'openAPIYaml' | 'vendor',
+                                  watchType: 'ts' | 'less' | 'css' | 'tsE2E' | 'openAPIYaml' | 'vendor'): ISchedulingResult {
         const nextPlugin = jobTracker.getNextKey();
         if (nextPlugin) {
             const plugin = this.getPlugin(nextPlugin);
@@ -216,6 +227,9 @@ export class Scheduler {
         this.watchers.openAPIYaml.forEach(watcher => {
             watcher.close();
         });
+        this.watchers.vendor.forEach(watcher => {
+            watcher.close();
+        });
     }
 
     private createTsJobTracker(): JobTracker {
@@ -264,6 +278,28 @@ export class Scheduler {
             this.filterLessPlugins(plugin.dependents)
         ));
         return new JobTracker(jobs);
+    }
+
+    private createVendorJobTracker(): JobTracker {
+        const vendorPlugins: CplacePlugin[] = [];
+        this.plugins.forEach(plugin => {
+            if (plugin.hasVendors && this.isInCompilationScope(plugin)) {
+                vendorPlugins.push(plugin);
+            }
+        });
+        const jobs: JobDetails[] = vendorPlugins.map(plugin => new JobDetails(
+            plugin.pluginName,
+            this.filterVendorPlugins(plugin.dependencies),
+            this.filterVendorPlugins(plugin.dependents)
+        ));
+        return new JobTracker(jobs);
+    }
+
+    private filterVendorPlugins(plugins: string[]): string[] {
+        return plugins
+            .map(p => this.getPlugin(p))
+            .filter(p => p.hasVendors && this.isInCompilationScope(p))
+            .map(p => p.pluginName);
     }
 
     private createOpenAPIYamlJobTracker(): JobTracker {
@@ -327,12 +363,14 @@ export class Scheduler {
             .map(p => p.pluginName);
     }
 
-    private registerWatch(pluginName: string, type: 'ts' | 'less' | 'css' | 'tsE2E' | 'openAPIYaml'): void {
+    private registerWatch(pluginName: string, type: 'ts' | 'less' | 'css' | 'tsE2E' | 'openAPIYaml' | 'vendor'): void {
         if (!this.watchFiles) {
             return;
         }
 
         const plugin = this.getPlugin(pluginName);
+        const pattern = Scheduler.WATCH_PATTERNS[type];
+        let glob: any;
 
         let watchDir = path.join(plugin.assetsDir, type);
         let jobTracker;
@@ -354,10 +392,17 @@ export class Scheduler {
                 watchDir = path.join(plugin.pluginDir, 'api');
                 jobTracker = this.openAPIYamlJobs;
                 break;
+            case 'vendor':
+                watchDir = path.join(plugin.pluginDir, 'assets');
+                glob = Scheduler.convertToUnixPath(`${watchDir}/(${pattern})`);
+                jobTracker = this.vendorJobs;
+                break;
         }
 
-        const pattern = Scheduler.WATCH_PATTERNS[type];
-        const glob = Scheduler.convertToUnixPath(`${watchDir}/**/*.(${pattern})`);
+        if (!glob) {
+            glob = Scheduler.convertToUnixPath(`${watchDir}/**/*.(${pattern})`);
+        }
+
         const watcher = chokidar.watch(glob);
         this.watchers[type].set(pluginName, watcher);
 

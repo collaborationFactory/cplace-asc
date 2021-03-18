@@ -7,21 +7,15 @@ import {CReplacePlugin} from './CReplacePlugin';
 import * as webpack from 'webpack';
 import {Configuration, ExternalsElement} from 'webpack';
 import {isFromLibrary} from '../model/utils';
-import {cgreen, debug, formatDuration, isDebugEnabled} from '../utils';
+import {debug, isDebugEnabled} from '../utils';
 import * as fs from 'fs';
 import * as copyFiles from 'copyfiles';
 import {AbstractTypescriptCompiler} from './AbstractTypescriptCompiler';
 import {CplaceTSConfigGenerator} from "../model/CplaceTSConfigGenerator";
-import {NPMResolver} from "../model/NPMResolver";
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
     public static readonly DEST_DIR = 'generated_js';
     private static readonly ENTRY = 'app.js';
-    private static readonly VENDORS_ENTRY = 'index.js';
-    private static readonly VENDORS_JS_FILE = 'vendor.js';
-    private static readonly VENDORS_CSS_FILE = 'vendor.css';
-    private static readonly JAVASCRIPT_TO_BE_COMPRESSED_PATH = 'javaScriptIncludesToBeCompressed.txt'
     private static readonly STATIC_IMPORT_EXTENSIONS = 'html|htm';
 
     private static readonly DEFAULT_EXTERNALS = {
@@ -50,13 +44,9 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
     protected async doPostProcessing(): Promise<void> {
         await this.copyStaticFiles();
         await this.runWebpack();
-        await this.buildPluginVendors();
     }
 
     private runWebpack() {
-        if (!fs.existsSync(path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, CplaceTypescriptCompiler.ENTRY))) {
-            return Promise.resolve(true);
-        }
         return new Promise((resolve, reject) => {
             // remove previously generated webpack bundle if exists (so it does not append)
             const bundleFile = path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, 'tsc.js');
@@ -178,133 +168,6 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                 } else {
                     resolve();
                 }
-            });
-        });
-    }
-
-    /**
-     * Creates plugin vendors
-     * @private
-     */
-    private async buildPluginVendors(): Promise<any> {
-        if (!fs.existsSync(path.join(this.assetsPath, 'package.json'))) {
-            return Promise.resolve(true);
-        }
-        console.log(`⟲ [${this.pluginName}] Building vendors...`);
-        const startTime = new Date().getTime();
-        return new Promise(async (resolve, reject) => {
-            NPMResolver.installPluginDependenciesAndCreateHash(this.pluginName, this.assetsPath);
-            await this.bundlePluginVendors();
-            await this.prepareVendorsForCompression(this.assetsPath);
-            const endTime = new Date().getTime();
-            console.log(cgreen`✓`, `[${this.pluginName}] Vendors built (${formatDuration(endTime - startTime)})`);
-            resolve(true);
-        });
-    }
-
-    /**
-     * Gets plugin webpack config
-     * @private
-     */
-    private getPluginWebpackConfig(): Configuration {
-        return {
-            mode: 'production',
-            entry: path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, CplaceTypescriptCompiler.VENDORS_ENTRY),
-            output: {
-                path: path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR),
-                filename: CplaceTypescriptCompiler.VENDORS_JS_FILE
-            },
-            resolve: {
-                modules: ['node_modules']
-            },
-            optimization: {
-                minimize: true
-            },
-            devtool: false,
-            plugins: [
-                new MiniCssExtractPlugin({
-                    filename: path.resolve(this.assetsPath, `generated_css/${CplaceTypescriptCompiler.VENDORS_CSS_FILE}`)
-                })
-            ],
-            module: {
-                rules: [
-                    {
-                        test: /\.(css|less|scss|sass)$/i,
-                        use: [
-                            MiniCssExtractPlugin.loader,
-                            'css-loader',
-                            'less-loader',
-                            'sass-loader'
-                        ]
-                    }
-                ]
-            }
-        }
-    }
-
-    /**
-     * Bundles plugin vendors
-     * @private
-     */
-    private bundlePluginVendors(): Promise<any> {
-        const startTime = new Date().getTime();
-        console.log(`⟲ [${this.pluginName}] Bundling vendors...`);
-        return new Promise<any>((resolve, reject) => {
-            const config = this.getPluginWebpackConfig();
-
-            // remove previously generated webpack bundle if exists (so it does not append)
-            const bundleFile = path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, CplaceTypescriptCompiler.VENDORS_JS_FILE)
-            if (fs.existsSync(bundleFile)) {
-                fs.unlinkSync(bundleFile);
-            }
-
-            webpack(config, (err, stats) => {
-                if (err) {
-                    reject(`✗ ${err.message}`);
-                } else if (stats.hasErrors()) {
-                    throw Error(`✗ ${stats.toString()}`);
-                } else {
-                    const endTime = new Date().getTime();
-                    console.log(cgreen`✓`, `[${this.pluginName}] Vendors bundled (${formatDuration(endTime - startTime)})`);
-                    resolve();
-                }
-            });
-        });
-    }
-
-    /**
-     * Writes vendor.js import to javaScriptIncludesToBeCompressed.txt
-     * @param assetsPath Provided assets path
-     * @private
-     */
-    private prepareVendorsForCompression(assetsPath: string): Promise<any> {
-
-        return new Promise<any>((resolve, reject) => {
-            const javaScriptToBeCompressedPath = path.join(assetsPath, CplaceTypescriptCompiler.JAVASCRIPT_TO_BE_COMPRESSED_PATH);
-
-            fs.readFile(javaScriptToBeCompressedPath, 'utf8', (err, buff) => {
-
-                if (err) {
-                    throw Error(`✗ Error reading ${javaScriptToBeCompressedPath}`);
-                }
-
-                const pathToInclude = `/${CplaceTypescriptCompiler.DEST_DIR}/${CplaceTypescriptCompiler.VENDORS_JS_FILE}`;
-                if (buff.includes(pathToInclude)) {
-                    // removes included path if already exists
-                    const includedPaths = buff.split('\n');
-                    const index = includedPaths.indexOf(pathToInclude);
-                    includedPaths.splice(index, 1);
-                    buff = includedPaths.join('\n');
-                }
-
-                const content = buff + `\n${pathToInclude}`;
-
-                fs.writeFile(javaScriptToBeCompressedPath, content, (e) => {
-                    if (e) {
-                        throw Error(`✗ Error writing ${pathToInclude} to ${javaScriptToBeCompressedPath}`);
-                    }
-                    resolve(true);
-                });
             });
         });
     }

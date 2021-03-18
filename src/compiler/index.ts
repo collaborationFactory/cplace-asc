@@ -16,6 +16,7 @@ import {cerr, enableDebug} from '../utils';
 import {CompressCssCompiler} from './CompressCssCompiler';
 import {E2ETypescriptCompiler} from "./E2ETypescriptCompiler";
 import {OpenAPIYamlCompiler} from "./OpenAPIYamlCompiler";
+import {VendorCompiler} from "./VendorCompiler";
 
 /* ==================
  *      This file will be called as main process by `ExecutorService` as specified by
@@ -57,8 +58,10 @@ if (require.main === module) {
         }
 
         let CompilerConstructor: ICompilerConstructor;
-        if (request.ts) {
-            CompilerConstructor = CplaceTypescriptCompiler;
+        if (request.vendor) {
+            CompilerConstructor = VendorCompiler;
+        } else if (request.ts) {
+            CompilerConstructor = CplaceTypescriptCompiler
         } else if (request.tsE2E) {
             CompilerConstructor = E2ETypescriptCompiler;
         } else if (request.less) {
