@@ -8,7 +8,8 @@ import * as webpack from "webpack";
 import spawn = require("cross-spawn");
 import * as crypto from "crypto";
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 export class VendorCompiler implements ICompiler {
     public static readonly DEST_JS_DIR = 'generated_js';
@@ -139,9 +140,24 @@ export class VendorCompiler implements ICompiler {
             optimization: {
                 minimize: true,
                 minimizer: [
-                    new OptimizeCSSAssetsPlugin({
-                        cssProcessorPluginOptions: {
-                            preset: ['default', { discardComments: { removeAll: true } }],
+                    new CssMinimizerPlugin({
+                        parallel: true,
+                        minimizerOptions: {
+                            preset: [
+                                'default',
+                                {
+                                    discardComments: { removeAll: true },
+                                },
+                            ],
+                        }
+                    }),
+                    new UglifyJsPlugin({
+                        extractComments: true,
+                        parallel: true,
+                        uglifyOptions: {
+                            output: {
+                                comments: false,
+                            },
                         }
                     })
                 ]
@@ -155,14 +171,34 @@ export class VendorCompiler implements ICompiler {
             module: {
                 rules: [
                     {
-                        test: /\.(css|less|scss|sass)$/i,
+                        test: /\.css$/,
+                        use: [
+                            MiniCssExtractPlugin.loader,
+                            'css-loader'
+                        ]
+                    },
+                    {
+                        test: /\.(sass|scss)$/,
                         use: [
                             MiniCssExtractPlugin.loader,
                             'css-loader',
-                            'less-loader',
                             'sass-loader'
                         ]
-                    }
+                    },
+                    {
+                        test: /\.less$/,
+                        use: [
+                            MiniCssExtractPlugin.loader,
+                            'css-loader',
+                            'less-loader'
+                        ]
+                    },
+                    {
+                        test: /\.(woff(2)?|ttf|eot|svg|png|jpe?g|gif)$/i,
+                        use: [
+                            'file-loader'
+                        ]
+                    },
                 ]
             }
         }
