@@ -7,6 +7,7 @@ import {Configuration} from "webpack";
 import * as webpack from "webpack";
 import spawn = require("cross-spawn");
 import * as crypto from "crypto";
+import {CompressCssCompiler} from "./CompressCssCompiler";
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
@@ -21,10 +22,13 @@ export class VendorCompiler implements ICompiler {
     private static readonly JAVASCRIPT_TO_BE_COMPRESSED = 'javaScriptIncludesToBeCompressed.txt';
     private static readonly CSS_IMPORTS = 'imports.css';
 
+    private compressCssCompiler: CompressCssCompiler;
+
     constructor(private readonly pluginName: string,
                 private readonly dependencyPaths: string[],
                 private readonly assetsPath: string,
                 private readonly mainRepoDir: string) {
+        this.compressCssCompiler = new CompressCssCompiler(this.pluginName, this.dependencyPaths, this.assetsPath, this.mainRepoDir, true);
     }
 
     /**
@@ -48,7 +52,7 @@ export class VendorCompiler implements ICompiler {
 
         await this.bundlePluginVendors();
         this.prepareVendorJSForCompression();
-        this.prepareVendorCSSForCompression();
+        await this.prepareVendorCSSForCompression();
 
         const endTime = new Date().getTime();
         console.log(cgreen`✓`, `[${this.pluginName}] vendors compiled (${formatDuration(endTime - startTime)})`);
@@ -221,6 +225,15 @@ export class VendorCompiler implements ICompiler {
             this.removeFileIfExists(vendorJsFile);
             this.removeFileIfExists(vendorCssFile);
 
+            const entryFile = path.resolve(this.assetsPath, VendorCompiler.DEST_JS_DIR, VendorCompiler.VENDOR_ENTRY);
+            const buffer = fs.readFileSync(entryFile);
+
+            if (!buffer.length) {
+                // if entry file is empty, there is no need to bundle
+                resolve();
+                return;
+            }
+
             webpack(config, (err, stats) => {
                 if (err) {
                     reject(`${err.message}`);
@@ -253,10 +266,10 @@ export class VendorCompiler implements ICompiler {
     }
 
     /**
-     * Writes vendor.js import to javaScriptIncludesToBeCompressed.txt
+     * Writes vendor.css import to imports.css file
      * @private
      */
-    private prepareVendorCSSForCompression(): void {
+    private prepareVendorCSSForCompression(): Promise<any> {
         const vendorCssPath = path.join(this.assetsPath, VendorCompiler.DEST_CSS_DIR, VendorCompiler.VENDOR_CSS_FILE);
         const cssImportsPath = path.join(this.assetsPath, VendorCompiler.DEST_CSS_DIR, VendorCompiler.CSS_IMPORTS);
         const pathToInclude = `@import url("./${VendorCompiler.VENDOR_CSS_FILE}");`;
@@ -264,9 +277,22 @@ export class VendorCompiler implements ICompiler {
         const noCssVendor = this.cleanVendor(vendorCssPath, cssImportsPath, pathToInclude);
 
         if (noCssVendor) {
-            return;
+            /*
+                If there is no css vendor, css compiler has to be started to clean the css outputs.
+             */
+            return this.compressCssCompiler.compile();
         }
+        const cssEntryBeforeWriteExists = fs.existsSync(cssImportsPath);
         this.writeVendorImport(cssImportsPath, pathToInclude);
+        const cssEntryAfterWriteExists = fs.existsSync(cssImportsPath);
+        if (!cssEntryBeforeWriteExists && cssEntryAfterWriteExists) {
+            /*
+                If css entry file doesn't exists at the time cplace-asc started, css watch will not be automatically fired.
+                Instead css compiler has to be triggered manually.
+             */
+            return this.compressCssCompiler.compile();
+        }
+        return Promise.resolve(true);
     }
 
     /**

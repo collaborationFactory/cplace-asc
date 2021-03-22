@@ -4,6 +4,7 @@ import {CompilationResult, ICompiler} from './interfaces';
 import {debug, formatDuration, GREEN_CHECK} from '../utils';
 import * as spawn from 'cross-spawn';
 import * as fs from 'fs';
+import rimraf = require("rimraf");
 
 export class CompressCssCompiler implements ICompiler {
     public static readonly CSS_SOURCES_DIR = 'css';
@@ -33,6 +34,11 @@ export class CompressCssCompiler implements ICompiler {
             const generatedCssDir = CompressCssCompiler.getCssOutputDir(this.assetsPath);
             const outputFile = path.join(generatedCssDir, CompressCssCompiler.OUTPUT_FILE_NAME);
 
+            if (!fs.existsSync(this.pathToEntryFile)) {
+                this.cleanOutput(outputFile);
+                return resolve(CompilationResult.CHANGED);
+            }
+
             if (!fs.existsSync(generatedCssDir)) {
                 fs.mkdirSync(generatedCssDir);
             }
@@ -50,6 +56,7 @@ export class CompressCssCompiler implements ICompiler {
 
             debug(`(CompressCssCompiler) [${this.pluginName}] clean-css return code: ${result.status}`);
             if (result.status !== 0) {
+                this.cleanOutput(outputFile);
                 throw Error(`[${this.pluginName}] CSS compression failed...`);
             }
 
@@ -58,6 +65,11 @@ export class CompressCssCompiler implements ICompiler {
 
             return resolve(CompilationResult.CHANGED);
         });
+    }
+
+    private cleanOutput(outputFile: string): void {
+        rimraf.sync(outputFile);
+        rimraf.sync(outputFile.concat('.map'));
     }
 
     private getCleanCssExecutable(): string {
