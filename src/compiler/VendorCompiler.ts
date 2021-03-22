@@ -14,7 +14,7 @@ const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 export class VendorCompiler implements ICompiler {
     public static readonly DEST_JS_DIR = 'generated_js';
-    public static readonly DEST_CSS_DIR = 'css';
+    public static readonly DEST_CSS_DIR = 'generated_css';
     private static readonly VENDOR_ENTRY = 'index.js';
     private static readonly VENDOR_ENTRY_HASH = 'index.js.hash';
     private static readonly VENDOR_JS_FILE = 'vendor.js';
@@ -271,8 +271,13 @@ export class VendorCompiler implements ICompiler {
      */
     private prepareVendorCSSForCompression(): Promise<any> {
         const vendorCssPath = path.join(this.assetsPath, VendorCompiler.DEST_CSS_DIR, VendorCompiler.VENDOR_CSS_FILE);
-        const cssImportsPath = path.join(this.assetsPath, VendorCompiler.DEST_CSS_DIR, VendorCompiler.CSS_IMPORTS);
-        const pathToInclude = `@import url("./${VendorCompiler.VENDOR_CSS_FILE}");`;
+        const cssFolder = path.join(this.assetsPath, 'css');
+        const cssImportsPath = path.join(cssFolder, VendorCompiler.CSS_IMPORTS);
+        const pathToInclude = `@import url("../${VendorCompiler.DEST_CSS_DIR}/${VendorCompiler.VENDOR_CSS_FILE}");`;
+
+        if (!fs.existsSync(cssFolder)) {
+            fs.mkdirSync(cssFolder);
+        }
 
         const noCssVendor = this.cleanVendor(vendorCssPath, cssImportsPath, pathToInclude);
 
