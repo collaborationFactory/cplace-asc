@@ -14,7 +14,6 @@ import {cerr, cgreen, cred, debug, sleepBusy} from "../utils";
 import {PackageVersion} from "./PackageVersion";
 import rimraf = require("rimraf");
 import Timeout = NodeJS.Timeout;
-import {exec} from "child_process";
 
 export class NPMResolver {
     private static readonly PACKAGE_LOCK_HASH = 'package-lock.hash';
@@ -59,14 +58,13 @@ export class NPMResolver {
      */
     private static installPluginDependencies(pluginName: string, assetsPath: string): Promise<any> {
         return new Promise<any>(((resolve, reject) => {
-            exec(`npm i --prefix ${assetsPath}`, (err) => {
-                if (err) {
-                    reject(`[${pluginName}] (NPM) installing dependencies failed`);
-                }
-                console.log(cgreen`✓`, `[${pluginName}] (NPM) dependencies successfully installed`);
-                NPMResolver.createPluginHashFile(assetsPath);
-                resolve(true);
-            });
+            const res = spawn.sync('npm', ['install', '--prefix', assetsPath]);
+            if (res.status !== 0) {
+                reject(`[${pluginName}] (NPM) installing dependencies failed`);
+            }
+            console.log(cgreen`✓`, `[${pluginName}] (NPM) dependencies successfully installed`);
+            NPMResolver.createPluginHashFile(assetsPath);
+            resolve(true);
         }));
     }
 
