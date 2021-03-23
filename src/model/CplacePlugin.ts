@@ -12,6 +12,7 @@ import {CplaceTypescriptCompiler} from '../compiler/CplaceTypescriptCompiler';
 import {CompressCssCompiler} from '../compiler/CompressCssCompiler';
 import {E2ETSConfigGenerator} from "./E2ETSConfigGenerator";
 import {getDependencyParser} from "./DependencyParser";
+import {NPMResolver} from "./NPMResolver";
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined
@@ -142,6 +143,10 @@ export default class CplacePlugin {
         if (this.hasTypeScriptAssets) {
             const generatedJs = CplaceTypescriptCompiler.getJavaScriptOutputDir(this.assetsDir);
             promises.push(this.removeDir(generatedJs));
+        }
+        if (this.hasVendors) {
+            const pluginNodeModules = NPMResolver.getPluginNodeModulesPath(this.assetsDir);
+            promises.push(this.removeDir(pluginNodeModules));
         }
         await Promise.all(promises);
 

@@ -51,6 +51,15 @@ export class NPMResolver {
     }
 
     /**
+     * Gets plugin node_modules path
+     * @param assetsPath Assets path
+     * @private
+     */
+    public static getPluginNodeModulesPath(assetsPath: string): string {
+        return path.resolve(assetsPath, NPMResolver.NODE_MODULES);
+    }
+
+    /**
      * Installs plugin dependencies
      * @param pluginName Plugin name
      * @param assetsPath Assets folder path
@@ -85,15 +94,6 @@ export class NPMResolver {
      */
     private static getPluginHashFilePath(assetsPath: string): string {
         return path.join(assetsPath, NPMResolver.NODE_MODULES, NPMResolver.PACKAGE_LOCK_HASH);
-    }
-
-    /**
-     * Gets plugin node_modules path
-     * @param assetsPath Assets path
-     * @private
-     */
-    private static getPluginNodeModulesPath(assetsPath: string): string {
-        return path.resolve(assetsPath, NPMResolver.NODE_MODULES);
     }
 
     /**

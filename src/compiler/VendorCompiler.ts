@@ -8,12 +8,12 @@ import * as webpack from "webpack";
 import spawn = require("cross-spawn");
 import * as crypto from "crypto";
 import {CompressCssCompiler} from "./CompressCssCompiler";
+import {CplaceTypescriptCompiler} from "./CplaceTypescriptCompiler";
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 export class VendorCompiler implements ICompiler {
-    public static readonly DEST_JS_DIR = 'generated_js';
     public static readonly DEST_CSS_DIR = 'generated_css';
     private static readonly VENDOR_ENTRY = 'index.js';
     private static readonly VENDOR_ENTRY_HASH = 'index.js.hash';
@@ -70,7 +70,7 @@ export class VendorCompiler implements ICompiler {
         if (!fs.existsSync(index)) {
             throw Error(`[${this.pluginName}] index.ts not found!`);
         }
-        const res = spawn.sync(tsc, [path.join(this.assetsPath, 'index.ts'), `--outDir`, path.resolve(this.assetsPath, VendorCompiler.DEST_JS_DIR)]);
+        const res = spawn.sync(tsc, [path.join(this.assetsPath, 'index.ts'), `--outDir`, path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR)]);
         if (res.status !== 0) {
             throw Error(`[${this.pluginName}] index.ts TS compilation failed!`);
         }
@@ -109,7 +109,7 @@ export class VendorCompiler implements ICompiler {
      */
     private getHash4Index(): string {
         const hash = crypto.createHash('sha256');
-        const data = fs.readFileSync(path.join(this.assetsPath, VendorCompiler.DEST_JS_DIR, VendorCompiler.VENDOR_ENTRY));
+        const data = fs.readFileSync(path.join(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_ENTRY));
         hash.update(data);
         return hash.digest('hex');
     }
@@ -119,7 +119,7 @@ export class VendorCompiler implements ICompiler {
      * @private
      */
     private getIndexHashFilePath(): string {
-        return path.join(this.assetsPath, VendorCompiler.DEST_JS_DIR, VendorCompiler.VENDOR_ENTRY_HASH);
+        return path.join(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_ENTRY_HASH);
     }
 
 
@@ -130,9 +130,9 @@ export class VendorCompiler implements ICompiler {
     private getPluginWebpackConfig(): Configuration {
         return {
             mode: 'production',
-            entry: path.resolve(this.assetsPath, VendorCompiler.DEST_JS_DIR, VendorCompiler.VENDOR_ENTRY),
+            entry: path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_ENTRY),
             output: {
-                path: path.resolve(this.assetsPath, VendorCompiler.DEST_JS_DIR),
+                path: path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR),
                 filename: VendorCompiler.VENDOR_JS_FILE
             },
             resolveLoader: {
@@ -219,13 +219,13 @@ export class VendorCompiler implements ICompiler {
             const config = this.getPluginWebpackConfig();
 
             // remove previously generated webpack bundle if exists (so it does not append)
-            const vendorJsFile = path.resolve(this.assetsPath, VendorCompiler.DEST_JS_DIR, VendorCompiler.VENDOR_JS_FILE)
+            const vendorJsFile = path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_JS_FILE)
             const vendorCssFile = path.resolve(this.assetsPath, VendorCompiler.DEST_CSS_DIR, VendorCompiler.VENDOR_CSS_FILE);
 
             this.removeFileIfExists(vendorJsFile);
             this.removeFileIfExists(vendorCssFile);
 
-            const entryFile = path.resolve(this.assetsPath, VendorCompiler.DEST_JS_DIR, VendorCompiler.VENDOR_ENTRY);
+            const entryFile = path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_ENTRY);
             const buffer = fs.readFileSync(entryFile);
 
             if (!buffer.length) {
@@ -253,9 +253,9 @@ export class VendorCompiler implements ICompiler {
      * @private
      */
     private prepareVendorJSForCompression(): void {
-        const vendorJsPath = path.resolve(this.assetsPath, VendorCompiler.DEST_JS_DIR, VendorCompiler.VENDOR_JS_FILE);
+        const vendorJsPath = path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_JS_FILE);
         const javaScriptToBeCompressedPath = path.join(this.assetsPath, VendorCompiler.JAVASCRIPT_TO_BE_COMPRESSED);
-        const pathToInclude = `/${VendorCompiler.DEST_JS_DIR}/${VendorCompiler.VENDOR_JS_FILE}`;
+        const pathToInclude = `/${CplaceTypescriptCompiler.DEST_DIR}/${VendorCompiler.VENDOR_JS_FILE}`;
 
         const noJsVendor = this.cleanVendor(vendorJsPath, javaScriptToBeCompressedPath, pathToInclude);
 
