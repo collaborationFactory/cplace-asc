@@ -2,7 +2,7 @@ import {CompilationResult, ICompiler} from "./interfaces";
 import * as fs from 'fs';
 import * as path from "path";
 import {NPMResolver} from "../model/NPMResolver";
-import {cgreen, formatDuration} from "../utils";
+import {cgreen, debug, formatDuration} from "../utils";
 import {Configuration} from "webpack";
 import * as webpack from "webpack";
 import spawn = require("cross-spawn");
@@ -45,10 +45,12 @@ export class VendorCompiler implements ICompiler {
         const oldIndexHash = this.readIndexHash();
         const newIndexHash = this.createIndexHashFile();
 
+        debug(`(VendorCompiler) [${this.pluginName}] comparing hash files...`);
         if (oldIndexHash === newIndexHash && !dependenciesWereUpdated) {
             console.log(cgreen`✓`, `[${this.pluginName}] vendors are up to date`);
             return Promise.resolve(CompilationResult.UNCHANGED);
         }
+        debug(`(VendorCompiler) [${this.pluginName}] hash files changed`);
 
         await this.bundlePluginVendors();
         this.prepareVendorJSForCompression();
@@ -65,15 +67,19 @@ export class VendorCompiler implements ICompiler {
      * @private
      */
     private tscPluginIndex(): void {
+        debug(`(VendorCompiler) [${this.pluginName}] compiling index.ts...`);
         const tsc = path.resolve(__dirname, '../../', 'node_modules/.bin/tsc');
         const index = path.join(this.assetsPath, 'index.ts');
         if (!fs.existsSync(index)) {
             throw Error(`[${this.pluginName}] index.ts not found!`);
         }
         const res = spawn.sync(tsc, [path.join(this.assetsPath, 'index.ts'), `--outDir`, path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR)]);
+        debug(`(VendorCompiler) [${this.pluginName}] index.ts tsc return code: ${res.status}`);
         if (res.status !== 0) {
-            throw Error(`[${this.pluginName}] index.ts TS compilation failed!`);
+            debug(`(VendorCompiler) [${this.pluginName}] index.ts compilation failed with error ${res.stdout}`);
+            throw Error(`[${this.pluginName}] index.ts compilation failed!`);
         }
+        debug(`(VendorCompiler) [${this.pluginName}] index.ts compiled`);
     }
 
     /**
@@ -257,7 +263,9 @@ export class VendorCompiler implements ICompiler {
         const javaScriptToBeCompressedPath = path.join(this.assetsPath, VendorCompiler.JAVASCRIPT_TO_BE_COMPRESSED);
         const pathToInclude = `/${CplaceTypescriptCompiler.DEST_DIR}/${VendorCompiler.VENDOR_JS_FILE}`;
 
+        debug(`(VendorCompiler) [${this.pluginName}] cleaning JS vendor imports...`);
         const noJsVendor = this.cleanVendor(vendorJsPath, javaScriptToBeCompressedPath, pathToInclude);
+        debug(`(VendorCompiler) [${this.pluginName}] JS vendor imports cleaned`);
 
         if (noJsVendor) {
             return;
@@ -279,7 +287,9 @@ export class VendorCompiler implements ICompiler {
             fs.mkdirSync(cssFolder);
         }
 
+        debug(`(VendorCompiler) [${this.pluginName}] cleaning CSS vendor imports...`);
         const noCssVendor = this.cleanVendor(vendorCssPath, cssImportsPath, pathToInclude);
+        debug(`(VendorCompiler) [${this.pluginName}] CSS vendor imports cleaned`);
 
         if (noCssVendor) {
             /*
@@ -309,6 +319,7 @@ export class VendorCompiler implements ICompiler {
     private writeVendorImport(fileToWrite: string, pathToInclude: string): void {
         let buffer = '';
 
+        debug(`(VendorCompiler) [${this.pluginName}] Writing vendor imports...`);
         if (fs.existsSync(fileToWrite)) {
             buffer = fs.readFileSync(fileToWrite, 'utf8');
 
@@ -323,6 +334,7 @@ export class VendorCompiler implements ICompiler {
 
         const content = buffer + `\n${pathToInclude}`;
         fs.writeFileSync(fileToWrite, content);
+        debug(`(VendorCompiler) [${this.pluginName}] Vendor imports written`);
     }
 
     /**

@@ -66,9 +66,11 @@ export class NPMResolver {
      * @private
      */
     private static installPluginDependencies(pluginName: string, assetsPath: string): boolean {
+        console.log(`⟲ [${pluginName}] (NPM) installing dependencies...`);
         const res = spawn.sync('npm', ['install', '--prefix', assetsPath]);
         if (res.status !== 0) {
-            throw Error(`[${pluginName}] (NPM) installing dependencies failed`);
+            debug(`[${pluginName}] (NPM) installing dependencies failed with error ${res.stdout}`);
+            throw Error(`[${pluginName}] (NPM) installing dependencies failed!`);
         }
         console.log(cgreen`✓`, `[${pluginName}] (NPM) dependencies successfully installed`);
         NPMResolver.createPluginHashFile(assetsPath);
