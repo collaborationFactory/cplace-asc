@@ -47,7 +47,7 @@ export class VendorCompiler implements ICompiler {
 
         if (oldIndexHash === newIndexHash && !dependenciesWereUpdated) {
             console.log(cgreen`✓`, `[${this.pluginName}] vendors are up to date`);
-            return Promise.resolve(CompilationResult.CHANGED);
+            return Promise.resolve(CompilationResult.UNCHANGED);
         }
 
         await this.bundlePluginVendors();
