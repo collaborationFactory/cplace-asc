@@ -394,7 +394,7 @@ export class Scheduler {
                 break;
             case 'vendor':
                 watchDir = path.join(plugin.pluginDir, 'assets');
-                glob = Scheduler.convertToUnixPath(`${watchDir}/(${pattern})`);
+                glob = Scheduler.convertToUnixPath(`${watchDir}/*(${pattern})`);
                 jobTracker = this.vendorJobs;
                 break;
         }
