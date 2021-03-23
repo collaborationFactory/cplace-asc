@@ -38,7 +38,7 @@ export class VendorCompiler implements ICompiler {
         console.log(`⟲ [${this.pluginName}] starting vendors compilation...`);
         const startTime = new Date().getTime();
 
-        const dependenciesWereUpdated = await NPMResolver.installPluginDependenciesAndCreateHash(this.pluginName, this.assetsPath);
+        const dependenciesWereUpdated = NPMResolver.installPluginDependenciesAndCreateHash(this.pluginName, this.assetsPath);
 
         this.tscPluginIndex();
 

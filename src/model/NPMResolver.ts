@@ -34,7 +34,7 @@ export class NPMResolver {
      * @param pluginName Plugin name
      * @param assetsPath Assets folder path
      */
-    public static installPluginDependenciesAndCreateHash(pluginName: string, assetsPath: string): Promise<boolean> {
+    public static installPluginDependenciesAndCreateHash(pluginName: string, assetsPath: string): boolean {
         if (fs.existsSync(NPMResolver.getPluginHashFilePath(assetsPath))) {
             const packageLockUpdated = NPMResolver.packageLockWasUpdated(NPMResolver.getPluginHashFilePath(assetsPath), NPMResolver.getPluginPackageLockPath(assetsPath), pluginName);
             if (packageLockUpdated) {
@@ -44,7 +44,7 @@ export class NPMResolver {
             if (!hasNodeModules || packageLockUpdated) {
                 return NPMResolver.installPluginDependencies(pluginName, assetsPath);
             }
-            return Promise.resolve(false);
+            return false;
         } else {
             return NPMResolver.installPluginDependencies(pluginName, assetsPath);
         }
@@ -56,16 +56,14 @@ export class NPMResolver {
      * @param assetsPath Assets folder path
      * @private
      */
-    private static installPluginDependencies(pluginName: string, assetsPath: string): Promise<any> {
-        return new Promise<any>(((resolve, reject) => {
-            const res = spawn.sync('npm', ['install', '--prefix', assetsPath]);
-            if (res.status !== 0) {
-                reject(`[${pluginName}] (NPM) installing dependencies failed`);
-            }
-            console.log(cgreen`✓`, `[${pluginName}] (NPM) dependencies successfully installed`);
-            NPMResolver.createPluginHashFile(assetsPath);
-            resolve(true);
-        }));
+    private static installPluginDependencies(pluginName: string, assetsPath: string): boolean {
+        const res = spawn.sync('npm', ['install', '--prefix', assetsPath]);
+        if (res.status !== 0) {
+            throw Error(`[${pluginName}] (NPM) installing dependencies failed`);
+        }
+        console.log(cgreen`✓`, `[${pluginName}] (NPM) dependencies successfully installed`);
+        NPMResolver.createPluginHashFile(assetsPath);
+        return true;
     }
 
     /**
