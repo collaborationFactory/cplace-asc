@@ -324,9 +324,11 @@ export class VendorCompiler implements ICompiler {
             buffer = fs.readFileSync(fileToWrite, 'utf8');
 
             if (buffer.includes(pathToInclude)) {
-                // removes included path if already exists
-                const includedPaths = buffer.split('\n');
+                const includedPaths = buffer.split('\n')
+                    .map(line => line.trim())
+                    .filter(Boolean);
                 const index = includedPaths.indexOf(pathToInclude);
+                // removes included path if already exists
                 includedPaths.splice(index, 1);
                 buffer = includedPaths.join('\n');
             }
