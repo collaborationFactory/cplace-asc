@@ -29,6 +29,118 @@ export class NPMResolver {
         this.watchers = [];
     }
 
+    /**
+     * Installs plugin dependencies and create hash
+     * @param pluginName Plugin name
+     * @param assetsPath Assets folder path
+     */
+    public static installPluginDependenciesAndCreateHash(pluginName: string, assetsPath: string): boolean {
+        if (fs.existsSync(NPMResolver.getPluginHashFilePath(assetsPath))) {
+            const packageLockUpdated = NPMResolver.packageLockWasUpdated(NPMResolver.getPluginHashFilePath(assetsPath), NPMResolver.getPluginPackageLockPath(assetsPath), pluginName);
+            if (packageLockUpdated) {
+                console.log(cgreen`⇢`, `[${pluginName}] (NPM) package-lock.json was updated...`);
+            }
+            const hasNodeModules = NPMResolver.getPluginNodeModulesPath(assetsPath);
+            if (!hasNodeModules || packageLockUpdated) {
+                return NPMResolver.installPluginDependencies(pluginName, assetsPath);
+            }
+            return false;
+        } else {
+            return NPMResolver.installPluginDependencies(pluginName, assetsPath);
+        }
+    }
+
+    /**
+     * Gets plugin node_modules path
+     * @param assetsPath Assets path
+     * @private
+     */
+    public static getPluginNodeModulesPath(assetsPath: string): string {
+        return path.resolve(assetsPath, NPMResolver.NODE_MODULES);
+    }
+
+    /**
+     * Installs plugin dependencies
+     * @param pluginName Plugin name
+     * @param assetsPath Assets folder path
+     * @private
+     */
+    private static installPluginDependencies(pluginName: string, assetsPath: string): boolean {
+        console.log(`⟲ [${pluginName}] (NPM) installing dependencies...`);
+        const res = spawn.sync('npm', ['install', '--prefix', assetsPath]);
+        if (res.status !== 0) {
+            debug(`[${pluginName}] (NPM) installing dependencies failed with error ${res.stdout}`);
+            throw Error(`[${pluginName}] (NPM) installing dependencies failed!`);
+        }
+        console.log(cgreen`✓`, `[${pluginName}] (NPM) dependencies successfully installed`);
+        NPMResolver.createPluginHashFile(assetsPath);
+        return true;
+    }
+
+    /**
+     * Gets package-lock.json hash
+     * @param packageLockPath package-lock.json path
+     * @private
+     */
+    private static getHash4PackageLock(packageLockPath: string): string {
+        const hash = crypto.createHash('sha256');
+        const data = fs.readFileSync(packageLockPath);
+        hash.update(data);
+        return hash.digest('hex');
+    }
+
+    /**
+     * Gets plugin hash file path
+     * @param assetsPath
+     * @private
+     */
+    private static getPluginHashFilePath(assetsPath: string): string {
+        return path.join(assetsPath, NPMResolver.NODE_MODULES, NPMResolver.PACKAGE_LOCK_HASH);
+    }
+
+    /**
+     * Gets plugin package-lock.json path
+     * @param assetsPath Assets path
+     * @private
+     */
+    private static getPluginPackageLockPath(assetsPath: string): string {
+        return path.resolve(assetsPath, NPMResolver.PACKAGE_LOCK_JSON);
+    }
+
+    /**
+     * Creates plugin hash file
+     * @param assetsPath Assets path
+     * @private
+     */
+    private static createPluginHashFile(assetsPath: string): void {
+        fs.writeFileSync(
+            NPMResolver.getPluginHashFilePath(assetsPath),
+            NPMResolver.getHash4PackageLock(NPMResolver.getPluginPackageLockPath(assetsPath)),
+            {encoding: 'utf8'}
+        );
+    }
+
+    /**
+     * Checks if package-lock.json was updated
+     * @param hashFilePath Hash file path
+     * @param packageLockPath package-lock.json path
+     * @param pluginName Provided plugin name
+     * @private
+     */
+    private static packageLockWasUpdated(hashFilePath: string, packageLockPath: string, pluginName?: string): boolean {
+        const oldHash = fs.readFileSync(hashFilePath, {encoding: 'utf8'});
+        if (oldHash === NPMResolver.getHash4PackageLock(packageLockPath)) {
+            const pluginLog = pluginName ? `[${pluginName}] ` : '';
+            console.log(cgreen`✓`, `${pluginLog}(NPM) node_modules are up to date`);
+            return false;
+        }
+        return true;
+    }
+
+    private static shouldResolveNpmModules(): boolean {
+        return PackageVersion.get().major !== 1;
+    }
+
     public async resolve(): Promise<void> {
         this.checkAndInstall();
 
@@ -43,10 +155,6 @@ export class NPMResolver {
         this.watchers.forEach(watcher => {
             watcher.close();
         });
-    }
-
-    private shouldResolveNpmModules(): boolean {
-        return PackageVersion.get().major !== 1;
     }
 
     private registerWatchers() {
@@ -94,7 +202,7 @@ export class NPMResolver {
     }
 
     private checkAndInstall() {
-        if (!this.shouldResolveNpmModules()) {
+        if (!NPMResolver.shouldResolveNpmModules()) {
             // clean up the checked-in node_modules if required
             if (existsSync(path.join(NPMResolver.NODE_MODULES, 'webdriverio'))) {
                 console.log(cgreen`⇢`, "Deleting the node_modules folder...");
@@ -139,7 +247,7 @@ export class NPMResolver {
             this.doNpmInstallAndCreateHash();
         } else {
             if (fs.existsSync(this.hashFilePath)) {
-                if (this.packageLockWasUpdated()) {
+                if (NPMResolver.packageLockWasUpdated(this.hashFilePath, this.getPackageLockPath())) {
                     console.log(cgreen`⇢`, `(NPM) package-lock.json was updated...`);
                     this.doNpmInstallAndCreateHash();
                 }
@@ -147,15 +255,6 @@ export class NPMResolver {
                 this.doNpmInstallAndCreateHash();
             }
         }
-    }
-
-    private packageLockWasUpdated(): boolean {
-        const oldHash = fs.readFileSync(this.hashFilePath, {encoding: 'utf8'});
-        if (oldHash === this.getHash4PackageLock()) {
-            console.log(cgreen`✓`, `(NPM) node_modules are up to date`);
-            return false;
-        }
-        return true;
     }
 
     private doNpmInstallAndCreateHash() {
@@ -172,15 +271,8 @@ export class NPMResolver {
         this.createHashFile();
     }
 
-    private getHash4PackageLock(): string {
-        const hash = crypto.createHash('sha256');
-        const data = fs.readFileSync(this.getPackageLockPath());
-        hash.update(data);
-        return hash.digest('hex');
-    }
-
     private createHashFile() {
-        fs.writeFileSync(this.hashFilePath, this.getHash4PackageLock(), {encoding: 'utf8'});
+        fs.writeFileSync(this.hashFilePath, NPMResolver.getHash4PackageLock(this.getPackageLockPath()), {encoding: 'utf8'});
     }
 
     private hasNoNodeModules(): boolean {
