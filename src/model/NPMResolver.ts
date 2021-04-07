@@ -74,6 +74,15 @@ export class NPMResolver {
         }
         console.log(cgreen`✓`, `[${pluginName}] (NPM) dependencies successfully installed`);
         NPMResolver.createPluginHashFile(assetsPath);
+        const nodeModulesPath = path.resolve(assetsPath, 'node_modules');
+        debug(`[${pluginName}] (NPM) removing symlinks...`);
+        fs.readdirSync(nodeModulesPath).forEach(folderName => {
+            const folder = path.resolve(nodeModulesPath, folderName);
+            if (fs.lstatSync(folder).isSymbolicLink()) {
+                rimraf.sync(folder);
+            }
+        });
+        debug(`[${pluginName}] (NPM) symlinks removed!`);
         return true;
     }
 
