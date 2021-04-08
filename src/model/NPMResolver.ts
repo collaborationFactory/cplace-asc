@@ -67,7 +67,7 @@ export class NPMResolver {
      */
     private static installPluginDependencies(pluginName: string, assetsPath: string): boolean {
         console.log(`⟲ [${pluginName}] (NPM) installing dependencies...`);
-        const res = spawn.sync('npm', ['install', '--prefix', assetsPath]);
+        const res = spawn.sync('npm', ['install', '--prefix', assetsPath, '--no-save']);
         if (res.status !== 0) {
             debug(`[${pluginName}] (NPM) installing dependencies failed with error ${res.stdout}`);
             throw Error(`[${pluginName}] (NPM) installing dependencies failed!`);
