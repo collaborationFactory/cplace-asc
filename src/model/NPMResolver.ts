@@ -74,7 +74,29 @@ export class NPMResolver {
         }
         console.log(cgreen`✓`, `[${pluginName}] (NPM) dependencies successfully installed`);
         NPMResolver.createPluginHashFile(assetsPath);
+        NPMResolver.removePluginSymlinks(pluginName, assetsPath);
         return true;
+    }
+
+    /**
+     * Removes symlinks inside plugin node_modules folder
+     * @param pluginName Plugin name
+     * @param assetsPath Assets folder path
+     * @private
+     */
+    private static removePluginSymlinks(pluginName: string, assetsPath: string): void {
+        const isWindows = process.platform === 'win32';
+        if (isWindows) {
+            console.log(`⟲ [${pluginName}] (NPM) removing symlinks...`);
+            const nodeModulesPath = path.resolve(assetsPath, 'node_modules');
+            fs.readdirSync(nodeModulesPath).forEach(dir => {
+                const dirPath = path.resolve(nodeModulesPath, dir);
+                if (fs.lstatSync(dirPath).isSymbolicLink()) {
+                    rimraf.sync(dirPath);
+                }
+            });
+            console.log(cgreen`✓`, `[${pluginName}] (NPM) symlinks removed`);
+        }
     }
 
     /**
