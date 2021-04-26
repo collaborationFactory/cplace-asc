@@ -113,7 +113,7 @@ function run(updateDetails?: IUpdateDetails) {
 
     const mainRepoPath = AssetsCompiler.getMainRepoPath(process.cwd(), cli.flags.localonly);
     if (mainRepoPath === null) {
-        console.error(cerr`Failed to find path to main repository containing cf.cplace.platform plugin... (Did you cd into the root directory of your cplace project?)`);
+        console.error(cerr`Failed to find path to main repository containing cf.cplace.platform plugin... Ensure that you are starting from the root directory of your cplace project.`);
         process.exit(1);
         return;
     } else if (path.basename(mainRepoPath) !== 'main' && (!cli.flags.onlypre) && (!cli.flags.localonly)) {
