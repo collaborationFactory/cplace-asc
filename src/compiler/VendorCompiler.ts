@@ -40,7 +40,16 @@ export class VendorCompiler implements ICompiler {
 
         const dependenciesWereUpdated = NPMResolver.installPluginDependenciesAndCreateHash(this.pluginName, this.assetsPath);
 
-        this.tscPluginIndex();
+        const pluginIndexExists = this.tscPluginIndex();
+
+        if (!pluginIndexExists) {
+            console.log(cgreen`⇢`, `[${this.pluginName}] index.ts not found. Bundling skipped!`);
+            debug(`(VendorCompiler) [${this.pluginName}] To bundle plugin vendors, please add the index.ts file!`);
+            this.removeVendors();
+            this.prepareVendorJSForCompression();
+            await this.prepareVendorCSSForCompression();
+            return Promise.resolve(CompilationResult.UNCHANGED);
+        }
 
         const oldIndexHash = this.readIndexHash();
         const newIndexHash = this.createIndexHashFile();
@@ -66,12 +75,12 @@ export class VendorCompiler implements ICompiler {
      * Compiles plugin index.ts
      * @private
      */
-    private tscPluginIndex(): void {
+    private tscPluginIndex(): boolean {
         debug(`(VendorCompiler) [${this.pluginName}] compiling index.ts...`);
         const tsc = path.resolve(__dirname, '../../', 'node_modules/.bin/tsc');
         const index = path.join(this.assetsPath, 'index.ts');
         if (!fs.existsSync(index)) {
-            throw Error(`[${this.pluginName}] index.ts not found!`);
+            return false;
         }
         const res = spawn.sync(tsc, [path.join(this.assetsPath, 'index.ts'), `--outDir`, path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR)]);
         debug(`(VendorCompiler) [${this.pluginName}] index.ts tsc return code: ${res.status}`);
@@ -80,6 +89,7 @@ export class VendorCompiler implements ICompiler {
             throw Error(`[${this.pluginName}] index.ts compilation failed!`);
         }
         debug(`(VendorCompiler) [${this.pluginName}] index.ts compiled`);
+        return true;
     }
 
     /**
@@ -224,12 +234,7 @@ export class VendorCompiler implements ICompiler {
         return new Promise<any>((resolve, reject) => {
             const config = this.getPluginWebpackConfig();
 
-            // remove previously generated webpack bundle if exists (so it does not append)
-            const vendorJsFile = path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_JS_FILE)
-            const vendorCssFile = path.resolve(this.assetsPath, VendorCompiler.DEST_CSS_DIR, VendorCompiler.VENDOR_CSS_FILE);
-
-            this.removeFileIfExists(vendorJsFile);
-            this.removeFileIfExists(vendorCssFile);
+            this.removeVendors();
 
             const entryFile = path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_ENTRY);
             const buffer = fs.readFileSync(entryFile);
@@ -252,6 +257,17 @@ export class VendorCompiler implements ICompiler {
                 }
             });
         });
+    }
+
+    /**
+     * Removes previously generated webpack bundle if exists
+     * @private
+     */
+    private removeVendors(): void {
+        const vendorJsFile = path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_JS_FILE)
+        const vendorCssFile = path.resolve(this.assetsPath, VendorCompiler.DEST_CSS_DIR, VendorCompiler.VENDOR_CSS_FILE);
+        this.removeFileIfExists(vendorJsFile);
+        this.removeFileIfExists(vendorCssFile);
     }
 
     /**
