@@ -28,13 +28,16 @@ let processedFiles: string[] = [];
 export function lessEscapePlugin(pluginName: string) {
     return {
         process: (src, extra) => {
-            if (!processedFiles.includes(extra.fileInfo.filename)) {
-                const improperLessEscaping = checkImproperLessEscaping(src);
-                if (improperLessEscaping) {
-                    const spacer = '  ';
-                    console.log(cwarn`⇢ [${pluginName}] LESS not properly escaped in ${extra.fileInfo.filename}:\n${improperLessEscaping}\n\n${spacer}Please escape LESS the following way:\n${spacer}width: ~"calc(100% - 200px)"; or width: ~"calc(100vw - " @yourVariable ~")";\n`);
-                }
+            const improperLessEscaping = checkImproperLessEscaping(src);
+            if (improperLessEscaping && !processedFiles.includes(extra.fileInfo.filename)) {
+                const spacer = '  ';
+                console.log(cwarn`⇢ [${pluginName}] LESS not properly escaped in ${extra.fileInfo.filename}:\n${improperLessEscaping}\n\n${spacer}Please escape LESS the following way:\n${spacer}width: ~"calc(100% - 200px)"; or width: ~"calc(100vw - " @yourVariable ~")";\n`);
                 processedFiles.push(extra.fileInfo.filename);
+            } else {
+                const foundFile = processedFiles.indexOf(extra.fileInfo.filename);
+                if (foundFile !== -1) {
+                    processedFiles.splice(foundFile, 1);
+                }
             }
             return src;
         }
