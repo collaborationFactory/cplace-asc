@@ -8,6 +8,7 @@ import {CompilationResult, ICompiler} from './interfaces';
 import {cerr, cgreen, cwarn, formatDuration, GREEN_CHECK} from '../utils';
 import {CompressCssCompiler} from './CompressCssCompiler';
 import Options = Less.Options;
+import {lessPlugins} from "../model/LessPlugins";
 
 export class LessCompiler implements ICompiler {
     private static readonly LESS_SOURCES_DIR = 'less';
@@ -47,7 +48,8 @@ export class LessCompiler implements ICompiler {
         console.log(`⟲ [${this.pluginName}] starting LESS compilation...`);
         return new Promise<CompilationResult>((resolve, reject) => {
             const lesscOptions: Options = {
-                filename: path.resolve(entryFile)
+                filename: path.resolve(entryFile),
+                plugins: lessPlugins(this.pluginName)
             };
             if (!this.isProduction) {
                 lesscOptions.sourceMap = {
@@ -67,11 +69,6 @@ export class LessCompiler implements ICompiler {
                         throw Error(`[${this.pluginName}] LESS compilation failed`);
                     })
                     .then((output: any) => {
-
-                        const improperLessEscaping = this.checkImproperLessEscaping(output.css);
-                        if (improperLessEscaping) {
-                            console.log(cwarn`⇢ [${this.pluginName}] LESS not properly escaped:\n${improperLessEscaping}`);
-                        }
 
                         let end = new Date().getTime();
                         console.log(cgreen`⇢`, `[${this.pluginName}] LESS compiled, writing output... (${formatDuration(end - start)})`);
@@ -117,25 +114,6 @@ export class LessCompiler implements ICompiler {
                 }
             });
         })
-    }
-
-    /**
-     * Checks improper LESS escaping
-     * @param cssOutput CSS string output
-     * @private
-     */
-    private checkImproperLessEscaping(cssOutput: string): string | undefined {
-        const cssOutputArray = cssOutput.split('\n');
-        const foundImproperLessEscaping = cssOutputArray.reduce((acc: string[], val: string) => {
-            if (val.includes('calc(') && !val.includes('~') && !val.includes('--')) {
-                const spacer = '  ';
-                acc.push(spacer.concat(val.trim()));
-            }
-            return acc;
-        }, []);
-        if (foundImproperLessEscaping && foundImproperLessEscaping.length) {
-            return foundImproperLessEscaping.join('\n');
-        }
     }
 
     private parseLESSVariablesToCSS(lessContent: string, lessVariables: {[key: string]: any} = {}): string {
