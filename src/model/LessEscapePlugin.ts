@@ -19,7 +19,7 @@ function checkImproperLessEscaping(cssOutput: string): string | undefined {
     }
 }
 
-let processedFiles: Set<string> = new Set<string>();
+let improperLessEscapedFiles: Set<string> = new Set<string>();
 
 /**
  * Processes LESS data and warns if there is an improper LESS escaping
@@ -29,7 +29,7 @@ export function lessEscapePlugin(pluginName: string) {
     return {
         process: (src, extra) => {
             const improperLessEscaping = checkImproperLessEscaping(src);
-            if (improperLessEscaping && !processedFiles.has(extra.fileInfo.filename)) {
+            if (improperLessEscaping && !improperLessEscapedFiles.has(extra.fileInfo.filename)) {
                 const spacer = ' ';
                 console.log(
                     cwarn`⇢ [${pluginName}] LESS not properly escaped in ${extra.fileInfo.filename}:`,
@@ -37,10 +37,11 @@ export function lessEscapePlugin(pluginName: string) {
                     cwarn`${spacer}Please escape LESS the following way:\n`,
                     cwarn`${spacer}width: ~"calc(100% - 200px)"; or width: ~"calc(100vw - " @yourVariable ~")";\n`
                 );
-                processedFiles.add(extra.fileInfo.filename);
+                improperLessEscapedFiles.add(extra.fileInfo.filename);
             } else {
-                if (processedFiles.has(extra.fileInfo.filename)) {
-                    processedFiles.delete(extra.fileInfo.filename);
+                // This is needed to avoid having warnings for the already checked files (watch)
+                if (improperLessEscapedFiles.has(extra.fileInfo.filename)) {
+                    improperLessEscapedFiles.delete(extra.fileInfo.filename);
                 }
             }
             return src;
