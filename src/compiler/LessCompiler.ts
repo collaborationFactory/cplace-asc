@@ -5,9 +5,10 @@ import * as less from 'less';
 import * as os from 'os';
 
 import {CompilationResult, ICompiler} from './interfaces';
-import {cerr, cgreen, formatDuration, GREEN_CHECK} from '../utils';
+import {cerr, cgreen, cwarn, formatDuration, GREEN_CHECK} from '../utils';
 import {CompressCssCompiler} from './CompressCssCompiler';
 import Options = Less.Options;
+import {lessPlugins} from "../model/LessPlugins";
 
 export class LessCompiler implements ICompiler {
     private static readonly LESS_SOURCES_DIR = 'less';
@@ -47,7 +48,8 @@ export class LessCompiler implements ICompiler {
         console.log(`⟲ [${this.pluginName}] starting LESS compilation...`);
         return new Promise<CompilationResult>((resolve, reject) => {
             const lesscOptions: Options = {
-                filename: path.resolve(entryFile)
+                filename: path.resolve(entryFile),
+                plugins: lessPlugins(this.pluginName)
             };
             if (!this.isProduction) {
                 lesscOptions.sourceMap = {
@@ -67,6 +69,7 @@ export class LessCompiler implements ICompiler {
                         throw Error(`[${this.pluginName}] LESS compilation failed`);
                     })
                     .then((output: any) => {
+
                         let end = new Date().getTime();
                         console.log(cgreen`⇢`, `[${this.pluginName}] LESS compiled, writing output... (${formatDuration(end - start)})`);
 
