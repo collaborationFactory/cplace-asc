@@ -99,6 +99,7 @@ export class Scheduler {
             return;
         }
 
+        // vendor compilation should be requested first
         const vendorSchedulingResult = this.getAndScheduleNextJob(this.vendorJobs, 'vendor', 'vendor');
         if (vendorSchedulingResult.backoff) {
             return;
