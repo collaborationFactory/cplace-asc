@@ -99,6 +99,31 @@ export class Scheduler {
             return;
         }
 
+        // vendor compilation should be requested first
+        const vendorSchedulingResult = this.getAndScheduleNextJob(this.vendorJobs, 'vendor', 'vendor');
+        if (vendorSchedulingResult.backoff) {
+            return;
+        }
+        const nextVendorPlugin = vendorSchedulingResult.scheduledPlugin;
+
+        const lessSchedulingResult = this.getAndScheduleNextJob(this.lessJobs, 'less', 'less');
+        if (lessSchedulingResult.backoff) {
+            return;
+        }
+        const nextLessPlugin = lessSchedulingResult.scheduledPlugin;
+
+        const openAPIYamlSchedulingResult = this.getAndScheduleNextJob(this.openAPIYamlJobs, 'openAPIYaml', 'openAPIYaml');
+        if (openAPIYamlSchedulingResult.backoff) {
+            return;
+        }
+        const nextOpenAPIYamlPlugin = openAPIYamlSchedulingResult.scheduledPlugin;
+
+        const compressCssSchedulingResult = this.getAndScheduleNextJob(this.compressCssJobs, 'compressCss', 'css');
+        if (compressCssSchedulingResult.backoff) {
+            return;
+        }
+        const nextCompressCssPlugin = compressCssSchedulingResult.scheduledPlugin;
+
         let nextTsE2EPlugin: string | null | undefined = null;
         if (!this.isProduction) {
             const tsE2ESchedulingResult = this.getAndScheduleNextJob(this.tsE2EJobs, 'tsE2E', 'tsE2E');
@@ -114,30 +139,6 @@ export class Scheduler {
         }
 
         const nextTsPlugin = tsSchedulingResult.scheduledPlugin;
-
-        const lessSchedulingResult = this.getAndScheduleNextJob(this.lessJobs, 'less', 'less');
-        if (lessSchedulingResult.backoff) {
-            return;
-        }
-        const nextLessPlugin = lessSchedulingResult.scheduledPlugin;
-
-        const openAPIYamlSchedulingResult = this.getAndScheduleNextJob(this.openAPIYamlJobs, 'openAPIYaml', 'openAPIYaml');
-        if (openAPIYamlSchedulingResult.backoff) {
-            return;
-        }
-        const nextOpenAPIYamlPlugin = openAPIYamlSchedulingResult.scheduledPlugin;
-
-        const vendorSchedulingResult = this.getAndScheduleNextJob(this.vendorJobs, 'vendor', 'vendor');
-        if (vendorSchedulingResult.backoff) {
-            return;
-        }
-        const nextVendorPlugin = vendorSchedulingResult.scheduledPlugin;
-
-        const compressCssSchedulingResult = this.getAndScheduleNextJob(this.compressCssJobs, 'compressCss', 'css');
-        if (compressCssSchedulingResult.backoff) {
-            return;
-        }
-        const nextCompressCssPlugin = compressCssSchedulingResult.scheduledPlugin;
 
         if (nextTsPlugin === null && nextTsE2EPlugin == null && nextLessPlugin === null &&
             nextCompressCssPlugin === null && nextOpenAPIYamlPlugin === null && nextVendorPlugin === null) {
