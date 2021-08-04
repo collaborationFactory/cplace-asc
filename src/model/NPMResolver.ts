@@ -343,12 +343,16 @@ export class NPMResolver {
                 const cleanToken: string = token.replace(/repo\.cplace\.apiToken: */, '');
                 const cleanUser: string = user.replace(/repo\.cplace\.apiTokenUser: */, '');
                 const cleanNpmrcPath: string = npmrcPath.replace(/userconfig *= */, '').replace(/"/gi, '');
-                const currentNpmrcConfig: string = fs.readFileSync(cleanNpmrcPath).toString();
-                const isConfigured: boolean = currentNpmrcConfig.includes(registry);
-                if (!isConfigured) {
-                    this.writeNPMRC(registry, cleanNpmrcPath, Buffer.from(`${cleanUser}:${cleanToken}`).toString('base64'), cleanUser);
+                if (!cleanNpmrcPath) {
+                    console.error('✗ No user npmrc found');
                 } else {
-                    console.info('⇢ cplace npmrc configuration for jfrog already found');
+                    const currentNpmrcConfig: string = fs.readFileSync(cleanNpmrcPath).toString();
+                    const isConfigured: boolean = currentNpmrcConfig.includes(registry);
+                    if (!isConfigured) {
+                        this.writeNPMRC(registry, cleanNpmrcPath, Buffer.from(`${cleanUser}:${cleanToken}`).toString('base64'), cleanUser);
+                    } else {
+                        console.info('⇢ cplace npmrc configuration for jfrog already found');
+                    }
                 }
             } else {
                 console.error('✗ Gradle / jfrog credentials not found or configured correctly');
