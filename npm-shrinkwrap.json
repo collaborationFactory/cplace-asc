@@ -3746,9 +3746,9 @@
       }
     },
     "generic-pool": {
-      "version": "3.7.8",
-      "resolved": "https://registry.npmjs.org/generic-pool/-/generic-pool-3.7.8.tgz",
-      "integrity": "sha512-Pz93INFSbhjEROVbM91rurD05G+Kx8833rG+lVU57mznEBpzkc1f5/g+d511a1Yf8dbAEsm7DDA3QLytMFbiGA=="
+      "version": "3.8.2",
+      "resolved": "https://registry.npmjs.org/generic-pool/-/generic-pool-3.8.2.tgz",
+      "integrity": "sha512-nGToKy6p3PAbYQ7p1UlWl6vSPwfwU6TMSWK7TTu+WUY4ZjyZQGniGGt2oNVvyNSpyZYSB43zMXVLcBm08MTMkg=="
     },
     "get-caller-file": {
       "version": "2.0.5",
