@@ -357,7 +357,7 @@ export class NPMResolver {
                     }
                 }
             } else {
-                console.error(cred`✗`, 'Gradle / jfrog credentials not found or configured correctly');
+                console.error(cred`✗`, 'jfrog credentials for Gradle not found or configured correctly:', 'https://docs.cplace.io/dev-docs/cplace-architecture/platform-component/build-system/java-artifact-based-builds/#creating-an-api-token-on-cplacejfrogio');
             }
         }
     }
