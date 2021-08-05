@@ -14,6 +14,7 @@ import {cerr, cgreen, cred, debug, sleepBusy} from "../utils";
 import {PackageVersion} from "./PackageVersion";
 import rimraf = require("rimraf");
 import Timeout = NodeJS.Timeout;
+import { execSync } from "child_process";
 
 export class NPMResolver {
     private static readonly PACKAGE_LOCK_HASH = 'package-lock.hash';
@@ -328,9 +329,7 @@ export class NPMResolver {
     private initRegistry(): void {
         console.info("⟲ Initialising cplace jfrog registry for NPM");
         const registry = '//cplace.jfrog.io/artifactory/api/npm/cplace-npm-local/';
-        const gradleProps = spawn.sync(path.join(this.mainRepo, 'gradlew'), ['properties'], {
-            stdio: ['pipe', 'pipe', process.stderr],
-        }).output.join();
+        const gradleProps: string = (execSync(path.join(this.mainRepo, 'gradlew properties')) || '').toString();
 
         if (!gradleProps) {
             console.error(cred`✗`, 'Gradle Properties not found');
@@ -338,9 +337,7 @@ export class NPMResolver {
             const token: string | undefined = (gradleProps.match(/repo\.cplace\.apiToken: *([a-z0-9]+)/gi) || [])[0];
             const user: string | undefined = (gradleProps.match(/repo\.cplace\.apiTokenUser: *([a-z0-9@\-_\.]+)/gi) || [])[0];
             if (token && user) {
-                const npmConfig: string = spawn.sync('npm', ['config', 'ls', '-l'], {
-                    stdio: ['ignore', 'ignore', process.stderr]
-                }).output.join();
+                const npmConfig: string = execSync('npm config ls -l').toString();
                 const npmrcPath: string | undefined = (npmConfig.match(/userconfig *= *".*"/gi) || [])[0];
                 const cleanToken: string = token.replace(/repo\.cplace\.apiToken: */, '');
                 const cleanUser: string = user.replace(/repo\.cplace\.apiTokenUser: */, '');
