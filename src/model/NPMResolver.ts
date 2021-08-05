@@ -347,7 +347,7 @@ export class NPMResolver {
                 } else {
                     const platformPath = process.platform === 'win32' ? `"${cleanNpmrcPath}"` : cleanNpmrcPath;
                     if(!fs.existsSync(platformPath)) {
-                        fs.writeFileSync(npmrcPath, "", {encoding: 'utf-8'});
+                        fs.writeFileSync(platformPath, "", {encoding: 'utf-8'});
                     }
                     const currentNpmrcConfig: string = fs.readFileSync(platformPath, {encoding: 'utf-8'}).toString();
                     const isConfigured: boolean = currentNpmrcConfig.includes(registry);
