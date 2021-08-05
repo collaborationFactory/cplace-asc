@@ -345,11 +345,10 @@ export class NPMResolver {
                 if (!cleanNpmrcPath) {
                     console.error(cred`✗`, 'No user npmrc found');
                 } else {
-                    const platformPath = process.platform === 'win32' ? `"${cleanNpmrcPath}"` : cleanNpmrcPath;
-                    if(!fs.existsSync(platformPath)) {
-                        fs.writeFileSync(platformPath, "", {encoding: 'utf-8'});
+                    if(!fs.existsSync(cleanNpmrcPath)) {
+                        fs.writeFileSync(cleanNpmrcPath, "", {encoding: 'utf-8'});
                     }
-                    const currentNpmrcConfig: string = fs.readFileSync(platformPath, {encoding: 'utf-8'}).toString();
+                    const currentNpmrcConfig: string = fs.readFileSync(cleanNpmrcPath, {encoding: 'utf-8'}).toString();
                     const isConfigured: boolean = currentNpmrcConfig.includes(registry);
                     if (!isConfigured) {
                         this.writeNPMRC(registry, cleanNpmrcPath, Buffer.from(`${cleanUser}:${cleanToken}`).toString('base64'), cleanUser);
