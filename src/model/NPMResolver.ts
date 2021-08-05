@@ -341,7 +341,7 @@ export class NPMResolver {
                 const npmrcPath: string | undefined = (npmConfig.match(/userconfig *= *".*"/gi) || [])[0];
                 const cleanToken: string = token.replace(/repo\.cplace\.apiToken: */, '');
                 const cleanUser: string = user.replace(/repo\.cplace\.apiTokenUser: */, '');
-                const cleanNpmrcPath: string = npmrcPath.replace(/userconfig *= */, '').replace(/"/gi, '').replace(/\\\\/, '\\');
+                const cleanNpmrcPath: string = npmrcPath.replace(/userconfig *= */, '').replace(/"/gi, '').replace(/\\\\/g, '\\');
                 if (!cleanNpmrcPath) {
                     console.error(cred`✗`, 'No user npmrc found');
                 } else {
