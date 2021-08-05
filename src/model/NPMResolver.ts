@@ -346,6 +346,9 @@ export class NPMResolver {
                     console.error(cred`✗`, 'No user npmrc found');
                 } else {
                     const platformPath = process.platform === 'win32' ? `"${cleanNpmrcPath}"` : cleanNpmrcPath;
+                    if(!fs.existsSync(platformPath)) {
+                        fs.writeFileSync(npmrcPath, "", {encoding: 'utf-8'});
+                    }
                     const currentNpmrcConfig: string = fs.readFileSync(platformPath, {encoding: 'utf-8'}).toString();
                     const isConfigured: boolean = currentNpmrcConfig.includes(registry);
                     if (!isConfigured) {
@@ -366,7 +369,7 @@ export class NPMResolver {
         npmrc = npmrc + `${registry}:always-auth=true \n`;
         npmrc = npmrc + `${registry}:email=${user}`;
         console.log(cgreen`✓`, 'Configured cplace jfrog to .npmrc: ', npmrcPath);
-        fs.writeFileSync(npmrcPath, npmrc);
+        fs.writeFileSync(npmrcPath, npmrc, {encoding: 'utf-8'});
     };
 
 }
