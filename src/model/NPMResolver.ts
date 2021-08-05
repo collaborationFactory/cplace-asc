@@ -339,7 +339,7 @@ export class NPMResolver {
             const user: string | undefined = (gradleProps.match(/repo\.cplace\.apiTokenUser: *([a-z0-9@\-_\.]+)/gi) || [])[0];
             if (token && user) {
                 const npmConfig: string = spawn.sync('npm', ['config', 'ls', '-l'], {
-                    stdio: ['pipe', 'pipe', process.stderr]
+                    stdio: ['ignore', 'ignore', process.stderr]
                 }).output.join();
                 const npmrcPath: string | undefined = (npmConfig.match(/userconfig *= *".*"/gi) || [])[0];
                 const cleanToken: string = token.replace(/repo\.cplace\.apiToken: */, '');
