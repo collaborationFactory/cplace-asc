@@ -14,7 +14,6 @@ import {cerr, cgreen, cred, debug, sleepBusy} from "../utils";
 import {PackageVersion} from "./PackageVersion";
 import rimraf = require("rimraf");
 import Timeout = NodeJS.Timeout;
-import { execSync } from "child_process";
 
 export class NPMResolver {
     private static readonly PACKAGE_LOCK_HASH = 'package-lock.hash';
@@ -329,33 +328,36 @@ export class NPMResolver {
     private initRegistry(): void {
         console.info("⟲ Initialising cplace jfrog registry for NPM");
         const registry = '//cplace.jfrog.io/artifactory/api/npm/cplace-npm-local/';
-        const gradleProps: string = (execSync(path.join(this.mainRepo, 'gradlew properties')) || '').toString();
+        const gradleProps = spawn.sync(path.join(this.mainRepo, 'gradlew'), ['properties'], {
+            stdio: ['pipe', 'pipe', process.stderr],
+        }).output.join();
 
         if (!gradleProps) {
-            console.error('✗ Gradle Properties not found');
+            console.error(cred`✗`, 'Gradle Properties not found');
         } else {
             const token: string | undefined = (gradleProps.match(/repo\.cplace\.apiToken: *([a-z0-9]+)/gi) || [])[0];
             const user: string | undefined = (gradleProps.match(/repo\.cplace\.apiTokenUser: *([a-z0-9@\-_\.]+)/gi) || [])[0];
-
             if (token && user) {
-                const npmConfig: string = execSync('npm config ls -l').toString();
+                const npmConfig: string = spawn.sync('npm', ['config', 'ls', '-l'], {
+                    stdio: ['pipe', 'pipe', process.stderr]
+                }).output.join();
                 const npmrcPath: string | undefined = (npmConfig.match(/userconfig *= *".*"/gi) || [])[0];
                 const cleanToken: string = token.replace(/repo\.cplace\.apiToken: */, '');
                 const cleanUser: string = user.replace(/repo\.cplace\.apiTokenUser: */, '');
                 const cleanNpmrcPath: string = npmrcPath.replace(/userconfig *= */, '').replace(/"/gi, '');
                 if (!cleanNpmrcPath) {
-                    console.error('✗ No user npmrc found');
+                    console.error(cred`✗`, 'No user npmrc found');
                 } else {
                     const currentNpmrcConfig: string = fs.readFileSync(cleanNpmrcPath).toString();
                     const isConfigured: boolean = currentNpmrcConfig.includes(registry);
                     if (!isConfigured) {
                         this.writeNPMRC(registry, cleanNpmrcPath, Buffer.from(`${cleanUser}:${cleanToken}`).toString('base64'), cleanUser);
                     } else {
-                        console.info('⇢ cplace npmrc configuration for jfrog already found');
+                        console.info(cgreen`✓`, 'cplace npmrc configuration for jfrog already found');
                     }
                 }
             } else {
-                console.error('✗ Gradle / jfrog credentials not found or configured correctly');
+                console.error(cred`✗`, 'Gradle / jfrog credentials not found or configured correctly');
             }
         }
     }
@@ -365,7 +367,7 @@ export class NPMResolver {
         npmrc = npmrc + `${registry}:_auth=${auth} \n`;
         npmrc = npmrc + `${registry}:always-auth=true \n`;
         npmrc = npmrc + `${registry}:email=${user}`;
-        console.log('⇢ Configured cplace jfrog to .npmrc: ', npmrcPath);
+        console.log(cgreen`✓`, 'Configured cplace jfrog to .npmrc: ', npmrcPath);
         fs.writeFileSync(npmrcPath, npmrc);
     };
 
