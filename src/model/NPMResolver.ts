@@ -342,6 +342,8 @@ export class NPMResolver {
         if(process.env.ENV_CPLACE_ARTIFACTORY_ACTOR && process.env.ENV_CPLACE_ARTIFACTORY_TOKEN) {
             if (!this.isJFrogConfigured(registry, cleanNpmrcPath)) {
                 this.writeNPMRC(registry, cleanNpmrcPath, Buffer.from(`${process.env.ENV_CPLACE_ARTIFACTORY_ACTOR}:${process.env.ENV_CPLACE_ARTIFACTORY_TOKEN}`).toString('base64'), process.env.ENV_CPLACE_ARTIFACTORY_ACTOR);
+            } else {
+                console.info(cgreen`✓`, 'cplace npmrc configuration for jfrog already found');
             }
         } else {
             const gradleProps: string = (execSync(path.join(this.mainRepo, 'gradlew properties')) || '').toString();
