@@ -338,7 +338,6 @@ export class NPMResolver {
             console.error(cred`✗`, 'No user npmrc found');
             return;
         }
-
         if(process.env.ENV_CPLACE_ARTIFACTORY_ACTOR && process.env.ENV_CPLACE_ARTIFACTORY_TOKEN) {
             console.info("⟲ Configuring npm jfrog registry via environment variables");
             if (!this.isJFrogConfigured(registry, cleanNpmrcPath)) {
@@ -357,9 +356,6 @@ export class NPMResolver {
                 if (token && user) {
                     const cleanToken: string = token.replace(/repo\.cplace\.apiToken: */, '');
                     const cleanUser: string = user.replace(/repo\.cplace\.apiTokenUser: */, '');
-                    if(!fs.existsSync(cleanNpmrcPath)) {
-                        fs.writeFileSync(cleanNpmrcPath, "", {encoding: 'utf-8'});
-                    }
                     if (!this.isJFrogConfigured(registry, cleanNpmrcPath)) {
                         this.writeNPMRC(registry, cleanNpmrcPath, Buffer.from(`${cleanUser}:${cleanToken}`).toString('base64'), cleanUser);
                     } else {
@@ -373,6 +369,10 @@ export class NPMResolver {
     }
 
     private isJFrogConfigured(registry: string, npmrcPath: string): boolean {
+        debug(`Checking if ${npmrcPath} exists`);
+        if(!fs.existsSync(npmrcPath)) {
+            return false;
+        }
         const currentNpmrcConfig: string = fs.readFileSync(npmrcPath, {encoding: 'utf-8'}).toString();
         return currentNpmrcConfig.includes(registry);
     }
