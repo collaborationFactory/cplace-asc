@@ -340,7 +340,9 @@ export class NPMResolver {
         }
 
         if(process.env.ENV_CPLACE_ARTIFACTORY_ACTOR && process.env.ENV_CPLACE_ARTIFACTORY_TOKEN) {
-            this.writeNPMRC(registry, cleanNpmrcPath, Buffer.from(`${process.env.ENV_CPLACE_ARTIFACTORY_ACTOR}:${process.env.ENV_CPLACE_ARTIFACTORY_TOKEN}`).toString('base64'), process.env.ENV_CPLACE_ARTIFACTORY_ACTOR);
+            if (!this.isJFrogConfigured(registry, cleanNpmrcPath)) {
+                this.writeNPMRC(registry, cleanNpmrcPath, Buffer.from(`${process.env.ENV_CPLACE_ARTIFACTORY_ACTOR}:${process.env.ENV_CPLACE_ARTIFACTORY_TOKEN}`).toString('base64'), process.env.ENV_CPLACE_ARTIFACTORY_ACTOR);
+            }
         } else {
             const gradleProps: string = (execSync(path.join(this.mainRepo, 'gradlew properties')) || '').toString();
 
@@ -352,13 +354,10 @@ export class NPMResolver {
                 if (token && user) {
                     const cleanToken: string = token.replace(/repo\.cplace\.apiToken: */, '');
                     const cleanUser: string = user.replace(/repo\.cplace\.apiTokenUser: */, '');
-
                     if(!fs.existsSync(cleanNpmrcPath)) {
                         fs.writeFileSync(cleanNpmrcPath, "", {encoding: 'utf-8'});
                     }
-                    const currentNpmrcConfig: string = fs.readFileSync(cleanNpmrcPath, {encoding: 'utf-8'}).toString();
-                    const isConfigured: boolean = currentNpmrcConfig.includes(registry);
-                    if (!isConfigured) {
+                    if (!this.isJFrogConfigured(registry, cleanNpmrcPath)) {
                         this.writeNPMRC(registry, cleanNpmrcPath, Buffer.from(`${cleanUser}:${cleanToken}`).toString('base64'), cleanUser);
                     } else {
                         console.info(cgreen`✓`, 'cplace npmrc configuration for jfrog already found');
@@ -368,7 +367,11 @@ export class NPMResolver {
                 }
             }
         }
-        
+    }
+
+    private isJFrogConfigured(registry: string, npmrcPath: string): boolean {
+        const currentNpmrcConfig: string = fs.readFileSync(npmrcPath, {encoding: 'utf-8'}).toString();
+        return currentNpmrcConfig.includes(registry);
     }
 
     private writeNPMRC(registry, npmrcPath, auth, user) {
