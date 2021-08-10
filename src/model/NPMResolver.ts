@@ -380,8 +380,8 @@ export class NPMResolver {
     private writeNPMRC(registry, npmrcPath, auth, user) {
         console.info("⟲ Writing npm config to:", npmrcPath);
         let npmrc = `\n@cplace-next:registry=https:${registry} \n`;
-        npmrc = npmrc + `${registry}:_auth=${auth} \n`;
-        npmrc = npmrc + `${registry}:always-auth=true \n`;
+        npmrc = npmrc + `${registry}:_auth=${auth}\n`;
+        npmrc = npmrc + `${registry}:always-auth=true\n`;
         npmrc = npmrc + `${registry}:email=${user}`;
         console.log(cgreen`✓`, 'Configured cplace jfrog to .npmrc: ', npmrcPath);
         fs.appendFileSync(npmrcPath, npmrc, {encoding: 'utf-8'});
