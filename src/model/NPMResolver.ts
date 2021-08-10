@@ -371,8 +371,6 @@ export class NPMResolver {
     private isJFrogConfigured(registry: string, npmrcPath: string): boolean {
         debug(`Checking for npmrc at ${npmrcPath}`);
         if(!fs.existsSync(npmrcPath)) {
-            debug(`Creating empty npmrc at ${npmrcPath}`);
-            fs.writeFileSync(npmrcPath, "", {encoding: 'utf-8'});
             return false
         }
         const currentNpmrcConfig: string = fs.readFileSync(npmrcPath, {encoding: 'utf-8'}).toString();
