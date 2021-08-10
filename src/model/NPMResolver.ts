@@ -340,6 +340,7 @@ export class NPMResolver {
         }
 
         if(process.env.ENV_CPLACE_ARTIFACTORY_ACTOR && process.env.ENV_CPLACE_ARTIFACTORY_TOKEN) {
+            console.info("⟲ Configuring npm jfrog registry via environment variables");
             if (!this.isJFrogConfigured(registry, cleanNpmrcPath)) {
                 this.writeNPMRC(registry, cleanNpmrcPath, Buffer.from(`${process.env.ENV_CPLACE_ARTIFACTORY_ACTOR}:${process.env.ENV_CPLACE_ARTIFACTORY_TOKEN}`).toString('base64'), process.env.ENV_CPLACE_ARTIFACTORY_ACTOR);
             } else {
@@ -377,6 +378,7 @@ export class NPMResolver {
     }
 
     private writeNPMRC(registry, npmrcPath, auth, user) {
+        console.info("⟲ Writing npm config to:", npmrcPath);
         let npmrc = `@cplace-next:registry=https:${registry} \n`;
         npmrc = npmrc + `${registry}:_auth=${auth} \n`;
         npmrc = npmrc + `${registry}:always-auth=true \n`;
