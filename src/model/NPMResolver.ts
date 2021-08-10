@@ -369,9 +369,9 @@ export class NPMResolver {
     }
 
     private isJFrogConfigured(registry: string, npmrcPath: string): boolean {
-        debug(`Checking if ${npmrcPath} exists`);
+        debug(`Checking for npmrc at ${npmrcPath}`);
         if(!fs.existsSync(npmrcPath)) {
-            return false;
+            return false
         }
         const currentNpmrcConfig: string = fs.readFileSync(npmrcPath, {encoding: 'utf-8'}).toString();
         return currentNpmrcConfig.includes(registry);
@@ -379,12 +379,12 @@ export class NPMResolver {
 
     private writeNPMRC(registry, npmrcPath, auth, user) {
         console.info("⟲ Writing npm config to:", npmrcPath);
-        let npmrc = `@cplace-next:registry=https:${registry} \n`;
-        npmrc = npmrc + `${registry}:_auth=${auth} \n`;
-        npmrc = npmrc + `${registry}:always-auth=true \n`;
-        npmrc = npmrc + `${registry}:email=${user}`;
+        let npmrc = `\n@cplace-next:registry=https:${registry}\n`;
+        npmrc = npmrc + `${registry}:_auth=${auth}\n`;
+        npmrc = npmrc + `${registry}:always-auth=true\n`;
+        npmrc = npmrc + `${registry}:email=${user}\n`;
         console.log(cgreen`✓`, 'Configured cplace jfrog to .npmrc: ', npmrcPath);
-        fs.writeFileSync(npmrcPath, npmrc, {encoding: 'utf-8'});
+        fs.appendFileSync(npmrcPath, npmrc, {encoding: 'utf-8'});
     };
 
 }
