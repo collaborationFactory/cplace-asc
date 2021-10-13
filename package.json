@@ -18,7 +18,7 @@
   "author": "collaboration Factory AG",
   "license": "ISC",
   "dependencies": {
-    "@openapitools/openapi-generator-cli": "^2.1.18",
+    "@openapitools/openapi-generator-cli": "2.1.26",
     "chokidar": "^3.0.2",
     "copyfiles": "^2.1.0",
     "cpx": "^1.5.0",

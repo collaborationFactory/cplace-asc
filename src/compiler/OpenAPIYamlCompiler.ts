@@ -105,7 +105,6 @@ export class OpenAPIYamlCompiler implements ICompiler {
         `generate -i ${yaml} -g typescript-angular -o ${dist} --additional-properties=ngVersion=6.1.7,npmName=restClient,supportsES6=true,npmVersion=6.9.0,withInterfaces=true`.split(
           " "
         );
-      console.info("---->", path.resolve(__dirname));
       const genRes = spawn.sync(cli, genArgs, {
         stdio: ["pipe", "pipe", process.stderr],
         env: {
