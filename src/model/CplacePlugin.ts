@@ -62,7 +62,7 @@ export default class CplacePlugin {
             this.hasTypeScriptE2EAssets = glob.sync(path.join(e2ePath, '**', '*.ts')).length > 0;
         }
         this.hasOpenAPIYamlAssets = glob.sync(path.join(this.pluginDir, 'api', '*.yaml')).length > 0;
-        this.hasLessAssets = glob.sync(path.join(this.assetsDir, '**', '*.less')).length > 0;
+        this.hasLessAssets = glob.sync(path.join(this.assetsDir, '**', '*.less'), {ignore: path.join(this.assetsDir, 'node_modules', '**', '*.less')}).length > 0;
         this.hasVendors = fs.existsSync(path.resolve(this.assetsDir, 'package.json'));
         this.hasCompressCssAssets = fs.existsSync(path.resolve(this.assetsDir, 'css', CompressCssCompiler.ENTRY_FILE_NAME));
     }
