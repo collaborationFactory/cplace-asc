@@ -3,6 +3,7 @@
  */
 
 import * as path from "path";
+import * as process from "process";
 import * as fs from "fs";
 import {existsSync} from "fs";
 import * as crypto from "crypto";
@@ -67,15 +68,18 @@ export class NPMResolver {
      * @private
      */
     private static installPluginDependencies(pluginName: string, assetsPath: string): boolean {
+        const oldCwd = process.cwd();
+        process.chdir(assetsPath);
         console.log(`⟲ [${pluginName}] (NPM) installing dependencies...`);
-        const res = spawn.sync('npm', ['install', '--cwd', assetsPath, '--prefix', assetsPath, '--no-save']);
+        const res = spawn.sync('npm', ['install', '--no-save']);
         if (res.status !== 0) {
-            debug(`[${pluginName}] (NPM) installing dependencies failed with error ${res.stdout}`);
+            debug(`[${pluginName}] (NPM) installing dependencies failed with error ${res.stderr}`);
             throw Error(`[${pluginName}] (NPM) installing dependencies failed!`);
         }
         console.log(cgreen`✓`, `[${pluginName}] (NPM) dependencies successfully installed`);
         NPMResolver.createPluginHashFile(assetsPath);
         NPMResolver.removePluginSymlinks(pluginName, assetsPath);
+        process.chdir(oldCwd);
         return true;
     }
 

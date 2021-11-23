@@ -1,9 +1,9 @@
-import * as cpx from "cpx";
 import * as path from "path";
 import * as rimraf from "rimraf";
 import { cerr, debug, formatDuration, GREEN_CHECK } from "../utils";
 import { CompilationResult, ICompiler } from "./interfaces";
 import spawn = require("cross-spawn");
+import * as fs from "fs";
 
 export class OpenAPIYamlCompiler implements ICompiler {
   constructor(
@@ -159,27 +159,23 @@ export class OpenAPIYamlCompiler implements ICompiler {
 
   /**
    * Copies plugin types from plugin/api/dist/openapi to plugin/assets/ts/api
-   * folder. For copying it uses cpx node module.
+   * folder.
    * @param plugin Provided plugin for which types should be copied on the right location.
    */
   private copyPluginTypes(plugin: string): Promise<any> {
     return new Promise((resolve) => {
       const pluginPath = this.getPluginPath(plugin);
-      const files = path.resolve(
-        `${pluginPath}/api/dist/openapi/model/**/*.ts`
-      );
       const dist = path.resolve(`${pluginPath}/assets/ts/api/`);
-      cpx.copy(files, dist, (err) => {
-        if (err) {
-          debug(
-            `(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${err.message}`
-          );
-          throw Error(
-            `[${this.pluginName}] OpenAPI YAML compilation failed...`
-          );
-        }
-        resolve(true);
-      });
+      const modelFolderPath = path.resolve(`${pluginPath}/api/dist/openapi/model`);
+      const modelFolderContent = fs.readdirSync(modelFolderPath);
+      const files = modelFolderContent.filter( file => file.match(new RegExp(`.*\.(ts)`, 'ig')));
+      if (files && files.length) {
+        files.forEach(file => {
+          const filePath = path.resolve(modelFolderPath, file);
+          fs.copyFileSync(filePath, path.resolve(dist, file));
+        });
+      }
+      resolve(true);
     });
   }
 
