@@ -317,21 +317,27 @@ export class AssetsCompiler {
     }
 
     private static findPluginPath(repositoryDir: string, pluginName: string, repoDependencies: string[]): string {
-        let relativePath = pluginName;
-        if (fs.existsSync(path.join(repositoryDir, relativePath))) {
-            return path.join(repositoryDir, relativePath);
+        let relativePathToPlugin = pluginName;
+        if (fs.existsSync(path.join(repositoryDir, relativePathToPlugin))) {
+            return path.join(repositoryDir, relativePathToPlugin);
         }
         for (const repoName of repoDependencies) {
-            relativePath = path.join('..', repoName, pluginName);
-            if (fs.existsSync(relativePath)) {
-                return relativePath;
+            const relativePathToRepo = path.join('..', repoName);
+            relativePathToPlugin = path.join('..', repoName, pluginName);
+            if (fs.existsSync(path.join(relativePathToRepo, "build.gradle")) &&
+                fs.existsSync(path.join(relativePathToPlugin, "build.gradle"))) {
+                return relativePathToPlugin;
+            } else if (!fs.existsSync(path.join(relativePathToRepo, "build.gradle")) &&
+                fs.existsSync(relativePathToPlugin)) {
+                return relativePathToPlugin;
             }
+
             // Resolve main Repository to folder called cplace
             if (repoName === 'main') {
                 const repoAlternative = 'cplace';
-                relativePath = path.join('..', repoAlternative, pluginName);
-                if (fs.existsSync(relativePath)) {
-                    return relativePath;
+                relativePathToPlugin = path.join('..', repoAlternative, pluginName);
+                if (fs.existsSync(relativePathToPlugin)) {
+                    return relativePathToPlugin;
                 }
             }
         }
