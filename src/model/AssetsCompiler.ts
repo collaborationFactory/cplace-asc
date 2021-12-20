@@ -5,11 +5,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import CplacePlugin from './CplacePlugin';
-import {ExecutorService, Scheduler} from '../executor';
-import {cerr, cgreen, csucc, debug, formatDuration, IUpdateDetails} from '../utils';
-import {NPMResolver} from "./NPMResolver";
-import {ImlParser} from "./ImlParser";
-import {PluginDescriptorParser} from "./PluginDescriptorParser";
+import { ExecutorService, Scheduler } from '../executor';
+import { cerr, cgreen, csucc, debug, formatDuration, IUpdateDetails } from '../utils';
+import { NPMResolver } from "./NPMResolver";
+import { ImlParser } from "./ImlParser";
+import { PluginDescriptorParser } from "./PluginDescriptorParser";
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -316,9 +316,15 @@ export class AssetsCompiler {
         }
     }
 
-    private static findPluginPath(repositoryDir: string, pluginName: string, repoDependencies: string[]): string {
+    public static findPluginPath(repositoryDir: string, pluginName: string, repoDependencies: string[]): string {
         let relativePathToPlugin = pluginName;
-        if (fs.existsSync(path.join(repositoryDir, relativePathToPlugin))) {
+        if (fs.existsSync(path.join(repositoryDir, "build.gradle")) &&
+            fs.existsSync(path.join(relativePathToPlugin, "build.gradle"))
+            && fs.existsSync(path.join(repositoryDir, relativePathToPlugin))
+        ) {
+            return path.join(repositoryDir, relativePathToPlugin);
+        } else if (!fs.existsSync(path.join(repositoryDir, "build.gradle")) &&
+            fs.existsSync(path.join(repositoryDir, relativePathToPlugin))) {
             return path.join(repositoryDir, relativePathToPlugin);
         }
         for (const repoName of repoDependencies) {
