@@ -6,7 +6,7 @@
   "homepage": "https://github.com/collaborationFactory/cplace-asc",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"SSSSHhhhhh... no test specified\"",
+    "test": "jest",
     "dev:tsc": "tsc",
     "clean": "rimraf dist/ *.tgz",
     "prepare": "npm run clean && npm run dev:tsc",
@@ -14,6 +14,9 @@
   },
   "bin": {
     "cplace-asc": "dist/index.js"
+  },
+  "jest": {
+    "preset": "ts-jest"
   },
   "author": "collaboration Factory AG",
   "license": "ISC",
@@ -44,6 +47,7 @@
     "@types/copyfiles": "^2.1.0",
     "@types/cross-spawn": "^6.0.0",
     "@types/generic-pool": "^3.1.6",
+    "@types/jest": "^27.0.3",
     "@types/less": "^3.0.0",
     "@types/meow": "^5.0.0",
     "@types/minimist": "^1.2.0",
@@ -51,6 +55,8 @@
     "@types/rimraf": "^2.0.2",
     "@types/vinyl": "^2.0.2",
     "@types/webpack": "^4.4.19",
-    "typescript": "^3.2.1"
+    "jest": "^27.4.5",
+    "ts-jest": "^27.1.2",
+    "typescript": "^3.9.10"
   }
 }
