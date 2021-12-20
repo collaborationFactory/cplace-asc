@@ -318,37 +318,29 @@ export class AssetsCompiler {
 
     public static findPluginPath(repositoryDir: string, pluginName: string, repoDependencies: string[]): string {
         let relativePathToPlugin = pluginName;
-        if (fs.existsSync(path.join(repositoryDir, "build.gradle")) &&
-            fs.existsSync(path.join(relativePathToPlugin, "build.gradle"))
-            && fs.existsSync(path.join(repositoryDir, relativePathToPlugin))
-        ) {
-            return path.join(repositoryDir, relativePathToPlugin);
-        } else if (!fs.existsSync(path.join(repositoryDir, "build.gradle")) &&
-            fs.existsSync(path.join(repositoryDir, relativePathToPlugin))) {
+        if (AssetsCompiler.isPluginFolder(repositoryDir, relativePathToPlugin)) {
             return path.join(repositoryDir, relativePathToPlugin);
         }
         for (const repoName of repoDependencies) {
             const relativePathToRepo = path.join('..', repoName);
             relativePathToPlugin = path.join('..', repoName, pluginName);
-            if (fs.existsSync(path.join(relativePathToRepo, "build.gradle")) &&
-                fs.existsSync(path.join(relativePathToPlugin, "build.gradle"))) {
+            if (AssetsCompiler.isPluginFolder(relativePathToRepo, relativePathToPlugin)) {
                 return relativePathToPlugin;
-            } else if (!fs.existsSync(path.join(relativePathToRepo, "build.gradle")) &&
-                fs.existsSync(relativePathToPlugin)) {
-                return relativePathToPlugin;
-            }
-
-            // Resolve main Repository to folder called cplace
-            if (repoName === 'main') {
-                const repoAlternative = 'cplace';
-                relativePathToPlugin = path.join('..', repoAlternative, pluginName);
-                if (fs.existsSync(relativePathToPlugin)) {
-                    return relativePathToPlugin;
-                }
             }
         }
         console.error(cerr`Could not locate plugin ${pluginName}`);
         throw Error(`Could not locate plugin ${pluginName}`);
+    }
+
+    private static isPluginFolder(repoPath: string, relativePathToPlugin: string): boolean {
+        if (fs.existsSync(path.join(repoPath, "build.gradle")) &&
+            fs.existsSync(path.join(relativePathToPlugin, "build.gradle"))) {
+            return true;
+        } else if (!fs.existsSync(path.join(repoPath, "build.gradle")) &&
+            fs.existsSync(relativePathToPlugin)) {
+            return true;
+        }
+        return false;
     }
 
     private isInCompilationScope(plugin: CplacePlugin): boolean {

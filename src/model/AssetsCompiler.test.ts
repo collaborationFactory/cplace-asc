@@ -41,6 +41,14 @@ test('cplace-asc in PPrepo can find Plugin in PPrepo with gradle marker', () => 
     expect(pluginPath).toBe(path.join(process.cwd(), pluginName).toString());
 });
 
+test('cplace-asc in PPrepo ignores Plugin in PPrepo without Plugin gradle marker', () => {
+    fs.mkdirSync(path.join(process.cwd(), ppRepo, pluginName), {recursive: true})
+    fs.writeFileSync(path.join(process.cwd(), ppRepo, gradleMarker), 'build.gradle')
+    process.chdir(ppRepo);
+    const t = () => { AssetsCompiler.findPluginPath(process.cwd(), pluginName, [mainRepo, repoDependency])};
+    expect(t).toThrow(Error);
+});
+
 test('cplace-asc in PPRepo can find Plugin in main repo', () => {
     fs.mkdirSync(path.join(process.cwd(), mainRepo, pluginName), {recursive: true})
     process.chdir(ppRepo);
@@ -55,6 +63,14 @@ test('cplace-asc in PPRepo can find Plugin in main repo with gradle marker', () 
     process.chdir(ppRepo);
     const pluginPath = AssetsCompiler.findPluginPath(process.cwd(), pluginName, [mainRepo, repoDependency]);
     expect(pluginPath).toBe(path.join('..', mainRepo, pluginName).toString());
+});
+
+test('cplace-asc in PPRepo ignores Plugin in main repo without Plugin gradle marker', () => {
+    fs.mkdirSync(path.join(process.cwd(), mainRepo, pluginName), {recursive: true})
+    fs.writeFileSync(path.join(process.cwd(), mainRepo, gradleMarker), 'build.gradle')
+    process.chdir(ppRepo);
+    const t = () => { AssetsCompiler.findPluginPath(process.cwd(), pluginName, [mainRepo, repoDependency])};
+    expect(t).toThrow(Error);
 });
 
 test('cplace-asc in PPRepo can find Plugin in RepoDependency', () => {
@@ -73,6 +89,14 @@ test('cplace-asc in PPRepo can find Plugin in RepoDependency with gradle marker'
     expect(pluginPath).toBe(path.join('..', repoDependency, pluginName).toString());
 });
 
+test('cplace-asc in PPRepo ignores Plugin in RepoDependency without Plugin gradle marker', () => {
+    fs.mkdirSync(path.join(process.cwd(), repoDependency, pluginName), {recursive: true})
+    fs.writeFileSync(path.join(process.cwd(), repoDependency, gradleMarker), 'build.gradle')
+    process.chdir(ppRepo);
+    const t = () => { AssetsCompiler.findPluginPath(process.cwd(), pluginName, [mainRepo, repoDependency])};
+    expect(t).toThrow(Error);
+});
+
 test('cplace-asc in Main can find Plugin in Main', () => {
     fs.mkdirSync(path.join(process.cwd(), mainRepo, pluginName), {recursive: true})
     process.chdir(mainRepo);
@@ -87,4 +111,12 @@ test('cplace-asc in Main can find Plugin in Main with gradle marker', () => {
     process.chdir(mainRepo);
     const pluginPath = AssetsCompiler.findPluginPath(process.cwd(), pluginName, [repoDependency]);
     expect(pluginPath).toBe(path.join(process.cwd(), pluginName).toString());
+});
+
+test('cplace-asc in Main igores Plugin in Main without Plugin gradle marker', () => {
+    fs.mkdirSync(path.join(process.cwd(), mainRepo, pluginName), {recursive: true})
+    fs.writeFileSync(path.join(process.cwd(), mainRepo, gradleMarker), 'build.gradle')
+    process.chdir(mainRepo);
+    const t = () => { AssetsCompiler.findPluginPath(process.cwd(), pluginName, [mainRepo, repoDependency])};
+    expect(t).toThrow(Error);
 });

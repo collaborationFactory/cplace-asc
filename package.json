@@ -16,7 +16,8 @@
     "cplace-asc": "dist/index.js"
   },
   "jest": {
-    "preset": "ts-jest"
+    "preset": "ts-jest",
+    "modulePathIgnorePatterns": ["./dist/"]
   },
   "author": "collaboration Factory AG",
   "license": "ISC",
