@@ -10,8 +10,6 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: "12.x"
-      - name: Setup GIT for testing
-        run: git config --global user.email "cplace-npm-tools@cplace.io" && git config --global user.name "cplace-npm-tools GitHub Action"
       - name: Install modules
         run: npm install
       - name: Run Jest
