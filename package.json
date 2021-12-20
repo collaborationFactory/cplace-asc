@@ -16,8 +16,14 @@
     "cplace-asc": "dist/index.js"
   },
   "jest": {
+    "globals": {
+      "ts-jest": {
+        "diagnostics": false
+      }
+    },
     "preset": "ts-jest",
-    "modulePathIgnorePatterns": ["./dist/"]
+    "rootDir": "src/",
+    "verbose": true
   },
   "author": "collaboration Factory AG",
   "license": "ISC",
