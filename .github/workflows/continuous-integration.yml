@@ -13,4 +13,5 @@ jobs:
       - name: Install modules
         run: npm install
       - name: Run Jest
-        run: jest
+        run: node_modules/.bin/jest --verbose
+
