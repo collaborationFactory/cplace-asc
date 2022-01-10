@@ -318,13 +318,13 @@ export class AssetsCompiler {
 
     public static findPluginPath(repositoryDir: string, pluginName: string, repoDependencies: string[]): string {
         let relativePathToPlugin = pluginName;
-        if (AssetsCompiler.isPluginFolder(repositoryDir, relativePathToPlugin)) {
+        if (AssetsCompiler.isPluginFolder(repositoryDir, pluginName)) {
             return path.join(repositoryDir, relativePathToPlugin);
         }
         for (const repoName of repoDependencies) {
-            const relativePathToRepo = path.join('..', repoName);
+            const pathToRepo = path.resolve(process.cwd(), '..', repoName);
             relativePathToPlugin = path.join('..', repoName, pluginName);
-            if (AssetsCompiler.isPluginFolder(relativePathToRepo, relativePathToPlugin)) {
+            if (AssetsCompiler.isPluginFolder(pathToRepo, pluginName)) {
                 return relativePathToPlugin;
             }
         }
@@ -332,12 +332,12 @@ export class AssetsCompiler {
         throw Error(`Could not locate plugin ${pluginName}`);
     }
 
-    private static isPluginFolder(repoPath: string, relativePathToPlugin: string): boolean {
+    private static isPluginFolder(repoPath: string, pluginName: string): boolean {
         if (fs.existsSync(path.join(repoPath, "build.gradle")) &&
-            fs.existsSync(path.join(relativePathToPlugin, "build.gradle"))) {
+            fs.existsSync(path.join(repoPath, pluginName, "build.gradle"))) {
             return true;
         } else if (!fs.existsSync(path.join(repoPath, "build.gradle")) &&
-            fs.existsSync(relativePathToPlugin)) {
+            fs.existsSync(path.join(repoPath, pluginName))) {
             return true;
         }
         return false;
