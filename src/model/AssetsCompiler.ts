@@ -258,7 +258,7 @@ export class AssetsCompiler {
 
     private static directoryLooksLikePlugin(pluginPath: string, potentialPluginName: string): boolean {
         return (
-            ImlParser.doesImlExist(pluginPath, potentialPluginName) || PluginDescriptorParser.doesPluginDescriptorExist(pluginPath)
+            ImlParser.doesImlExist(pluginPath, potentialPluginName) || PluginDescriptorParser.isCplacePluginWithGradleAndContainsPluginDescriptor(pluginPath)
         ) && fs.existsSync(path.join(pluginPath, 'src')); // path to src directory - release-notes will be excluded
     }
 
