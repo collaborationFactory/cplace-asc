@@ -8,21 +8,24 @@ const mainRepo = 'main';
 const repoDependency = 'cplace-paw';
 const ppRepo = 'cplace-project-planning';
 const gradleMarker = 'build.gradle';
-let initialWD = process.cwd();
+const initialWD = process.cwd();
+
+function removeTestFolder() {
+    if (fs.existsSync(path.join(initialWD, 'testsetup'))) {
+        console.log('removing path', path.join(initialWD, 'testsetup'));
+        rimraf.sync(path.join(initialWD, 'testsetup'));
+    }
+}
 
 beforeEach(() => {
-    if (fs.existsSync('testsetup')) {
-        rimraf.sync('testsetup');
-    }
-    fs.mkdirSync(path.join('testsetup', repoDependency), {recursive: true})
-    fs.mkdirSync(path.join('testsetup', ppRepo), {recursive: true})
-    process.chdir(path.join(process.cwd(), 'testsetup'));
+    removeTestFolder();
+    fs.mkdirSync(path.join(initialWD,'testsetup', repoDependency), {recursive: true})
+    fs.mkdirSync(path.join(initialWD,'testsetup', ppRepo), {recursive: true})
+    process.chdir(path.join(initialWD, 'testsetup'));
 });
 
 afterAll(() => {
-    if (fs.existsSync(path.join(initialWD, 'testsetup'))) {
-        rimraf.sync(path.join(initialWD, 'testsetup'));
-    }
+    removeTestFolder();
 });
 
 test('cplace-asc in PPrepo can find Plugin in PPrepo', () => {
@@ -113,7 +116,7 @@ test('cplace-asc in Main can find Plugin in Main with gradle marker', () => {
     expect(pluginPath).toBe(path.join(process.cwd(), pluginName).toString());
 });
 
-test('cplace-asc in Main igores Plugin in Main without Plugin gradle marker', () => {
+test('cplace-asc in Main ignores Plugin in Main without Plugin gradle marker', () => {
     fs.mkdirSync(path.join(process.cwd(), mainRepo, pluginName), {recursive: true})
     fs.writeFileSync(path.join(process.cwd(), mainRepo, gradleMarker), 'build.gradle')
     process.chdir(mainRepo);
