@@ -322,7 +322,7 @@ export class AssetsCompiler {
             return path.join(repositoryDir, relativePathToPlugin);
         }
         for (const repoName of repoDependencies) {
-            const pathToRepo = path.resolve(process.cwd(), '..', repoName);
+            const pathToRepo = path.resolve(repositoryDir, '..', repoName);
             relativePathToPlugin = path.join('..', repoName, pluginName);
             if (AssetsCompiler.isPluginFolder(pathToRepo, pluginName)) {
                 return relativePathToPlugin;
