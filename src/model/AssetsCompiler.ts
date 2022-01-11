@@ -335,9 +335,11 @@ export class AssetsCompiler {
     private static isPluginFolder(repoPath: string, pluginName: string): boolean {
         if (fs.existsSync(path.join(repoPath, "build.gradle")) &&
             fs.existsSync(path.join(repoPath, pluginName, "build.gradle"))) {
+            // a plugin in cplace 5.4 and later, with Gradle build files whose existence we just checked
             return true;
         } else if (!fs.existsSync(path.join(repoPath, "build.gradle")) &&
             fs.existsSync(path.join(repoPath, pluginName))) {
+            // a potential plugin in cplace 5.3 and earlier, with Ant build files and IML project files; we don't check those however
             return true;
         }
         return false;
