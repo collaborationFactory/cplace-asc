@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as fs from "fs";
-import {cerr} from "../utils";
+import { cerr } from "../utils";
 
 export interface PluginDescriptor {
     /**
@@ -19,6 +19,7 @@ export interface PluginDescriptor {
 
 export class PluginDescriptorParser {
     public static readonly DESCRIPTOR_FILE_NAME = 'pluginDescriptor.json';
+    public static readonly BUILD_GRADLE_FILE_NAME = 'build.gradle';
 
     private readonly pathToDescriptor: string;
     private readonly descriptor: PluginDescriptor;
@@ -39,8 +40,12 @@ export class PluginDescriptorParser {
         return path.join(pluginDir, PluginDescriptorParser.DESCRIPTOR_FILE_NAME);
     }
 
-    public static doesPluginDescriptorExist(pluginDir: string): boolean {
-        return fs.existsSync(this.getPathToDescriptor(pluginDir));
+    public static getPathToBuildGradle(pluginDir) {
+        return path.join(pluginDir, PluginDescriptorParser.BUILD_GRADLE_FILE_NAME);
+    }
+
+    public static isCplacePluginWithGradleAndContainsPluginDescriptor(pluginDir: string): boolean {
+        return fs.existsSync(this.getPathToDescriptor(pluginDir)) && fs.existsSync(this.getPathToBuildGradle(pluginDir));
     }
 
     public getPluginDescriptor(): PluginDescriptor {

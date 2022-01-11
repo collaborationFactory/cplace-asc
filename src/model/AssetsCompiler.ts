@@ -5,11 +5,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import CplacePlugin from './CplacePlugin';
-import {ExecutorService, Scheduler} from '../executor';
-import {cerr, cgreen, csucc, debug, formatDuration, IUpdateDetails} from '../utils';
-import {NPMResolver} from "./NPMResolver";
-import {ImlParser} from "./ImlParser";
-import {PluginDescriptorParser} from "./PluginDescriptorParser";
+import { ExecutorService, Scheduler } from '../executor';
+import { cerr, cgreen, csucc, debug, formatDuration, IUpdateDetails } from '../utils';
+import { NPMResolver } from "./NPMResolver";
+import { ImlParser } from "./ImlParser";
+import { PluginDescriptorParser } from "./PluginDescriptorParser";
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -258,7 +258,7 @@ export class AssetsCompiler {
 
     private static directoryLooksLikePlugin(pluginPath: string, potentialPluginName: string): boolean {
         return (
-            ImlParser.doesImlExist(pluginPath, potentialPluginName) || PluginDescriptorParser.doesPluginDescriptorExist(pluginPath)
+            ImlParser.doesImlExist(pluginPath, potentialPluginName) || PluginDescriptorParser.isCplacePluginWithGradleAndContainsPluginDescriptor(pluginPath)
         ) && fs.existsSync(path.join(pluginPath, 'src')); // path to src directory - release-notes will be excluded
     }
 
@@ -316,27 +316,33 @@ export class AssetsCompiler {
         }
     }
 
-    private static findPluginPath(repositoryDir: string, pluginName: string, repoDependencies: string[]): string {
-        let relativePath = pluginName;
-        if (fs.existsSync(path.join(repositoryDir, relativePath))) {
-            return path.join(repositoryDir, relativePath);
+    public static findPluginPath(repositoryDir: string, pluginName: string, repoDependencies: string[]): string {
+        let relativePathToPlugin = pluginName;
+        if (AssetsCompiler.isPluginFolder(repositoryDir, pluginName)) {
+            return path.join(repositoryDir, relativePathToPlugin);
         }
         for (const repoName of repoDependencies) {
-            relativePath = path.join('..', repoName, pluginName);
-            if (fs.existsSync(relativePath)) {
-                return relativePath;
-            }
-            // Resolve main Repository to folder called cplace
-            if (repoName === 'main') {
-                const repoAlternative = 'cplace';
-                relativePath = path.join('..', repoAlternative, pluginName);
-                if (fs.existsSync(relativePath)) {
-                    return relativePath;
-                }
+            const pathToRepo = path.resolve(repositoryDir, '..', repoName);
+            relativePathToPlugin = path.join('..', repoName, pluginName);
+            if (AssetsCompiler.isPluginFolder(pathToRepo, pluginName)) {
+                return relativePathToPlugin;
             }
         }
         console.error(cerr`Could not locate plugin ${pluginName}`);
         throw Error(`Could not locate plugin ${pluginName}`);
+    }
+
+    private static isPluginFolder(repoPath: string, pluginName: string): boolean {
+        if (fs.existsSync(path.join(repoPath, "build.gradle")) &&
+            fs.existsSync(path.join(repoPath, pluginName, "build.gradle"))) {
+            // a plugin in cplace 5.4 and later, with Gradle build files whose existence we just checked
+            return true;
+        } else if (!fs.existsSync(path.join(repoPath, "build.gradle")) &&
+            fs.existsSync(path.join(repoPath, pluginName))) {
+            // a potential plugin in cplace 5.3 and earlier, with Ant build files and IML project files; we don't check those however
+            return true;
+        }
+        return false;
     }
 
     private isInCompilationScope(plugin: CplacePlugin): boolean {

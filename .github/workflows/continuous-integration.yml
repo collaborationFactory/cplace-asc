@@ -1,0 +1,17 @@
+name: Continuous Integration
+on: [pull_request]
+
+jobs:
+  build:
+    name: Run unit tests with Jest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "12.x"
+      - name: Install modules
+        run: npm install
+      - name: Run Jest
+        run: node_modules/.bin/jest --verbose
+
