@@ -169,7 +169,9 @@ export class NPMResolver {
     }
 
     public async resolve(): Promise<void> {
-        this.initRegistry();
+        if (this.isGradleProject()) {
+            this.initRegistry();
+        }
         this.checkAndInstall();
 
         if (this.watch) {
@@ -328,6 +330,10 @@ export class NPMResolver {
 
     private getPackageLockPath(): string {
         return path.resolve(this.mainRepo, NPMResolver.PACKAGE_LOCK_JSON);
+    }
+
+    private isGradleProject(): boolean {
+        return fs.existsSync(path.join(this.mainRepo, 'gradlew'));
     }
 
     private initRegistry(): void {
