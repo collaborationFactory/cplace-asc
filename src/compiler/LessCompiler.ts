@@ -5,7 +5,7 @@ import * as less from 'less';
 import * as os from 'os';
 
 import {CompilationResult, ICompiler} from './interfaces';
-import {cerr, cgreen, cwarn, formatDuration, GREEN_CHECK} from '../utils';
+import {cerr, cgreen, formatDuration, GREEN_CHECK} from '../utils';
 import {CompressCssCompiler} from './CompressCssCompiler';
 import Options = Less.Options;
 import {lessPlugins} from "../model/LessPlugins";

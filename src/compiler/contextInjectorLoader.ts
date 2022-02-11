@@ -3,13 +3,13 @@
  */
 
 import * as path from 'path';
-import {loader} from 'webpack';
+import {LoaderContext} from 'webpack';
 
 /*
     This file is configured by `TypescriptCompiler` as a loader for Webpack
  */
 
-export default function (this: loader.LoaderContext, source: string, map: any) {
+export default function (this: LoaderContext<any>, source: string, map: any) {
     // @ts-ignore
     if (this.resourcePath === path.resolve(this.rootContext, this.query.entry)) {
         const requireContext = '\n//======================================================\n' +

@@ -4,7 +4,7 @@ import {CompilationResult, ICompiler} from './interfaces';
 import {debug, formatDuration, GREEN_CHECK} from '../utils';
 import * as spawn from 'cross-spawn';
 import * as fs from 'fs';
-import rimraf = require("rimraf");
+import * as rimraf from "rimraf";
 
 export class CompressCssCompiler implements ICompiler {
     public static readonly CSS_SOURCES_DIR = 'css';

@@ -3,9 +3,8 @@
  */
 
 import * as path from 'path';
-import {CReplacePlugin} from './CReplacePlugin';
 import * as webpack from 'webpack';
-import {Configuration, ExternalsElement} from 'webpack';
+import {Configuration} from 'webpack';
 import {isFromLibrary} from '../model/utils';
 import {debug, isDebugEnabled} from '../utils';
 import * as fs from 'fs';
@@ -59,7 +58,7 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                 if (err) {
                     debug(err);
                     reject(err);
-                } else if (stats.hasErrors()) {
+                } else if (stats?.hasErrors()) {
                     throw Error(stats.toString());
                 } else {
                     resolve();
@@ -90,9 +89,7 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                     },
                     {
                         test: new RegExp(`\.(${CplaceTypescriptCompiler.STATIC_IMPORT_EXTENSIONS})$`),
-                        use: [{
-                            loader: path.resolve(__filename, '../../../node_modules/raw-loader')
-                        }]
+                        type: 'asset/source'
                     }
                 ]
             },
@@ -109,12 +106,10 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                 library: '$' + this.pluginName.replace(/\./g, '_'),
                 libraryExport: 'default'
             },
-            plugins: [
-                new CReplacePlugin()
-            ],
             resolve: {
                 extensions: ['.ts', '.js']
-            }
+            },
+            target: ['web', 'es5']
         };
 
         if (!this.isProduction) {
@@ -133,7 +128,7 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
         return config;
     }
 
-    private populateWebpackExternals(): ExternalsElement[] {
+    private populateWebpackExternals(): ({ [key: string]: string } | ExternalItemFunction)[] {
         const pluginDir = path.dirname(this.assetsPath);
         const extraTypes = CplaceTSConfigGenerator.getExtraTypes(pluginDir, this.dependencyPaths);
 
@@ -143,12 +138,19 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
         }, this.resolveWebpackExternal.bind(this)];
     }
 
-    private resolveWebpackExternal(context: string, request: string, callback: Function) {
-        if (isFromLibrary(request)) {
-            const newRequest = request.substr(1);
-            return callback(null, newRequest);
+    private resolveWebpackExternal(data: ExternalItemFunctionData, callback: ExternalItemCallback): void {
+        if (typeof data.request === 'string' && isFromLibrary(data.request)) {
+            return callback(undefined, this.replaceCplacePluginIdentifier(data.request));
         }
-        callback();
+        return callback();
+    }
+
+    private replaceCplacePluginIdentifier(request: string): string {
+        return request.replace(/(^@)([a-zA-Z0-9.]+)(\/.+)/gi, (match, at, folder, path) => {
+            const resolver = folder.replace(/\./g, '_');
+            const module = `.${path}.js`;
+            return `window['$${resolver}']('${module}')`;
+        });
     }
 
     private async copyStaticFiles(): Promise<void> {
@@ -173,3 +175,15 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
         });
     }
 }
+
+
+interface ExternalItemFunctionData {
+    context?: string;
+    request?: ExternalItemRequest;
+}
+
+type ExternalItemRequest = string | boolean | string[] | { [index: string]: any };
+
+type ExternalItemCallback = (err?: Error, result?: ExternalItemRequest) => void;
+
+type ExternalItemFunction = (data: ExternalItemFunctionData, callback: ExternalItemCallback) => void;

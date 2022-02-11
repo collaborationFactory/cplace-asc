@@ -415,7 +415,7 @@ export class Scheduler {
             }
             console.log('===> Recompiling', pluginName);
             debounce && clearTimeout(debounce);
-            debounce = setTimeout(() => {
+            debounce = global.setTimeout(() => {
                 jobTracker.markDirty(pluginName);
                 this.scheduleNext();
             }, 500);

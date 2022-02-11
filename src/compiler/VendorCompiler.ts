@@ -5,12 +5,12 @@ import {NPMResolver} from "../model/NPMResolver";
 import {cgreen, debug, formatDuration} from "../utils";
 import {Configuration} from "webpack";
 import * as webpack from "webpack";
-import spawn = require("cross-spawn");
+import * as spawn from 'cross-spawn';
 import * as crypto from "crypto";
 import {CompressCssCompiler} from "./CompressCssCompiler";
 import {CplaceTypescriptCompiler} from "./CplaceTypescriptCompiler";
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require("terser-webpack-plugin");
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 export class VendorCompiler implements ICompiler {
@@ -171,14 +171,15 @@ export class VendorCompiler implements ICompiler {
                             ],
                         }
                     }),
-                    new UglifyJsPlugin({
-                        extractComments: true,
+                    new TerserPlugin({
+                        minify: TerserPlugin.uglifyJsMinify,
                         parallel: true,
-                        uglifyOptions: {
+                        extractComments: true,
+                        terserOptions: {
                             output: {
-                                comments: false,
-                            },
-                        }
+                                comments: false
+                            }
+                        },
                     })
                 ]
             },
@@ -220,7 +221,8 @@ export class VendorCompiler implements ICompiler {
                         ]
                     },
                 ]
-            }
+            },
+            target: ['web', 'es5']
         }
     }
 
@@ -228,10 +230,10 @@ export class VendorCompiler implements ICompiler {
      * Bundles plugin vendors
      * @private
      */
-    private bundlePluginVendors(): Promise<any> {
+    private bundlePluginVendors(): Promise<void> {
         const startTime = new Date().getTime();
         console.log(`⟲ [${this.pluginName}] bundling vendors...`);
-        return new Promise<any>((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             const config = this.getPluginWebpackConfig();
 
             this.removeVendors();
@@ -248,7 +250,7 @@ export class VendorCompiler implements ICompiler {
             webpack(config, (err, stats) => {
                 if (err) {
                     reject(`${err.message}`);
-                } else if (stats.hasErrors()) {
+                } else if (stats?.hasErrors()) {
                     reject(`${stats.toString()}`);
                 } else {
                     const endTime = new Date().getTime();

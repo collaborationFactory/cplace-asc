@@ -9,11 +9,11 @@ import { existsSync } from "fs";
 import * as crypto from "crypto";
 import * as spawn from 'cross-spawn';
 import * as chokidar from "chokidar";
-import { FSWatcher } from "chokidar";
-import { Scheduler } from "../executor";
-import { cerr, cgreen, cred, debug, sleepBusy } from "../utils";
-import { PackageVersion } from "./PackageVersion";
-import rimraf = require("rimraf");
+import {FSWatcher} from "chokidar";
+import {Scheduler} from "../executor";
+import {cerr, cgreen, cred, debug, sleepBusy} from "../utils";
+import {PackageVersion} from "./PackageVersion";
+import * as rimraf from "rimraf";
 import Timeout = NodeJS.Timeout;
 import { RegistryInitializer } from "./RegistryInitializer";
 
@@ -212,7 +212,7 @@ export class NPMResolver {
                 return;
             }
             debounce && clearTimeout(debounce);
-            debounce = setTimeout(() => {
+            debounce = global.setTimeout(() => {
                 if (!fs.existsSync(this.getNodeModulesPath())) {
                     console.log(cerr`(NPM) node_modules folder has been removed - restart cplace-asc`);
                     process.exit();

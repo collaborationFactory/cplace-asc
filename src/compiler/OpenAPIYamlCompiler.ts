@@ -2,7 +2,7 @@ import * as path from "path";
 import * as rimraf from "rimraf";
 import { cerr, debug, formatDuration, GREEN_CHECK } from "../utils";
 import { CompilationResult, ICompiler } from "./interfaces";
-import spawn = require("cross-spawn");
+import * as spawn from 'cross-spawn';
 import * as fs from "fs";
 
 export class OpenAPIYamlCompiler implements ICompiler {

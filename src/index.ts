@@ -38,7 +38,7 @@ function run(updateDetails?: IUpdateDetails) {
             plugin: {
                 type: 'string',
                 alias: 'p',
-                default: null
+                isRequired: false
             },
             watch: {
                 type: 'boolean',
@@ -56,9 +56,8 @@ function run(updateDetails?: IUpdateDetails) {
                 default: false
             },
             threads: {
-                type: 'string',
-                alias: 't',
-                default: null
+                type: 'number',
+                alias: 't'
             },
             localonly: {
                 type: 'boolean',
@@ -83,7 +82,7 @@ function run(updateDetails?: IUpdateDetails) {
         }
     });
 
-    if (cli.flags.plugin !== null && !cli.flags.plugin) {
+    if (cli.flags.plugin !== undefined && !cli.flags.plugin) {
         console.error(cerr`Missing value for --plugin|-p argument`);
         process.exit(1);
     }
@@ -96,14 +95,14 @@ function run(updateDetails?: IUpdateDetails) {
         process.exit(1);
     }
 
-    if (cli.flags.threads !== null) {
-        const t = parseInt(cli.flags.threads);
-        if (isNaN(t)) {
+    if (cli.flags.threads !== undefined) {
+        const t = cli.flags.threads;
+        if (isNaN(t) || t < 0) {
             console.error(cerr`Number of --threads|-t must be greater or equal to 0 `);
             process.exit(1);
             return;
         }
-        cli.flags.threads = t;
+        cli.flags.threads = Math.floor(t);
     }
 
     if (cli.flags.verbose) {
@@ -132,7 +131,7 @@ function run(updateDetails?: IUpdateDetails) {
             maxParallelism: !!cli.flags.threads ? cli.flags.threads : os.cpus().length - 1,
             localOnly: cli.flags.localonly,
             production: cli.flags.production,
-            noParents: cli.flags.noparents || cli.flags.noParents
+            noParents: cli.flags.noparents
         };
 
         console.log(getAvailableStats());
