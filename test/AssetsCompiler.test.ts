@@ -1,7 +1,7 @@
-import { AssetsCompiler } from "./AssetsCompiler";
 import * as fs from "fs";
 import * as path from "path";
 import * as rimraf from "rimraf";
+import { AssetsCompiler } from "../src/model/AssetsCompiler";
 
 const pluginName = 'cf.cplace.handsOnTable';
 const mainRepoName = 'main';
