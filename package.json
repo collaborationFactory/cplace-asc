@@ -1,6 +1,6 @@
 {
   "name": "@cplace/asc",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "cplace assets compiler",
   "repository": "https://github.com/collaborationFactory/cplace-asc",
   "homepage": "https://github.com/collaborationFactory/cplace-asc",
@@ -22,7 +22,7 @@
       }
     },
     "preset": "ts-jest",
-    "rootDir": "src/",
+    "rootDir": "",
     "verbose": true
   },
   "author": "collaboration Factory AG",
