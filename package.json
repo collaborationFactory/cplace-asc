@@ -22,7 +22,7 @@
       }
     },
     "preset": "ts-jest",
-    "rootDir": "",
+    "rootDir": "test",
     "verbose": true
   },
   "author": "collaboration Factory AG",
