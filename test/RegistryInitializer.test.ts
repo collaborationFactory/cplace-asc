@@ -12,7 +12,7 @@ const npmrcPath = path.join(basePath, '.npmrc');
 const npmrcUser = 'max.mustermann@collaboration-factory.de';
 const npmrcBasicAuthToken = 'bWF4Lm11c3Rlcm1hbm5AY29sbGFib3JhdGlvbi1mYWN0b3J5LmRlOnRva2Vu';
 
-const gradleProperties='org.gradle.java.home=/Users/stefanstadler/.sdkman/candidates/java/11.0.2-open\n' +
+const gradleProperties='org.gradle.java.home=/Users/maxmustermann/.sdkman/candidates/java/xx.0.2-open\n' +
     'repo.cplace.apiTokenUser=max.mustermann@collaboration-factory.de\n' +
     'repo.cplace.apiToken=token\n' +
     'org.gradle.jvmargs=-Xmx4192m\n';
