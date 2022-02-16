@@ -66,7 +66,7 @@ export class RegistryInitializer {
         }
         const cleanNpmrcPath: string = npmrcPath.replace(/^userconfig *= */, '').replace(/"/gi, '').replace(/\\\\/g, '\\');
         if (!cleanNpmrcPath) {
-            console.error(cred`✗`, 'Userconfig was found in npmrc but but path can not be extracted');
+            console.error(cred`✗`, 'Userconfig was found in npmrc but path can not be extracted');
             return;
         }
         this.npmrcPath = cleanNpmrcPath;
