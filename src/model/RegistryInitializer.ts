@@ -73,25 +73,21 @@ export class RegistryInitializer {
     }
 
     private initOrUpdateJfrogCredentials() {
-        if (RegistryInitializer.doesNpmrcExist(this.npmrcPath)) {
-            this.currentNpmrcConfig = fs.readFileSync(this.npmrcPath, {encoding: 'utf-8'}).toString();
-            if (!this.hasJfrogCredentials()) {
-                this.appendToExistingNpmrc();
-            } else if (!this.hasLatestJfrogCredentials()) {
-                this.updateNPMRC();
-            }
+        RegistryInitializer.createNmprcIfNotExistent(this.npmrcPath)
+        this.currentNpmrcConfig = fs.readFileSync(this.npmrcPath, {encoding: 'utf-8'}).toString();
+        if (!this.hasJfrogCredentials()) {
+            this.appendToExistingNpmrc();
+        } else if (!this.hasLatestJfrogCredentials()) {
+            this.updateNPMRC();
         }
-        return;
     }
 
-    private static doesNpmrcExist(npmrcPath: string): boolean {
+    private static createNmprcIfNotExistent(npmrcPath: string) {
         debug(`Checking for npmrc at ${npmrcPath}`);
         if (!fs.existsSync(npmrcPath)) {
-            console.error(cred`✗`, `.npmrc could not be found at expected location ${npmrcPath}`);
-            return false
+            fs.writeFileSync(npmrcPath, "");
+            console.info(cgreen`✓`, `Created empty .npmrc at location ${npmrcPath}`);
         }
-        console.info(cgreen`✓`, 'cplace npmrc configuration found');
-        return true;
     }
 
     private hasJfrogCredentials(): boolean {

@@ -54,6 +54,14 @@ afterAll(() => {
     removeTestFolder(basePath);
 });
 
+test('create .npmrc in case it does not exist', () => {
+    const registryInitializerPrototype = setupRegistryInitializerMock();
+    registryInitializerPrototype.initRegistry();
+    const npmrcContent = fs.readFileSync(npmrcPath).toString();
+    expect(npmrcContent).toContain(npmrcConfigured_new_registry);
+});
+
+
 test('auth token can be extracted from gradle.properties', () => {
     const registryInitializerPrototype = setupRegistryInitializerMock();
     registryInitializerPrototype.extractTokenFromGradleProps();
