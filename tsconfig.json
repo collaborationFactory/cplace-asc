@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
-    "rootDir": "src",
+    "rootDirs": [
+      "src",
+      "test"
+    ],
     "target": "es2016",
     "lib": [
       "es2016",
@@ -16,7 +19,10 @@
     "outDir": "./dist"
   },
   "include": [
-    "**/*.ts"
+    "src/**/*"
+  ],
+  "exclude": [
+    "**/*.spec.ts"
   ],
   "compileOnSave": true
 }
