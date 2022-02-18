@@ -44,6 +44,7 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
             },
             include: [
                 './**/*.ts',
+                '../node_modules/@types',
                 ...additionalIncludes
             ]
         };
