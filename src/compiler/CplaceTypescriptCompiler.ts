@@ -19,10 +19,7 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
     private static readonly STATIC_IMPORT_EXTENSIONS = 'html|htm';
 
     private static readonly DEFAULT_EXTERNALS = {
-        d3: 'd3',
-        moment: 'moment',
-        underscore: '_',
-        draggable: 'Draggable'
+        jquery: 'jQuery'
     };
 
     constructor(pluginName: string,
@@ -109,9 +106,13 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                 libraryExport: 'default'
             },
             plugins: [
-                new CReplacePlugin()
+                new CReplacePlugin(),
+                new webpack.ProvidePlugin({
+                    Highcharts: "Highcharts"
+                }) 
             ],
             resolve: {
+                modules: [path.resolve(this.assetsPath, 'node_modules'), path.resolve(this.assetsPath, 'js')],
                 extensions: ['.ts', '.js']
             }
         };

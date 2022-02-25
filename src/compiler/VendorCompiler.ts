@@ -147,6 +147,9 @@ export class VendorCompiler implements ICompiler {
         return {
             mode: 'production',
             entry: path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_ENTRY),
+            externals: {
+                jquery: 'jQuery'
+            },
             output: {
                 path: path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR),
                 filename: VendorCompiler.VENDOR_JS_FILE
@@ -155,7 +158,7 @@ export class VendorCompiler implements ICompiler {
                 modules: [path.resolve(__dirname, '../../', 'node_modules')]
             },
             resolve: {
-                modules: [path.resolve(this.assetsPath, 'node_modules')]
+                modules: [path.resolve(this.assetsPath, 'node_modules'), path.resolve(this.assetsPath, 'js')]
             },
             optimization: {
                 minimize: true,
@@ -186,7 +189,10 @@ export class VendorCompiler implements ICompiler {
             plugins: [
                 new MiniCssExtractPlugin({
                     filename: `../${VendorCompiler.DEST_CSS_DIR}/${VendorCompiler.VENDOR_CSS_FILE}`
-                })
+                }),
+                new webpack.ProvidePlugin({
+                    _: "underscore"
+                }) 
             ],
             module: {
                 rules: [
@@ -355,7 +361,7 @@ export class VendorCompiler implements ICompiler {
             }
         }
 
-        const content = buffer + `\n${pathToInclude}`;
+        const content = `${pathToInclude}\n` + buffer;
         fs.writeFileSync(fileToWrite, content);
         debug(`(VendorCompiler) [${this.pluginName}] Vendor imports written`);
     }
