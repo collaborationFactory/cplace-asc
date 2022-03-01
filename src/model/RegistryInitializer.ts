@@ -40,10 +40,10 @@ export class RegistryInitializer {
     }
 
     private extractTokenFromGradleProps() {
-        const gradleProps = fs.readFileSync(path.join(os.homedir(), RegistryInitializer.GRADLE_HOME, RegistryInitializer.GRADLE_PROPERTIES)).toString();
+        const gradleProps = this.getGradlePropsPath();
 
-        if (!gradleProps) {
-            console.error(cred`✗`, 'Gradle Properties not found');
+        if (!fs.existsSync(gradleProps)) {
+            console.error(cred`✗`, `Gradle Properties ${gradleProps} not found`);
         } else {
             const token: string | undefined = (gradleProps.match(/repo\.cplace\.apiToken *= *([a-z0-9]+)/gi) || [])[0];
             const user: string | undefined = (gradleProps.match(/repo\.cplace\.apiTokenUser *= *([a-z0-9@\-_\.]+)/gi) || [])[0];
@@ -55,6 +55,21 @@ export class RegistryInitializer {
                 console.error(cred`✗`, 'jfrog credentials for Gradle not found or configured correctly:', 'https://docs.cplace.io/dev-docs/cplace-architecture/platform-component/build-system/java-artifact-based-builds/#creating-an-api-token-on-cplacejfrogio');
             }
         }
+    }
+
+    private getGradlePropsPath(): string {
+        const gradleHome = RegistryInitializer.getGradleHome();
+        if (!fs.existsSync(gradleHome)) {
+            console.error(cred`✗`, `Gradle Home ${gradleHome} does not exist. Please use the default (${os.homedir()}/${RegistryInitializer.GRADLE_HOME}) or properly configure the environment variable GRADLE_USER_HOME.`);
+        }
+        return fs.readFileSync(path.join(gradleHome, RegistryInitializer.GRADLE_PROPERTIES)).toString();
+    }
+
+    private static getGradleHome(): string {
+        if(process.env.GRADLE_USER_HOME) {
+            return process.env.GRADLE_USER_HOME;
+        }
+        return path.join(os.homedir(), RegistryInitializer.GRADLE_HOME);
     }
 
     private getNpmrcPath(): string | undefined {
