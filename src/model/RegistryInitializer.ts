@@ -59,10 +59,18 @@ export class RegistryInitializer {
 
     private getGradlePropsPath(): string {
         const gradleHome = RegistryInitializer.getGradleHome();
+        debug(`.gradle location: ${gradleHome}`);
         if (!fs.existsSync(gradleHome)) {
-            console.error(cred`✗`, `Gradle Home ${gradleHome} does not exist. Please use the default (${os.homedir()}/${RegistryInitializer.GRADLE_HOME}) or properly configure the environment variable GRADLE_USER_HOME.`);
+            console.error(cred`✗`, `.gradle at location ${gradleHome} does not exist. Please use the default (${os.homedir()}/${RegistryInitializer.GRADLE_HOME}) or properly configure the environment variable GRADLE_USER_HOME.`);
+            return '';
         }
-        return fs.readFileSync(path.join(gradleHome, RegistryInitializer.GRADLE_PROPERTIES)).toString();
+        const gradleProperties = path.join(gradleHome, RegistryInitializer.GRADLE_PROPERTIES);
+        debug(`gradle.properties location: ${gradleProperties}`);
+        if (!fs.existsSync(gradleProperties)) {
+            console.error(cred`✗`, `gradle.properties at location ${gradleProperties} does not exist!`);
+            return '';
+        }
+        return fs.readFileSync(gradleProperties).toString();
     }
 
     private static getGradleHome(): string {
