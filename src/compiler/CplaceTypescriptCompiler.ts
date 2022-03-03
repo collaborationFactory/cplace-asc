@@ -57,6 +57,7 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
             // @ts-ignore
             webpack(this.getWebpackConfig(), (err, stats) => {
                 if (err) {
+                    debug(err);
                     reject(err);
                 } else if (stats.hasErrors()) {
                     throw Error(stats.toString());

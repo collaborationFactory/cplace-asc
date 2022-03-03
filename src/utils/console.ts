@@ -11,8 +11,14 @@ export function enableDebug(debugEnabled = true): void {
     DEBUG_ENABLED = debugEnabled;
 }
 
-export function debug(content: string): void {
-    DEBUG_ENABLED && console.debug(`\x1b[37m✹ ${content}\x1b[0m`);
+export function debug(content: string | Error): void {
+    if (DEBUG_ENABLED) {
+        if (typeof content === 'string') {
+            console.debug(`\x1b[37m✹ ${content}\x1b[0m`);
+        } else {
+            console.debug(content);
+        }
+    }
 }
 
 export function cred(templateStrings: TemplateStringsArray, ...values: any) {
