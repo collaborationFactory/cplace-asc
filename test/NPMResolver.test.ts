@@ -1,14 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
+import * as tmp from "tmp";
 import * as child_process from "child_process";
 import {cred} from "../src/utils";
 import {NPMResolver} from "../src/model/NPMResolver";
-import {removeTestFolder} from "./Util";
 
 describe('resolve npm credentials', () => {
 
-    const basePath = path.join(process.cwd(), 'testsetup');
-    const npmrcPath = path.join(basePath, '.npmrc');
     const npmrc_not_configured = '# configure auth token\n' +
         '@fontawesome:registry=https://npm.fontawesome.com/\n' +
         '//npm.fontawesome.com/:_authToken=$AUTH_TOKEN\n' +
@@ -21,14 +19,19 @@ describe('resolve npm credentials', () => {
         ';log level settigns\n' +
         'loglevel=warn'
 
+    let tmpTestFolder: tmp.DirSyncObject;
+    let basePath: string;
+    let npmrcPath: string;
 
     beforeEach(() => {
-        removeTestFolder(basePath);
-        fs.mkdirSync(path.join(basePath), {recursive: true});
+        tmpTestFolder = tmp.dirSync({unsafeCleanup: true});
+        console.log('Test data will be below: ', tmpTestFolder.name);
+        basePath = tmpTestFolder.name;
+        npmrcPath = path.join(basePath, '.npmrc');
     });
 
-    afterAll(() => {
-        removeTestFolder(basePath);
+    afterEach(() => {
+        tmpTestFolder.removeCallback();
     });
 
     test('no userconfig in npm config', () => {

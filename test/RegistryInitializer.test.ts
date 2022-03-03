@@ -1,16 +1,13 @@
 import * as fs from "fs";
 import * as path from "path";
+import * as tmp from "tmp";
 import * as child_process from "child_process";
 import {RegistryInitializer} from "../src/model/RegistryInitializer";
-import {removeTestFolder} from "./Util";
 import * as os from "os";
 import {cred} from "../src/utils";
 
 describe('configuring jfrog credentials', () => {
-    const basePath = path.join(process.cwd(), 'testsetup');
-    const gradleHome = path.join(basePath, RegistryInitializer.GRADLE_HOME);
-    const gradlePropertiesPath = path.join(gradleHome, RegistryInitializer.GRADLE_PROPERTIES);
-    const npmrcPath = path.join(basePath, '.npmrc');
+
     const npmrcUser = 'max.mustermann@collaboration-factory.de';
     const npmrcBasicAuthToken = 'bWF4Lm11c3Rlcm1hbm5AY29sbGFib3JhdGlvbi1mYWN0b3J5LmRlOnRva2Vu';
 
@@ -46,22 +43,32 @@ describe('configuring jfrog credentials', () => {
         '//cplace.jfrog.io/artifactory/api/npm/cplace-npm/:always-auth=true\n' +
         '//cplace.jfrog.io/artifactory/api/npm/cplace-npm/:email=max.mustermann@collaboration-factory.de'
 
+    let tmpTestFolder: tmp.DirSyncObject;
+    let basePath: string;
+    let gradleHome: string;
+    let gradlePropertiesPath: string;
+    let npmrcPath: string;
+
     beforeEach(() => {
-        // jest.resetModules();
-        // removeTestFolder(basePath);
-        fs.mkdirSync(path.join(basePath), {recursive: true});
+        tmpTestFolder = tmp.dirSync({unsafeCleanup: true});
+        console.log('Test data will be below: ', tmpTestFolder.name);
+        basePath = tmpTestFolder.name;
+        gradleHome = path.join(basePath, RegistryInitializer.GRADLE_HOME);
+        gradlePropertiesPath = path.join(gradleHome, RegistryInitializer.GRADLE_PROPERTIES);
+        npmrcPath = path.join(basePath, '.npmrc');
     });
 
     afterEach(() => {
         jest.restoreAllMocks();
         jest.resetModules();
-        removeTestFolder(basePath);
+        tmpTestFolder.removeCallback();
     });
 
     test('create .npmrc in case it does not exist', () => {
         const registryInitializerPrototype = setupRegistryInitializerMock(false);
 
         registryInitializerPrototype.initRegistry();
+
         const npmrcContent = fs.readFileSync(npmrcPath).toString();
         expect(npmrcContent).toContain(npmrcConfigured_new_registry);
     });

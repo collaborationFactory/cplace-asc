@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import * as rimraf from "rimraf";
+import * as tmp from "tmp";
 import {AssetsCompiler} from "../src/model/AssetsCompiler";
 
 describe('test the assets compilation', () => {
@@ -10,25 +10,25 @@ describe('test the assets compilation', () => {
     const repoDependencyName = 'cplace-paw';
     const ppRepoName = 'cplace-project-planning';
     const gradleMarkerName = 'build.gradle';
-    const basePath = path.join(process.cwd(), 'testsetup');
-    const mainRepoPath = path.join(basePath, mainRepoName);
-    const ppRepoPath = path.join(basePath, ppRepoName);
 
-    function removeTestFolder() {
-        if (fs.existsSync(path.join(basePath))) {
-            console.log('removing path', path.join(basePath));
-            rimraf.sync(path.join(basePath));
-        }
-    }
+    let tmpTestFolder: tmp.DirSyncObject;
+    let basePath: string;
+    let mainRepoPath: string;
+    let ppRepoPath: string;
 
     beforeEach(() => {
-        removeTestFolder();
+        tmpTestFolder = tmp.dirSync({unsafeCleanup: true});
+        console.log('Test data will be below: ', tmpTestFolder.name);
+        basePath = tmpTestFolder.name;
+        mainRepoPath = path.join(basePath, mainRepoName);
+        ppRepoPath = path.join(basePath, ppRepoName);
+
         fs.mkdirSync(path.join(basePath, repoDependencyName), {recursive: true});
         fs.mkdirSync(path.join(basePath, ppRepoName), {recursive: true});
     });
 
-    afterAll(() => {
-        removeTestFolder();
+    afterEach(() => {
+        tmpTestFolder.removeCallback();
     });
 
     test('cplace-asc in PPrepo can find Plugin in PPrepo', () => {

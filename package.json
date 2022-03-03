@@ -64,6 +64,7 @@
     "@types/webpack": "^4.4.19",
     "jest": "^27.4.5",
     "ts-jest": "^27.1.2",
-    "typescript": "^3.9.10"
+    "typescript": "^3.9.10",
+    "tmp": "^0.2.1"
   }
 }
