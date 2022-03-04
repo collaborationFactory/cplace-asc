@@ -7,7 +7,7 @@ export class PackageVersion {
 
     private static _version: PackageVersion | undefined = undefined;
 
-    private constructor(public readonly major: number, public readonly minor: number, public readonly patch: number) {
+    constructor(public readonly major: number, public readonly minor: number, public readonly patch: number) {
     }
 
     public static initialize(mainRepo: string): PackageVersion {

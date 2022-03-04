@@ -16,7 +16,7 @@ export function getDependencyParser(): DependencyParser {
     }
 }
 
-class ImlDependencyParser implements DependencyParser {
+export class ImlDependencyParser implements DependencyParser {
     public getPluginDependencies(pluginDir: string, pluginName: string, excludeTestDependencies: boolean): string[] {
         const pathToIml = path.join(pluginDir, `${pluginName}.iml`);
         const imlParser = new ImlParser(pathToIml);
@@ -33,7 +33,7 @@ class ImlDependencyParser implements DependencyParser {
     }
 }
 
-class PluginDescriptorDependencyParser implements DependencyParser {
+export class PluginDescriptorDependencyParser implements DependencyParser {
     public getPluginDependencies(pluginDir: string, pluginName: string, excludeTestDependencies: boolean): string[] {
         const descriptorParser = new PluginDescriptorParser(pluginDir);
         const pluginDescriptor = descriptorParser.getPluginDescriptor();
