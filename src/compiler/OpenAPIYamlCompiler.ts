@@ -10,7 +10,9 @@ export class OpenAPIYamlCompiler implements ICompiler {
     private readonly pluginName: string,
     private readonly dependencyPaths: string[],
     private readonly assetsPath: string,
-    private readonly mainRepoDir: string
+    private readonly mainRepoDir: string,
+    private readonly isProduction: boolean,
+    private readonly esTargetVersion: string
   ) {}
 
   /**

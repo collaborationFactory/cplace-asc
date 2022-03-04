@@ -4,6 +4,7 @@ export interface ICompileRequest {
     assetsPath: string;
     mainRepoDir: string;
     isProduction: boolean;
+    esTargetVersion: string;
     verbose?: boolean;
     less?: boolean;
     ts?: boolean;
@@ -28,7 +29,8 @@ export interface ICompilerConstructor {
         dependencyPaths: string[],
         assetsPath: string,
         mainRepoDir: string,
-        isProduction: boolean): ICompiler;
+        isProduction: boolean,
+        esTargetVersion: string): ICompiler;
 }
 
 export enum CompilationResult {

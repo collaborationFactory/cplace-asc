@@ -27,7 +27,9 @@ export class VendorCompiler implements ICompiler {
     constructor(private readonly pluginName: string,
                 private readonly dependencyPaths: string[],
                 private readonly assetsPath: string,
-                private readonly mainRepoDir: string) {
+                private readonly mainRepoDir: string,
+                private readonly isProduction: boolean,
+                private readonly esTargetVersion: string) {
         this.compressCssCompiler = new CompressCssCompiler(this.pluginName, this.dependencyPaths, this.assetsPath, this.mainRepoDir, true);
     }
 
@@ -222,7 +224,7 @@ export class VendorCompiler implements ICompiler {
                     },
                 ]
             },
-            target: ['web', 'es5']
+            target: ['web', this.esTargetVersion]
         }
     }
 

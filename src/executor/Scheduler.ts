@@ -57,6 +57,7 @@ export class Scheduler {
      * @param isProduction Whether to compile for production
      * @param noParents Whether to exclude parent repositories from compilation
      * @param watchFiles Whether to watch files for changes
+     * @param esTargetVersion ECMAScript target version: es5, es2015, es2016, ...
      * @param updateDetails Details of a potentially available version update
      */
     constructor(private readonly executor: ExecutorService,
@@ -66,6 +67,7 @@ export class Scheduler {
                 private readonly isProduction: boolean,
                 private readonly noParents: boolean,
                 private readonly watchFiles: boolean,
+                private readonly esTargetVersion: string,
                 private readonly updateDetails?: IUpdateDetails) {
         this.tsJobs = this.createTsJobTracker();
         this.tsE2EJobs = this.createTsE2EJobTracker();
@@ -171,6 +173,7 @@ export class Scheduler {
                 assetsPath: plugin.assetsDir,
                 mainRepoDir: this.mainRepoDir,
                 isProduction: this.isProduction,
+                esTargetVersion: this.esTargetVersion,
                 verbose: isDebugEnabled()
             };
             compileRequest[compileType] = true;

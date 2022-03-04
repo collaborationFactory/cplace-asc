@@ -28,8 +28,9 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                 dependencyPaths: string[],
                 assetsPath: string,
                 mainRepoDir: string,
-                isProduction: boolean) {
-        super(pluginName, dependencyPaths, assetsPath, mainRepoDir, isProduction, 'ts', CplaceTypescriptCompiler.DEST_DIR);
+                isProduction: boolean,
+                esTargetVersion: string) {
+        super(pluginName, dependencyPaths, assetsPath, mainRepoDir, isProduction, esTargetVersion,'ts', CplaceTypescriptCompiler.DEST_DIR);
     }
 
     public static getJavaScriptOutputDir(assetsPath: string): string {
@@ -109,7 +110,7 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
             resolve: {
                 extensions: ['.ts', '.js']
             },
-            target: ['web', 'es5']
+            target: ['web', this.getEcmaScriptTargetVersion()]
         };
 
         if (!this.isProduction) {
@@ -135,22 +136,36 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
         return [{
             ...CplaceTypescriptCompiler.DEFAULT_EXTERNALS,
             ...(extraTypes ? extraTypes.externals : {})
-        }, this.resolveWebpackExternal.bind(this)];
+        }, CplaceTypescriptCompiler.resolveWebpackExternal.bind(this)];
     }
 
-    private resolveWebpackExternal(data: ExternalItemFunctionData, callback: ExternalItemCallback): void {
+    private static resolveWebpackExternal(data: ExternalItemFunctionData, callback: ExternalItemCallback): void {
         if (typeof data.request === 'string' && isFromLibrary(data.request)) {
-            return callback(undefined, this.replaceCplacePluginIdentifier(data.request));
+            return callback(undefined, CplaceTypescriptCompiler.replaceCplacePluginIdentifier(data.request));
         }
         return callback();
     }
 
-    private replaceCplacePluginIdentifier(request: string): string {
+    private static replaceCplacePluginIdentifier(request: string): string {
         return request.replace(/(^@)([a-zA-Z0-9.]+)(\/.+)/gi, (match, at, folder, path) => {
             const resolver = folder.replace(/\./g, '_');
             const module = `.${path}.js`;
             return `window['$${resolver}']('${module}')`;
         });
+    }
+
+    private getEcmaScriptTargetVersion(): string {
+        const tsconfigJson = fs.readFileSync(path.join(this.mainRepoDir, 'tsconfig.base.json'), 'utf8');
+        if (tsconfigJson) {
+            const target = JSON.parse(tsconfigJson)?.compilerOptions?.target;
+            if (target) {
+                debug(`Webpack EcmaScript target version: ${target}`);
+                return target;
+            }
+        }
+        const defaultTarget = 'es5';
+        debug(`No EcmaScript target version found. Using ${defaultTarget}`);
+        return defaultTarget;
     }
 
     private async copyStaticFiles(): Promise<void> {

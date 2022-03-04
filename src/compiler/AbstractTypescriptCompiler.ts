@@ -18,6 +18,7 @@ export abstract class AbstractTypescriptCompiler implements ICompiler {
                 protected readonly assetsPath: string,
                 protected readonly mainRepoDir: string,
                 protected readonly isProduction: boolean,
+                protected readonly esTargetVersion: string,
                 protected readonly srcFolderName: string,
                 protected readonly outputDirName: string) {
     }

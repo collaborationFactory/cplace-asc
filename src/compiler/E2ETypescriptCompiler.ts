@@ -10,8 +10,10 @@ export class E2ETypescriptCompiler extends AbstractTypescriptCompiler {
     constructor(pluginName: string,
                 dependencyPaths: string[],
                 assetsPath: string,
-                mainRepoDir: string) {
-        super(pluginName, dependencyPaths, assetsPath, mainRepoDir, false, 'e2e', E2ETypescriptCompiler.DEST_DIR);
+                mainRepoDir: string,
+                isProduction: boolean,
+                esTargetVersion: string) {
+        super(pluginName, dependencyPaths, assetsPath, mainRepoDir, false,  esTargetVersion,'e2e', E2ETypescriptCompiler.DEST_DIR);
     }
 
     protected getJobName(): string {

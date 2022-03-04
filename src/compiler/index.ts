@@ -82,7 +82,8 @@ if (require.main === module) {
                 request.dependencyPaths,
                 request.assetsPath,
                 request.mainRepoDir,
-                request.isProduction
+                request.isProduction,
+                request.esTargetVersion
             );
         } catch (e) {
             console.error(cerr`${e.message}`);

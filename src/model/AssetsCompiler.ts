@@ -104,6 +104,8 @@ export class AssetsCompiler {
             ));
         }
 
+        const esTargetVersion = AssetsCompiler.getEcmaScriptTargetVersion(mainRepoPath);
+
         const start = new Date().getTime();
         if (this.runConfig.clean) {
             debug(`(AssetsCompiler) running clean for all plugins...`);
@@ -133,6 +135,7 @@ export class AssetsCompiler {
             this.runConfig.production,
             this.runConfig.noParents,
             this.runConfig.watchFiles,
+            esTargetVersion,
             updateDetails
         );
 
@@ -227,6 +230,21 @@ export class AssetsCompiler {
         AssetsCompiler.setDependents(projects);
         return projects;
     }
+
+    private static getEcmaScriptTargetVersion(mainRepoPath: string): string {
+        const tsconfigJson = fs.readFileSync(path.join(mainRepoPath, 'tsconfig.base.json'), 'utf8');
+        if (tsconfigJson) {
+            const target = JSON.parse(tsconfigJson)?.compilerOptions?.target;
+            if (target) {
+                debug(`Webpack EcmaScript target version: ${target}`);
+                return target;
+            }
+        }
+        const defaultTarget = 'es5';
+        debug(`No EcmaScript target version found. Using ${defaultTarget}`);
+        return defaultTarget;
+    }
+
 
     public static getMainRepoPath(repositoryDir: string, localonly: boolean): string | null {
         let mainRepoPath = '';
