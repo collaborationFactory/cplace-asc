@@ -189,10 +189,7 @@ export class VendorCompiler implements ICompiler {
             plugins: [
                 new MiniCssExtractPlugin({
                     filename: `../${VendorCompiler.DEST_CSS_DIR}/${VendorCompiler.VENDOR_CSS_FILE}`
-                }),
-                new webpack.ProvidePlugin({
-                    _: "underscore"
-                }) 
+                })
             ],
             module: {
                 rules: [
@@ -225,6 +222,52 @@ export class VendorCompiler implements ICompiler {
                             'file-loader'
                         ]
                     },
+                    {
+                        test: /underscore/,
+                        loader: 'expose-loader',
+                        options: {
+                            exposes: [
+                                {
+                                    globalName: '_'
+                                }
+                            ],
+                        }
+                        
+                    },
+                    {
+                        test: /moment\.js$/,
+                        loader: 'expose-loader',
+                        options: {
+                            exposes: [
+                                {
+                                    globalName: 'moment'
+                                }
+                            ],
+                        },
+                    },
+                    {
+                        test: /highcharts\.js$/,
+                        loader: 'expose-loader',
+                        options: {
+                            exposes: [
+                                {
+                                    globalName: 'Highcharts'
+                                }
+                            ],
+                        },
+                    },
+                    {
+                        test: /codemirror\.js$/,
+                        loader: 'expose-loader',
+                        options: {
+                            exposes: [
+                                {
+                                    globalName: 'CodeMirror'
+                                }
+                            ],
+                        },
+                    }
+
                 ]
             }
         }

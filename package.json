@@ -62,6 +62,7 @@
     "@types/rimraf": "^2.0.2",
     "@types/vinyl": "^2.0.2",
     "@types/webpack": "^4.4.19",
+    "expose-loader": "^1.0.3",
     "jest": "^27.4.5",
     "ts-jest": "^27.1.2",
     "typescript": "^3.9.10"
