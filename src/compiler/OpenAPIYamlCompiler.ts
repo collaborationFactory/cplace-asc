@@ -108,7 +108,7 @@ export class OpenAPIYamlCompiler implements ICompiler {
                     ' '
                 );
             const genRes = spawn.sync(cli, genArgs, {
-                stdio: ['pipe', 'pipe', process.stderr],
+                stdio: ['pipe', 'pipe', 'pipe'],
                 env: {
                     ...process.env,
                     PWD: path.resolve(__dirname, '..', '..'),
@@ -116,7 +116,9 @@ export class OpenAPIYamlCompiler implements ICompiler {
             });
             if (genRes.status !== 0) {
                 console.error(
-                    cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${genRes.error?.message}`
+                    cerr`(OpenAPIYamlCompiler) [${
+                        this.pluginName
+                    }] OpenAPI YAML compilation failed with error ${genRes.output.toString()}`
                 );
                 throw Error(
                     `[${this.pluginName}] OpenAPI YAML compilation failed...`
@@ -145,11 +147,13 @@ export class OpenAPIYamlCompiler implements ICompiler {
                     'eolConverter'
                 );
                 const res = spawn.sync(eolConverter, ['crlf', files], {
-                    stdio: ['pipe', 'pipe', process.stderr],
+                    stdio: ['pipe', 'pipe', 'pipe'],
                 });
                 if (res.status !== 0) {
                     console.error(
-                        cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${res.error?.message}`
+                        cerr`(OpenAPIYamlCompiler) [${
+                            this.pluginName
+                        }] OpenAPI YAML compilation failed with error ${res.output.toString()}`
                     );
                     throw Error(
                         `[${this.pluginName}] OpenAPI YAML compilation failed...`
