@@ -1,8 +1,8 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import {cgreen, debug, GREEN_CHECK, RED_CROSS} from './console';
+import { cgreen, debug, GREEN_CHECK, RED_CROSS } from './console';
 import * as https from 'https';
-import {Socket} from 'net';
+import { Socket } from 'net';
 
 export interface IUpdateDetails {
     installedVersion: Version;
@@ -10,22 +10,33 @@ export interface IUpdateDetails {
 }
 
 export async function checkForUpdate(): Promise<IUpdateDetails | undefined> {
-    process.stdout.write(cgreen`⇢` + ` Checking whether newer version is available... `);
+    process.stdout.write(
+        cgreen`⇢` + ` Checking whether newer version is available... `
+    );
 
     try {
-        const packageJsonContent = fs.readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf-8');
+        const packageJsonContent = fs.readFileSync(
+            path.join(__dirname, '..', '..', 'package.json'),
+            'utf-8'
+        );
         const packageJson = JSON.parse(packageJsonContent);
         const currentVersion = Version.parse(packageJson.version);
         if (!currentVersion) {
             process.stdout.write(RED_CROSS + '\n');
-            debug(`[UpdateCheck] Could not check whether a newer version is available, continuing...`);
+            debug(
+                `[UpdateCheck] Could not check whether a newer version is available, continuing...`
+            );
             return undefined;
         }
 
-        const remoteVersion = await getRemoteVersionFromRegistry(packageJson.name);
+        const remoteVersion = await getRemoteVersionFromRegistry(
+            packageJson.name
+        );
         if (!remoteVersion) {
             process.stdout.write(RED_CROSS + '\n');
-            debug(`[UpdateCheck] Could not check whether a newer version is available, continuing...`);
+            debug(
+                `[UpdateCheck] Could not check whether a newer version is available, continuing...`
+            );
             return undefined;
         }
 
@@ -34,12 +45,14 @@ export async function checkForUpdate(): Promise<IUpdateDetails | undefined> {
         if (remoteVersion.isNewerThan(currentVersion)) {
             return {
                 installedVersion: currentVersion,
-                availableVersion: remoteVersion
+                availableVersion: remoteVersion,
             };
         }
     } catch (e) {
         process.stdout.write(RED_CROSS + '\n');
-        debug(`[UpdateCheck] Failed to check whether an update is available, continuing...`);
+        debug(
+            `[UpdateCheck] Failed to check whether an update is available, continuing...`
+        );
         debug(e);
     }
     return undefined;
@@ -54,37 +67,44 @@ export function printUpdateDetails(updateDetails?: IUpdateDetails): void {
     console.log();
     console.log(cgreen`!---------------------------------------------!`);
     console.log(cgreen`! A newer version of @cplace/asc is available !`);
-    console.log(cgreen`! >> ${installed} -> ${available}                     !`);
+    console.log(
+        cgreen`! >> ${installed} -> ${available}                     !`
+    );
     console.log(cgreen`! -> Please update to the latest version:     !`);
     console.log(cgreen`!    npm install -g @cplace/asc               !`);
     console.log(cgreen`!---------------------------------------------!`);
     console.log();
 }
 
-async function getRemoteVersionFromRegistry(packageName: string): Promise<Version | null> {
+async function getRemoteVersionFromRegistry(
+    packageName: string
+): Promise<Version | null> {
     try {
         const p = new Promise<string>((resolve, reject) => {
-            const req = https.request({
-                method: 'GET',
-                hostname: 'registry.npmjs.org',
-                path: `/-/package/${packageName}/dist-tags`,
-                timeout: 2000
-            }, res => {
-                let data = '';
-                res.on('data', chunk => {
-                    data += chunk;
-                });
-                res.on('end', () => {
-                    resolve(data);
-                });
-            });
+            const req = https.request(
+                {
+                    method: 'GET',
+                    hostname: 'registry.npmjs.org',
+                    path: `/-/package/${packageName}/dist-tags`,
+                    timeout: 2000,
+                },
+                (res) => {
+                    let data = '';
+                    res.on('data', (chunk) => {
+                        data += chunk;
+                    });
+                    res.on('end', () => {
+                        resolve(data);
+                    });
+                }
+            );
             req.on('socket', (socket: Socket) => {
                 socket.setTimeout(2000);
                 socket.on('timeout', () => {
                     req.abort();
                 });
             });
-            req.on('error', err => {
+            req.on('error', (err) => {
                 reject(err);
             });
             req.end();
@@ -99,8 +119,11 @@ async function getRemoteVersionFromRegistry(packageName: string): Promise<Versio
 }
 
 class Version {
-    constructor(public major: number, public minor: number, public patch: number) {
-    }
+    constructor(
+        public major: number,
+        public minor: number,
+        public patch: number
+    ) {}
 
     public static parse(version: string): Version | null {
         const parts = version.split('.');

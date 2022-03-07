@@ -15,7 +15,7 @@ export interface ICompileRequest {
 
 export enum ProcessState {
     DONE = 'done',
-    FAILED = 'failed'
+    FAILED = 'failed',
 }
 
 export interface ICompileResponse {
@@ -24,19 +24,20 @@ export interface ICompileResponse {
 }
 
 export interface ICompilerConstructor {
-    new(pluginName: string,
+    new (
+        pluginName: string,
         dependencyPaths: string[],
         assetsPath: string,
         mainRepoDir: string,
-        isProduction: boolean): ICompiler;
+        isProduction: boolean
+    ): ICompiler;
 }
 
 export enum CompilationResult {
     UNCHANGED = 'unchanged',
-    CHANGED = 'modified'
+    CHANGED = 'modified',
 }
 
 export interface ICompiler {
     compile(): Promise<CompilationResult>;
 }
-

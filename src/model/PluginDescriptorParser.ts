@@ -1,6 +1,6 @@
-import * as path from "path";
-import * as fs from "fs";
-import { cerr } from "../utils";
+import * as path from 'path';
+import * as fs from 'fs';
+import { cerr } from '../utils';
 
 export interface PluginDescriptor {
     /**
@@ -25,27 +25,47 @@ export class PluginDescriptorParser {
     private readonly descriptor: PluginDescriptor;
 
     constructor(private pluginDir: string) {
-        this.pathToDescriptor = PluginDescriptorParser.getPathToDescriptor(pluginDir);
+        this.pathToDescriptor =
+            PluginDescriptorParser.getPathToDescriptor(pluginDir);
         if (!fs.existsSync(this.pathToDescriptor)) {
-            console.error(cerr`(PluginDescriptor) Failed to find plugin descriptor for ${path.basename(pluginDir)}`);
+            console.error(
+                cerr`(PluginDescriptor) Failed to find plugin descriptor for ${path.basename(
+                    pluginDir
+                )}`
+            );
             console.error();
-            console.error(cerr`(PluginDescriptor) Try running "gradle generatePluginDescriptor" in the containing repository`);
+            console.error(
+                cerr`(PluginDescriptor) Try running "gradle generatePluginDescriptor" in the containing repository`
+            );
             console.error();
-            throw Error(`PluginDescriptor ${this.pathToDescriptor} does not exist`);
+            throw Error(
+                `PluginDescriptor ${this.pathToDescriptor} does not exist`
+            );
         }
         this.descriptor = this.parseFile();
     }
 
     public static getPathToDescriptor(pluginDir) {
-        return path.join(pluginDir, PluginDescriptorParser.DESCRIPTOR_FILE_NAME);
+        return path.join(
+            pluginDir,
+            PluginDescriptorParser.DESCRIPTOR_FILE_NAME
+        );
     }
 
     public static getPathToBuildGradle(pluginDir) {
-        return path.join(pluginDir, PluginDescriptorParser.BUILD_GRADLE_FILE_NAME);
+        return path.join(
+            pluginDir,
+            PluginDescriptorParser.BUILD_GRADLE_FILE_NAME
+        );
     }
 
-    public static isCplacePluginWithGradleAndContainsPluginDescriptor(pluginDir: string): boolean {
-        return fs.existsSync(this.getPathToDescriptor(pluginDir)) && fs.existsSync(this.getPathToBuildGradle(pluginDir));
+    public static isCplacePluginWithGradleAndContainsPluginDescriptor(
+        pluginDir: string
+    ): boolean {
+        return (
+            fs.existsSync(this.getPathToDescriptor(pluginDir)) &&
+            fs.existsSync(this.getPathToBuildGradle(pluginDir))
+        );
     }
 
     public getPluginDescriptor(): PluginDescriptor {
@@ -53,7 +73,9 @@ export class PluginDescriptorParser {
     }
 
     private parseFile(): PluginDescriptor {
-        const content = fs.readFileSync(this.pathToDescriptor, {encoding: 'utf8'});
+        const content = fs.readFileSync(this.pathToDescriptor, {
+            encoding: 'utf8',
+        });
         return JSON.parse(content) as PluginDescriptor;
     }
 }

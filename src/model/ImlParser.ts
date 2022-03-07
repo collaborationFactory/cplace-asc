@@ -1,4 +1,4 @@
-import * as path from "path";
+import * as path from 'path';
 
 declare function require(name: string): any;
 
@@ -29,9 +29,10 @@ export class ImlParser {
         let result: IImlModuleDependency[] = [];
 
         if (components) {
-            components.forEach(component => {
+            components.forEach((component) => {
                 if (component.$.name === 'NewModuleRootManager') {
-                    result = ImlParser.getReferencedModulesFromManager(component);
+                    result =
+                        ImlParser.getReferencedModulesFromManager(component);
                 }
             });
         }
@@ -50,21 +51,23 @@ export class ImlParser {
         });
     }
 
-    private static getReferencedModulesFromManager(component: any): IImlModuleDependency[] {
+    private static getReferencedModulesFromManager(
+        component: any
+    ): IImlModuleDependency[] {
         const entries = component.orderEntry as any[];
         if (!entries) {
             return [];
         }
 
         return entries
-            .filter(entry => entry.$.type && entry.$.type === 'module')
-            .map(entry => {
+            .filter((entry) => entry.$.type && entry.$.type === 'module')
+            .map((entry) => {
                 return {
                     moduleName: entry.$['module-name'],
-                    isTestScoped: entry.$['scope'] === 'TEST'
+                    isTestScoped: entry.$['scope'] === 'TEST',
                 };
             })
-            .filter(dep => {
+            .filter((dep) => {
                 return !!dep.moduleName;
             });
     }

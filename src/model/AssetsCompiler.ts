@@ -6,10 +6,17 @@ import * as fs from 'fs';
 import * as path from 'path';
 import CplacePlugin from './CplacePlugin';
 import { ExecutorService, Scheduler } from '../executor';
-import { cerr, cgreen, csucc, debug, formatDuration, IUpdateDetails } from '../utils';
-import { NPMResolver } from "./NPMResolver";
-import { ImlParser } from "./ImlParser";
-import { PluginDescriptorParser } from "./PluginDescriptorParser";
+import {
+    cerr,
+    cgreen,
+    csucc,
+    debug,
+    formatDuration,
+    IUpdateDetails,
+} from '../utils';
+import { NPMResolver } from './NPMResolver';
+import { ImlParser } from './ImlParser';
+import { PluginDescriptorParser } from './PluginDescriptorParser';
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -85,7 +92,10 @@ export class AssetsCompiler {
      */
     private npmResolver: NPMResolver | null = null;
 
-    constructor(private readonly runConfig: IAssetsCompilerConfiguration, private readonly repositoryDir: string) {
+    constructor(
+        private readonly runConfig: IAssetsCompilerConfiguration,
+        private readonly repositoryDir: string
+    ) {
         this.repositoryName = path.basename(repositoryDir);
         this.projects = this.setupProjects();
     }
@@ -93,15 +103,18 @@ export class AssetsCompiler {
     public async start(updateDetails?: IUpdateDetails): Promise<void> {
         if (!this.projects.size) {
             console.log(cgreen`->`, 'Nothing to do, no plugins detected...');
-            return new Promise<void>(resolve => resolve());
+            return new Promise<void>((resolve) => resolve());
         }
 
-        const mainRepoPath = AssetsCompiler.getMainRepoPath(this.repositoryDir, this.runConfig.localOnly);
+        const mainRepoPath = AssetsCompiler.getMainRepoPath(
+            this.repositoryDir,
+            this.runConfig.localOnly
+        );
         if (mainRepoPath === null) {
             debug(`(AssetsCompiler) Main repo cannot be found...`);
-            return new Promise<void>((resolve, reject) => reject(
-                'Main repo cannot be found...'
-            ));
+            return new Promise<void>((resolve, reject) =>
+                reject('Main repo cannot be found...')
+            );
         }
 
         const start = new Date().getTime();
@@ -114,14 +127,17 @@ export class AssetsCompiler {
             }
         }
 
-        this.npmResolver = new NPMResolver(mainRepoPath, this.runConfig.watchFiles);
+        this.npmResolver = new NPMResolver(
+            mainRepoPath,
+            this.runConfig.watchFiles
+        );
         await this.npmResolver.resolve();
 
         if (this.runConfig.onlyPreprocessing) {
             console.log();
             console.log(csucc`Preprocessing completed successfully`);
             console.log();
-            return new Promise<void>(resolve => resolve());
+            return new Promise<void>((resolve) => resolve());
         }
 
         this.executor = new ExecutorService(this.runConfig.maxParallelism);
@@ -137,24 +153,32 @@ export class AssetsCompiler {
         );
 
         debug(`(AssetsCompiler) starting scheduler for compilation tasks...`);
-        return this.scheduler
-            .start()
-            .then(() => {
+        return this.scheduler.start().then(
+            () => {
                 const end = new Date().getTime();
                 const successLog = () => {
                     console.log();
-                    console.log(csucc`Assets compiled successfully (${formatDuration(end - start)})`);
+                    console.log(
+                        csucc`Assets compiled successfully (${formatDuration(
+                            end - start
+                        )})`
+                    );
                     console.log();
                 };
 
                 if (!!this.executor) {
                     this.executor.destroy().then(successLog, successLog);
                 }
-            }, (e) => {
-                debug(`(AssetsCompiler) Error while running assets compiler: ${e}`);
+            },
+            (e) => {
+                debug(
+                    `(AssetsCompiler) Error while running assets compiler: ${e}`
+                );
                 const errorLog = () => {
                     console.log();
-                    console.error(cerr`COMPILATION FAILED - please check errors in output above`);
+                    console.error(
+                        cerr`COMPILATION FAILED - please check errors in output above`
+                    );
                     console.log();
                 };
 
@@ -162,7 +186,8 @@ export class AssetsCompiler {
                     this.executor.destroy().then(errorLog, errorLog);
                 }
                 throw e;
-            });
+            }
+        );
     }
 
     public async shutdown(): Promise<void> {
@@ -186,40 +211,68 @@ export class AssetsCompiler {
         let knownRepoDependencies: string[];
         if (this.runConfig.localOnly) {
             knownRepoDependencies = [];
-            debug(`(AssetsCompiler) Ignoring repo dependencies since localOnly execution...`);
+            debug(
+                `(AssetsCompiler) Ignoring repo dependencies since localOnly execution...`
+            );
         } else {
-            knownRepoDependencies = AssetsCompiler.getRepoDependencies(this.repositoryDir);
-            debug(`(AssetsCompiler) Detected repo dependencies: ${knownRepoDependencies.join(', ')}`);
+            knownRepoDependencies = AssetsCompiler.getRepoDependencies(
+                this.repositoryDir
+            );
+            debug(
+                `(AssetsCompiler) Detected repo dependencies: ${knownRepoDependencies.join(
+                    ', '
+                )}`
+            );
         }
 
         const projects = new Map<string, CplacePlugin>();
         const files = fs.readdirSync(this.repositoryDir);
 
-        files.forEach(file => {
+        files.forEach((file) => {
             const filePath = path.join(this.repositoryDir, file);
             if (fs.lstatSync(filePath).isDirectory()) {
                 const potentialPluginName = path.basename(file);
-                if ((this.runConfig.rootPlugins.length === 0 || this.runConfig.rootPlugins.indexOf(potentialPluginName) !== -1)
-                    && AssetsCompiler.directoryLooksLikePlugin(filePath, potentialPluginName)) {
+                if (
+                    (this.runConfig.rootPlugins.length === 0 ||
+                        this.runConfig.rootPlugins.indexOf(
+                            potentialPluginName
+                        ) !== -1) &&
+                    AssetsCompiler.directoryLooksLikePlugin(
+                        filePath,
+                        potentialPluginName
+                    )
+                ) {
                     AssetsCompiler.addProjectDependenciesRecursively(
                         this.repositoryDir,
-                        projects, knownRepoDependencies,
-                        potentialPluginName, filePath, this.runConfig);
+                        projects,
+                        knownRepoDependencies,
+                        potentialPluginName,
+                        filePath,
+                        this.runConfig
+                    );
                 }
             }
         });
 
-        projects.forEach(project => {
+        projects.forEach((project) => {
             if (!this.isInCompilationScope(project)) {
                 return;
             }
 
             if (project.hasTypeScriptAssets) {
-                project.generateTsConfig(p => projects.get(p), this.runConfig.production, this.runConfig.localOnly);
+                project.generateTsConfig(
+                    (p) => projects.get(p),
+                    this.runConfig.production,
+                    this.runConfig.localOnly
+                );
             }
             if (project.hasTypeScriptE2EAssets) {
                 if (!this.runConfig.production) {
-                    project.generateTsE2EConfig(p => projects.get(p), false, this.runConfig.localOnly)
+                    project.generateTsE2EConfig(
+                        (p) => projects.get(p),
+                        false,
+                        this.runConfig.localOnly
+                    );
                 }
             }
         });
@@ -228,45 +281,82 @@ export class AssetsCompiler {
         return projects;
     }
 
-    public static getMainRepoPath(repositoryDir: string, localonly: boolean): string | null {
+    public static getMainRepoPath(
+        repositoryDir: string,
+        localonly: boolean
+    ): string | null {
         let mainRepoPath = '';
         if (localonly) {
-            debug(`(AssetsCompiler) Resolving main repo path [localonly] as: "${repositoryDir}"`);
+            debug(
+                `(AssetsCompiler) Resolving main repo path [localonly] as: "${repositoryDir}"`
+            );
             mainRepoPath = path.resolve(repositoryDir);
         } else {
-            debug(`(AssetsCompiler) Resolving main repo path from root: "${repositoryDir}"`);
-            if (fs.existsSync(path.resolve(path.join(repositoryDir, '..', 'main')))) {
+            debug(
+                `(AssetsCompiler) Resolving main repo path from root: "${repositoryDir}"`
+            );
+            if (
+                fs.existsSync(
+                    path.resolve(path.join(repositoryDir, '..', 'main'))
+                )
+            ) {
                 debug(`(AssetsCompiler) Found as "main"`);
-                mainRepoPath = path.resolve(path.join(repositoryDir, '..', 'main'));
-            } else if (fs.existsSync(path.resolve(path.join(repositoryDir, '..', 'cplace')))) {
+                mainRepoPath = path.resolve(
+                    path.join(repositoryDir, '..', 'main')
+                );
+            } else if (
+                fs.existsSync(
+                    path.resolve(path.join(repositoryDir, '..', 'cplace'))
+                )
+            ) {
                 debug(`(AssetsCompiler) Found as "cplace"`);
-                mainRepoPath = path.resolve(path.join(repositoryDir, '..', 'cplace'));
+                mainRepoPath = path.resolve(
+                    path.join(repositoryDir, '..', 'cplace')
+                );
             } else {
-                debug(`(AssetsCompiler) Failed to find main/cplace repository...`);
+                debug(
+                    `(AssetsCompiler) Failed to find main/cplace repository...`
+                );
                 return null;
             }
         }
 
         debug(`(AssetsCompiler) main repo resolved to: "${mainRepoPath}"`);
-        if (!fs.existsSync(path.join(mainRepoPath, AssetsCompiler.PLATFORM_PLUGIN_NAME))) {
-            debug(`(AssetsCompiler) Failed to find cf.cplace.platform inside: "${mainRepoPath}"`);
+        if (
+            !fs.existsSync(
+                path.join(mainRepoPath, AssetsCompiler.PLATFORM_PLUGIN_NAME)
+            )
+        ) {
+            debug(
+                `(AssetsCompiler) Failed to find cf.cplace.platform inside: "${mainRepoPath}"`
+            );
             return null;
         }
 
         return mainRepoPath;
     }
 
-    private static directoryLooksLikePlugin(pluginPath: string, potentialPluginName: string): boolean {
+    private static directoryLooksLikePlugin(
+        pluginPath: string,
+        potentialPluginName: string
+    ): boolean {
         return (
-            ImlParser.doesImlExist(pluginPath, potentialPluginName) || PluginDescriptorParser.isCplacePluginWithGradleAndContainsPluginDescriptor(pluginPath)
-        ) && fs.existsSync(path.join(pluginPath, 'src')); // path to src directory - release-notes will be excluded
+            (ImlParser.doesImlExist(pluginPath, potentialPluginName) ||
+                PluginDescriptorParser.isCplacePluginWithGradleAndContainsPluginDescriptor(
+                    pluginPath
+                )) &&
+            fs.existsSync(path.join(pluginPath, 'src'))
+        ); // path to src directory - release-notes will be excluded
     }
 
-    private static addProjectDependenciesRecursively(repositoryDir: string,
-                                                     projects: Map<string, CplacePlugin>,
-                                                     repoDependencies: string[],
-                                                     pluginName: string,
-                                                     pluginPath: string, runConfig: IAssetsCompilerConfiguration) {
+    private static addProjectDependenciesRecursively(
+        repositoryDir: string,
+        projects: Map<string, CplacePlugin>,
+        repoDependencies: string[],
+        pluginName: string,
+        pluginPath: string,
+        runConfig: IAssetsCompilerConfiguration
+    ) {
         if (projects.has(pluginName)) {
             return;
         }
@@ -275,35 +365,51 @@ export class AssetsCompiler {
         project.parseDependencies(runConfig.production);
         projects.set(pluginName, project);
 
-        project.dependencies.forEach(depName => {
+        project.dependencies.forEach((depName) => {
             if (projects.has(depName)) {
                 return;
             }
-            const pluginPath = this.findPluginPath(repositoryDir, depName, repoDependencies);
-            this.addProjectDependenciesRecursively(repositoryDir, projects, repoDependencies, depName, pluginPath, runConfig);
+            const pluginPath = this.findPluginPath(
+                repositoryDir,
+                depName,
+                repoDependencies
+            );
+            this.addProjectDependenciesRecursively(
+                repositoryDir,
+                projects,
+                repoDependencies,
+                depName,
+                pluginPath,
+                runConfig
+            );
         });
     }
 
     private static setDependents(projects: Map<string, CplacePlugin>) {
         for (const plugin of projects.values()) {
             plugin.dependencies
-                .map(dep => projects.get(dep))
-                .forEach(p => {
+                .map((dep) => projects.get(dep))
+                .forEach((p) => {
                     if (!!p) {
-                        p.dependents.push(plugin.pluginName)
+                        p.dependents.push(plugin.pluginName);
                     }
                 });
         }
     }
 
     private static getRepoDependencies(repositoryDir: string): string[] {
-        if (path.basename(repositoryDir) === 'main' || path.basename(repositoryDir) === 'cplace') {
+        if (
+            path.basename(repositoryDir) === 'main' ||
+            path.basename(repositoryDir) === 'cplace'
+        ) {
             return [];
         }
 
         const parentReposPath = path.join(repositoryDir, 'parent-repos.json');
         if (!fs.existsSync(parentReposPath)) {
-            debug(`(AssetsCompiler) could not find parent-repos.json: ${parentReposPath}`);
+            debug(
+                `(AssetsCompiler) could not find parent-repos.json: ${parentReposPath}`
+            );
             return [];
         }
         const parentReposContent = fs.readFileSync(parentReposPath, 'utf8');
@@ -311,12 +417,18 @@ export class AssetsCompiler {
             const parentRepos = JSON.parse(parentReposContent);
             return Object.keys(parentRepos);
         } catch (err) {
-            console.error(cerr`Failed to parse parent-repos.json: ${parentReposPath}`);
+            console.error(
+                cerr`Failed to parse parent-repos.json: ${parentReposPath}`
+            );
             throw err;
         }
     }
 
-    public static findPluginPath(repositoryDir: string, pluginName: string, repoDependencies: string[]): string {
+    public static findPluginPath(
+        repositoryDir: string,
+        pluginName: string,
+        repoDependencies: string[]
+    ): string {
         let relativePathToPlugin = pluginName;
         if (AssetsCompiler.isPluginFolder(repositoryDir, pluginName)) {
             return path.join(repositoryDir, relativePathToPlugin);
@@ -332,13 +444,20 @@ export class AssetsCompiler {
         throw Error(`Could not locate plugin ${pluginName}`);
     }
 
-    private static isPluginFolder(repoPath: string, pluginName: string): boolean {
-        if (fs.existsSync(path.join(repoPath, "build.gradle")) &&
-            fs.existsSync(path.join(repoPath, pluginName, "build.gradle"))) {
+    private static isPluginFolder(
+        repoPath: string,
+        pluginName: string
+    ): boolean {
+        if (
+            fs.existsSync(path.join(repoPath, 'build.gradle')) &&
+            fs.existsSync(path.join(repoPath, pluginName, 'build.gradle'))
+        ) {
             // a plugin in cplace 5.4 and later, with Gradle build files whose existence we just checked
             return true;
-        } else if (!fs.existsSync(path.join(repoPath, "build.gradle")) &&
-            fs.existsSync(path.join(repoPath, pluginName))) {
+        } else if (
+            !fs.existsSync(path.join(repoPath, 'build.gradle')) &&
+            fs.existsSync(path.join(repoPath, pluginName))
+        ) {
             // a potential plugin in cplace 5.3 and earlier, with Ant build files and IML project files; we don't check those however
             return true;
         }

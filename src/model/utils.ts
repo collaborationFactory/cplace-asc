@@ -13,7 +13,11 @@ export function getAvailableStats() {
     let memoryUsage = process.memoryUsage();
     for (let key in memoryUsage) {
         // @ts-ignore
-        op.push(`${key}: ${Math.round(memoryUsage[key] / 1024 / 1024 * 100) / 100}MB`);
+        op.push(
+            `${key}: ${
+                Math.round((memoryUsage[key] / 1024 / 1024) * 100) / 100
+            }MB`
+        );
     }
 
     return op.join(', ');
