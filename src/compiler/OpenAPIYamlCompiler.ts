@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as rimraf from "rimraf";
-import { cerr, debug, formatDuration, GREEN_CHECK } from "../utils";
+import { cerr, formatDuration, GREEN_CHECK } from "../utils";
 import { CompilationResult, ICompiler } from "./interfaces";
 import spawn = require("cross-spawn");
 import * as fs from "fs";
@@ -113,9 +113,8 @@ export class OpenAPIYamlCompiler implements ICompiler {
         },
       });
       if (genRes.status !== 0) {
-        const errorMessage = genRes.stdout;
-        debug(
-          `(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${errorMessage}`
+        console.error(
+            cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${genRes.error?.message}`
         );
         throw Error(`[${this.pluginName}] OpenAPI YAML compilation failed...`);
       }
@@ -145,8 +144,8 @@ export class OpenAPIYamlCompiler implements ICompiler {
           stdio: ["pipe", "pipe", process.stderr],
         });
         if (res.status !== 0) {
-          debug(
-            `(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${res.stdout}`
+          console.error(
+              cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${res.error?.message}`
           );
           throw Error(
             `[${this.pluginName}] OpenAPI YAML compilation failed...`
@@ -189,8 +188,8 @@ export class OpenAPIYamlCompiler implements ICompiler {
       const dist = path.resolve(`${pluginPath}/api/dist/openapi`);
       rimraf(dist, (err) => {
         if (err) {
-          debug(
-            `(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${err.message}`
+          console.error(
+              cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${err.message}`
           );
           throw Error(
             `[${this.pluginName}] OpenAPI YAML compilation failed...`
@@ -210,8 +209,8 @@ export class OpenAPIYamlCompiler implements ICompiler {
       const dist = path.resolve(`${process.cwd()}/openapitools.json`);
       rimraf(dist, (err) => {
         if (err) {
-          debug(
-            `(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${err.message}`
+          console.error(
+              cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${err.message}`
           );
           throw Error(
             `[${this.pluginName}] OpenAPI YAML compilation failed...`
