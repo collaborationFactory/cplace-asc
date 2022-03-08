@@ -174,7 +174,7 @@ export class VendorCompiler implements ICompiler {
                         }
                     }),
                     new TerserPlugin({
-                        minify: TerserPlugin.uglifyJsMinify,
+                        minify: TerserPlugin.terserMinify,
                         parallel: true,
                         extractComments: true,
                         terserOptions: {

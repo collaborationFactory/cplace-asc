@@ -11,6 +11,7 @@ import * as fs from 'fs';
 import * as copyFiles from 'copyfiles';
 import {AbstractTypescriptCompiler} from './AbstractTypescriptCompiler';
 import {CplaceTSConfigGenerator} from "../model/CplaceTSConfigGenerator";
+const TerserPlugin = require("terser-webpack-plugin");
 
 export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
     public static readonly DEST_DIR = 'generated_js';
@@ -92,6 +93,21 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                         test: new RegExp(`\.(${CplaceTypescriptCompiler.STATIC_IMPORT_EXTENSIONS})$`),
                         type: 'asset/source'
                     }
+                ]
+            },
+            optimization: {
+                minimize: true,
+                minimizer: [
+                    new TerserPlugin({
+                         minify: TerserPlugin.terserMinify,
+                         parallel: true,
+                         extractComments: true,
+                         terserOptions: {
+                             output: {
+                                 comments: false
+                             }
+                         },
+                     })
                 ]
             },
             output: {
