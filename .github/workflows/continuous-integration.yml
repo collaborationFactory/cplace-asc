@@ -2,16 +2,86 @@ name: Continuous Integration
 on: [pull_request]
 
 jobs:
-  build:
-    name: Run unit tests with Jest
+  test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+
       - uses: actions/checkout@v2
+
       - uses: actions/setup-node@v1
         with:
-          node-version: "12.x"
+          node-version: '14.x'
+
+      - name: Cache Node Modules
+        id: npm-cache
+        uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/npm-shrinkwrap.json') }}
+
       - name: Install modules
-        run: npm install
+        run: npm ci
+
       - name: Run Jest
         run: node_modules/.bin/jest --verbose
 
+  compile:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        node_version:
+          - 14
+    name: Node ${{ matrix.node_version }} - ${{ matrix.architecture }} on ${{ matrix.os }}
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v2
+        with:
+          repository: collaborationFactory/cplace
+          token: ${{ CPLACE_GITHUB_TOKEN }}
+          path: './main'
+
+      - name: Setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node_version }}
+          architecture: ${{ matrix.architecture }}
+
+      - name: Cache Node Modules
+        id: npm-cache
+        uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/npm-shrinkwrap.json') }}
+
+      - name: Install modules
+        run: npm ci
+
+      - name: Setup JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+
+      - name: Create plugin descriptors
+        working-directory: ./main
+        run: ./gradlew generatePluginDescriptor
+
+      - name: Build
+        run: npm run prepare
+
+      - name: Compile
+        working-directory: ./main
+        run: node ../dist/index.js
