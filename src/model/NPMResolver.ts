@@ -21,6 +21,7 @@ export class NPMResolver {
     private static readonly PACKAGE_LOCK_HASH = 'package-lock.hash';
     private static readonly PACKAGE_LOCK_JSON = 'package-lock.json';
     private static readonly NODE_MODULES = 'node_modules';
+    private static readonly PATCHES_FOLDER = 'patches';
 
     private readonly mainRepo: string;
     private readonly hashFilePath: string;
@@ -63,6 +64,16 @@ export class NPMResolver {
     }
 
     /**
+     * Gets the 'patches' folder in the plugin with modifications of npm modules.
+     * @param assetsPath Assets path
+     * @private
+     */
+    public static getModulePatches(assetsPath: string): string {
+        return path.resolve(assetsPath, NPMResolver.PATCHES_FOLDER);
+    }
+
+
+    /**
      * Installs plugin dependencies
      * @param pluginName Plugin name
      * @param assetsPath Assets folder path
@@ -78,10 +89,33 @@ export class NPMResolver {
             throw Error(`[${pluginName}] (NPM) installing dependencies failed!`);
         }
         console.log(cgreen`✓`, `[${pluginName}] (NPM) dependencies successfully installed`);
+
+        NPMResolver.applyPatchesTo3rdPartyLibraies(pluginName, assetsPath);
+        
         NPMResolver.createPluginHashFile(assetsPath);
         NPMResolver.removePluginSymlinks(pluginName, assetsPath);
         process.chdir(oldCwd);
         return true;
+    }
+
+    /**
+     * Apply custom changes to 3rd part libraries.
+     * The changes are applied from the 'patches' folder with the 'patch-package' module.
+     * 
+     * @param pluginName Plugin name
+     * @param assetsPath Assets folder path in the plugin
+     */
+    private static applyPatchesTo3rdPartyLibraies(pluginName: string, assetsPath: string) {
+        const patchesPath = NPMResolver.getModulePatches(assetsPath);
+        if (fs.existsSync(patchesPath)) {
+            console.log(`⟲ [${pluginName}] (NPM) applying patches...`);
+            const res = spawn.sync('npx', ['patch-package']);
+            if (res.status !== 0) {
+                debug(`[${pluginName}] (NPM) applying patches failed with error ${res.stderr}`);
+                throw Error(`[${pluginName}] (NPM) applying patches failed!`);
+            }
+            console.log(cgreen`✓`, `[${pluginName}] (NPM) patches successfully applied`);
+        }
     }
 
     /**

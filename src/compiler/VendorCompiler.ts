@@ -223,6 +223,14 @@ export class VendorCompiler implements ICompiler {
                         ]
                     },
                     {
+                        // jquery.ba-bbq expects 'this' to be th 'window' object
+                        // see https://v4.webpack.js.org/guides/shimming/#granular-shimming
+                        test: /jquery.ba-bbq\.js/,
+                        use: 'imports-loader?wrapper=window',
+                    },
+                    // the following modules are used as globals througout cplace, so they are exposed
+                    // see https://v4.webpack.js.org/loaders/expose-loader/
+                    {
                         test: /underscore/,
                         loader: 'expose-loader',
                         options: {
@@ -263,6 +271,28 @@ export class VendorCompiler implements ICompiler {
                             exposes: [
                                 {
                                     globalName: 'CodeMirror'
+                                }
+                            ],
+                        },
+                    },
+                    {
+                        test: /draggable\.bundle\.legacy\.js$/,
+                        loader: 'expose-loader',
+                        options: {
+                            exposes: [
+                                {
+                                    globalName: 'Draggable'
+                                }
+                            ],
+                        },
+                    },
+                    {
+                        test: /dagre-d3\\index\.js/,
+                        loader: 'expose-loader',
+                        options: {
+                            exposes: [
+                                {
+                                    globalName: 'dagreD3'
                                 }
                             ],
                         },
