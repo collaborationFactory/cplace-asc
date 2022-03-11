@@ -78,7 +78,6 @@ export class NPMResolver {
             throw Error(`[${pluginName}] (NPM) installing dependencies failed!`);
         }
         console.log(cgreen`✓`, `[${pluginName}] (NPM) dependencies successfully installed`);
-        
         NPMResolver.createPluginHashFile(assetsPath);
         NPMResolver.removePluginSymlinks(pluginName, assetsPath);
         process.chdir(oldCwd);
