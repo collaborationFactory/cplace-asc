@@ -296,6 +296,19 @@ export class VendorCompiler implements ICompiler {
                                 }
                             ],
                         },
+                    },
+                    {
+                        test: /clipboard\.js$/,
+                        loader: 'expose-loader',
+                        options: {
+                            exposes: [
+                                {
+                                    globalName: 'Clipboard',
+                                    // override because of the browser's Clipboard API
+                                    override: true
+                                }
+                            ],
+                        },
                     }
 
                 ]
