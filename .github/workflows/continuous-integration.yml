@@ -11,7 +11,8 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v2
+      - name: Checkout cplace-asc
+        uses: actions/checkout@v3
 
       - uses: actions/setup-node@v1
         with:
@@ -47,9 +48,12 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v2
+      - name: Checkout cplace-asc
+        uses: actions/checkout@v3
+
+      - name: Checkout cplace
+        uses: actions/checkout@v3
         with:
-          ref: master
           repository: collaborationFactory/cplace
           path: main
           token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
