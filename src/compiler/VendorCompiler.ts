@@ -158,7 +158,7 @@ export class VendorCompiler implements ICompiler {
                 modules: [path.resolve(__dirname, '../../', 'node_modules')]
             },
             resolve: {
-                modules: [path.resolve(this.assetsPath, 'node_modules'), path.resolve(this.assetsPath, 'js')]
+                modules: [path.resolve(this.assetsPath, 'node_modules'), path.resolve(this.assetsPath, 'js'), path.resolve(this.assetsPath, '3rdParty')]
             },
             optimization: {
                 minimize: true,
@@ -223,76 +223,12 @@ export class VendorCompiler implements ICompiler {
                         ]
                     },
                     {
-                        // jquery.ba-bbq expects 'this' to be th 'window' object
-                        // see https://v4.webpack.js.org/guides/shimming/#granular-shimming
-                        test: /jquery.ba-bbq\.js/,
-                        use: 'imports-loader?wrapper=window',
-                    },
-                    // the following modules are used as globals througout cplace, so they are exposed
-                    // see https://v4.webpack.js.org/loaders/expose-loader/
-                    {
-                        test: /underscore/,
-                        loader: 'expose-loader',
-                        options: {
-                            exposes: [
-                                {
-                                    globalName: '_'
-                                }
-                            ],
-                        }
-                        
-                    },
-                    {
-                        test: /moment\.js$/,
-                        loader: 'expose-loader',
-                        options: {
-                            exposes: [
-                                {
-                                    globalName: 'moment'
-                                }
-                            ],
-                        },
-                    },
-                    {
                         test: /highcharts\.js$/,
                         loader: 'expose-loader',
                         options: {
                             exposes: [
                                 {
                                     globalName: 'Highcharts'
-                                }
-                            ],
-                        },
-                    },
-                    {
-                        test: /codemirror\.js$/,
-                        loader: 'expose-loader',
-                        options: {
-                            exposes: [
-                                {
-                                    globalName: 'CodeMirror'
-                                }
-                            ],
-                        },
-                    },
-                    {
-                        test: /draggable\.bundle\.legacy\.js$/,
-                        loader: 'expose-loader',
-                        options: {
-                            exposes: [
-                                {
-                                    globalName: 'Draggable'
-                                }
-                            ],
-                        },
-                    },
-                    {
-                        test: /dagre-d3\\index\.js/,
-                        loader: 'expose-loader',
-                        options: {
-                            exposes: [
-                                {
-                                    globalName: 'dagreD3'
                                 }
                             ],
                         },
@@ -310,7 +246,6 @@ export class VendorCompiler implements ICompiler {
                             ],
                         },
                     }
-
                 ]
             }
         }
@@ -432,7 +367,7 @@ export class VendorCompiler implements ICompiler {
             buffer = fs.readFileSync(fileToWrite, 'utf8');
 
             if (buffer.includes(pathToInclude)) {
-                let includedPaths = buffer.split('\n');
+                let includedPaths = buffer.replace(/\r/g, '').split('\n');
                 includedPaths = includedPaths
                     .map((line, index) => {
                         if (index === includedPaths.length - 1) {
