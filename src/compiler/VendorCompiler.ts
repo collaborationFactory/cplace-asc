@@ -2,9 +2,10 @@ import {CompilationResult, ICompiler} from "./interfaces";
 import * as fs from 'fs';
 import * as path from "path";
 import {NPMResolver} from "../model/NPMResolver";
-import {cgreen, debug, formatDuration} from "../utils";
+import {cerr, cgreen, debug, formatDuration} from "../utils";
 import {Configuration} from "webpack";
 import * as webpack from "webpack";
+import {merge} from 'webpack-merge';
 import spawn = require("cross-spawn");
 import * as crypto from "crypto";
 import {CompressCssCompiler} from "./CompressCssCompiler";
@@ -21,6 +22,7 @@ export class VendorCompiler implements ICompiler {
     private static readonly VENDOR_CSS_FILE = 'vendor.css';
     private static readonly JAVASCRIPT_TO_BE_COMPRESSED = 'javaScriptIncludesToBeCompressed.txt';
     private static readonly CSS_IMPORTS = 'imports.css';
+    private static readonly PLUGIN_SPECIFIC_VENDOR_CONFIG = 'vendor.config.js';
 
     private compressCssCompiler: CompressCssCompiler;
 
@@ -138,6 +140,25 @@ export class VendorCompiler implements ICompiler {
         return path.join(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_ENTRY_HASH);
     }
 
+    /**
+     * Load plugin specific webpack config file in the assets of a plugin
+     * @private
+     */
+    private getPluginSpecificWebpackConfig(): Configuration {
+        const pluginSpecificConfigFile = path.join(this.assetsPath, VendorCompiler.PLUGIN_SPECIFIC_VENDOR_CONFIG);
+        if (!fs.existsSync(pluginSpecificConfigFile)) {
+            return {};
+        }
+
+        console.log(`⟲ [${this.pluginName}] loading custom vendor webpack configuration...`);
+        try {
+            const pluginSpecificConfig = require(pluginSpecificConfigFile);    
+            return pluginSpecificConfig;
+        } catch (e) {
+            console.error(cerr`Error while loading configuration ${pluginSpecificConfigFile}`);
+            throw e;
+        }     
+    }
 
     /**
      * Gets plugin webpack config
@@ -221,30 +242,6 @@ export class VendorCompiler implements ICompiler {
                         use: [
                             'file-loader'
                         ]
-                    },
-                    {
-                        test: /highcharts\.js$/,
-                        loader: 'expose-loader',
-                        options: {
-                            exposes: [
-                                {
-                                    globalName: 'Highcharts'
-                                }
-                            ],
-                        },
-                    },
-                    {
-                        test: /clipboard\.js$/,
-                        loader: 'expose-loader',
-                        options: {
-                            exposes: [
-                                {
-                                    globalName: 'Clipboard',
-                                    // override because of the browser's Clipboard API
-                                    override: true
-                                }
-                            ],
-                        },
                     }
                 ]
             }
@@ -260,6 +257,7 @@ export class VendorCompiler implements ICompiler {
         console.log(`⟲ [${this.pluginName}] bundling vendors...`);
         return new Promise<any>((resolve, reject) => {
             const config = this.getPluginWebpackConfig();
+            const pluginSpecificConfig = this.getPluginSpecificWebpackConfig();
 
             this.removeVendors();
 
@@ -272,7 +270,8 @@ export class VendorCompiler implements ICompiler {
                 return;
             }
 
-            webpack(config, (err, stats) => {
+            const mergedConfig = merge(config, pluginSpecificConfig);
+            webpack(mergedConfig, (err, stats) => {
                 if (err) {
                     reject(`${err.message}`);
                 } else if (stats.hasErrors()) {
