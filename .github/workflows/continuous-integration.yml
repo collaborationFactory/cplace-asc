@@ -10,28 +10,12 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          access_token: ${{ github.token }}
-
-      - name: Checkout cplace-asc
-        uses: actions/checkout@v3
-
+      - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: 12.x
-
-      - name: Cache Node Modules
-        id: npm-cache
-        uses: actions/cache@v2
-        with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/npm-shrinkwrap.json') }}
-
+          node-version: "12.x"
       - name: Install modules
-        run: npm ci
-
+        run: npm install
       - name: Run Jest
         run: node_modules/.bin/jest --verbose
 
