@@ -1,10 +1,6 @@
 name: Continuous Integration
 on: [pull_request]
 
-env:
-  ENV_CPLACE_ARTIFACTORY_ACTOR: ${{ secrets.ENV_CPLACE_ARTIFACTORY_ACTOR }}
-  ENV_CPLACE_ARTIFACTORY_TOKEN: ${{ secrets.ENV_CPLACE_ARTIFACTORY_TOKEN }}
-
 jobs:
   test:
     name: Test
@@ -36,6 +32,9 @@ jobs:
         run: env && node_modules/.bin/jest --verbose
 
   compile:
+    env:
+      ENV_CPLACE_ARTIFACTORY_ACTOR: ${{ secrets.ENV_CPLACE_ARTIFACTORY_ACTOR }}
+      ENV_CPLACE_ARTIFACTORY_TOKEN: ${{ secrets.ENV_CPLACE_ARTIFACTORY_TOKEN }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
