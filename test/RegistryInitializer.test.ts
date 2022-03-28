@@ -2,9 +2,9 @@ import * as fs from "fs";
 import * as path from "path";
 import * as tmp from "tmp";
 import * as child_process from "child_process";
-import {RegistryInitializer} from "../src/model/RegistryInitializer";
+import { RegistryInitializer } from "../src/model/RegistryInitializer";
 import * as os from "os";
-import {cred} from "../src/utils";
+import { cred } from "../src/utils";
 
 describe('configuring jfrog credentials', () => {
 
@@ -38,10 +38,10 @@ describe('configuring jfrog credentials', () => {
         '//cplace.jfrog.io/artifactory/api/npm/cplace-npm-local/:always-auth=true\n' +
         '//cplace.jfrog.io/artifactory/api/npm/cplace-npm-local/:email=max.mustermann@collaboration-factory.de\n'
 
-    const npmrcConfigured_new_registry = '@cplace-next:registry=https://cplace.jfrog.io/artifactory/api/npm/cplace-npm/\n' +
-        '//cplace.jfrog.io/artifactory/api/npm/cplace-npm/:_auth=bWF4Lm11c3Rlcm1hbm5AY29sbGFib3JhdGlvbi1mYWN0b3J5LmRlOnRva2Vu\n' +
-        '//cplace.jfrog.io/artifactory/api/npm/cplace-npm/:always-auth=true\n' +
-        '//cplace.jfrog.io/artifactory/api/npm/cplace-npm/:email=max.mustermann@collaboration-factory.de'
+    const npmrcConfigured_new_registry_1 = '@cplace-next:registry=https://cplace.jfrog.io/artifactory/api/npm/cplace-npm/'
+    const npmrcConfigured_new_registry_2 = '//cplace.jfrog.io/artifactory/api/npm/cplace-npm/:_auth=bWF4Lm11c3Rlcm1hbm5AY29sbGFib3JhdGlvbi1mYWN0b3J5LmRlOnRv'
+    const npmrcConfigured_new_registry_3 = '//cplace.jfrog.io/artifactory/api/npm/cplace-npm/:always-auth=true'
+    const npmrcConfigured_new_registry_4 = '//cplace.jfrog.io/artifactory/api/npm/cplace-npm/:email='
 
     let tmpTestFolder: tmp.DirSyncObject;
     let basePath: string;
@@ -70,7 +70,10 @@ describe('configuring jfrog credentials', () => {
         registryInitializerPrototype.initRegistry();
 
         const npmrcContent = fs.readFileSync(npmrcPath).toString();
-        expect(npmrcContent).toContain(npmrcConfigured_new_registry);
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry_1);
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry_2);
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry_3);
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry_4);
     });
 
     test('auth token can be extracted from gradle.properties', () => {
@@ -94,7 +97,10 @@ describe('configuring jfrog credentials', () => {
         const npmrcContent = fs.readFileSync(npmrcPath).toString();
 
         expect(npmrcContent).toContain(npmrc_not_configured);
-        expect(npmrcContent).toContain(npmrcConfigured_new_registry);
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry_1);
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry_2);
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry_3);
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry_4);
         expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(4);
     });
 
@@ -103,7 +109,10 @@ describe('configuring jfrog credentials', () => {
         fs.writeFileSync(npmrcPath, npmrcConfigured_old_registry);
         registryInitializerPrototype.initRegistry();
         const npmrcContent = fs.readFileSync(npmrcPath).toString();
-        expect(npmrcContent).toContain(npmrcConfigured_new_registry);
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry_1);
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry_2);
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry_3);
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry_4);
         expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(4);
     });
 
@@ -112,7 +121,10 @@ describe('configuring jfrog credentials', () => {
         fs.writeFileSync(npmrcPath, npmrcConfigured_outdated_token);
         registryInitializerPrototype.initRegistry();
         const npmrcContent = fs.readFileSync(npmrcPath).toString();
-        expect(npmrcContent).toContain(npmrcConfigured_new_registry);
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry_1);
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry_2);
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry_3);
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry_4);
         expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(4);
     });
 
@@ -144,7 +156,7 @@ describe('configuring jfrog credentials', () => {
         fs.mkdirSync(gradleHome, {recursive: true});
 
         if (createNpmrc) {
-            fs.writeFileSync(npmrcPath, npmrcConfigured_new_registry);
+            fs.writeFileSync(npmrcPath, npmrcConfigured_new_registry_1 + "\n" + npmrcConfigured_new_registry_2 + "\n" + npmrcConfigured_new_registry_3 + "\n" + npmrcConfigured_new_registry_4 + "\n");
         }
 
         if (createGradleProperties) {
