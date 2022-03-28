@@ -1,5 +1,5 @@
 name: Continuous Integration
-on: [pull_request]
+on: [ pull_request ]
 
 jobs:
   test:
@@ -29,7 +29,7 @@ jobs:
         run: npm ci
 
       - name: Run Jest
-        run: env && node_modules/.bin/jest --verbose
+        run: node_modules/.bin/jest --verbose
 
   compile:
     env:
