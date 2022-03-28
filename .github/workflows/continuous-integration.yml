@@ -33,7 +33,7 @@ jobs:
         run: npm ci
 
       - name: Run Jest
-        run: node_modules/.bin/jest --verbose
+        run: env && node_modules/.bin/jest --verbose
 
   compile:
     runs-on: ${{ matrix.os }}
