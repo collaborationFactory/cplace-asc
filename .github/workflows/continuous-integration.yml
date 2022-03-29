@@ -105,6 +105,10 @@ jobs:
         working-directory: ./cplace-project-planning
         run: ./gradlew generatePluginDescriptor
 
+      - name: Create plugin descriptors cplace-paw
+        working-directory: ./cplace-paw
+        run: ./gradlew generatePluginDescriptor
+
       - name: Build
         run: npm run prepare
 
