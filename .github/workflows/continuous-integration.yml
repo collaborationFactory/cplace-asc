@@ -61,6 +61,13 @@ jobs:
           path: main
           token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
+      - name: Checkout cplace
+        uses: actions/checkout@v3
+        with:
+          repository: collaborationFactory/cplace-project-planning
+          path: cplace-project-planning
+          token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
+
       - name: Setup node
         uses: actions/setup-node@v2
         with:
@@ -83,13 +90,21 @@ jobs:
           distribution: 'adopt'
           java-version: '11'
 
-      - name: Create plugin descriptors
+      - name: Create plugin descriptors in main
         working-directory: ./main
+        run: ./gradlew generatePluginDescriptor
+
+      - name: Create plugin descriptors cplace-project-planning
+        working-directory: ./cplace-project-planning
         run: ./gradlew generatePluginDescriptor
 
       - name: Build
         run: npm run prepare
 
-      - name: Compile
+      - name: Compile main
         working-directory: ./main
+        run: node ../dist/index.js
+
+      - name: Compile cplace-project-planning
+        working-directory: ./cplace-project-planning
         run: node ../dist/index.js
