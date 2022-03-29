@@ -95,7 +95,7 @@ describe('configuring jfrog credentials', () => {
 
         expect(npmrcContent).toContain(npmrc_not_configured);
         expect(npmrcContent).toContain(npmrcConfigured_new_registry);
-        expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(4);
+        expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(8);
     });
 
     test('cplace-asc can update old registry url', () => {
@@ -104,7 +104,7 @@ describe('configuring jfrog credentials', () => {
         registryInitializerPrototype.initRegistry();
         const npmrcContent = fs.readFileSync(npmrcPath).toString();
         expect(npmrcContent).toContain(npmrcConfigured_new_registry);
-        expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(4);
+        expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(8);
     });
 
     test('cplace-asc can update outdated auth token', () => {
@@ -113,7 +113,7 @@ describe('configuring jfrog credentials', () => {
         registryInitializerPrototype.initRegistry();
         const npmrcContent = fs.readFileSync(npmrcPath).toString();
         expect(npmrcContent).toContain(npmrcConfigured_new_registry);
-        expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(4);
+        expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(8);
     });
 
     test('cplace-asc does not exit if gradle home exists without gradle properties', () => {

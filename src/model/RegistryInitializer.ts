@@ -32,12 +32,12 @@ export class RegistryInitializer {
 
             this.initOrUpdateJfrogCredentials(
                 '@cplace-next', 
-                `${RegistryInitializer.JROG_REGISTRY_URL}${RegistryInitializer.JROG_CPLACE_NPM_REGISTRY}/`, 
+                `${RegistryInitializer.JROG_REGISTRY_URL}`, 
                 'cplace-npm-local', 
                 RegistryInitializer.JROG_CPLACE_NPM_REGISTRY);
             this.initOrUpdateJfrogCredentials(
                 '@cplace-3rdparty-modified', 
-                `${RegistryInitializer.JROG_REGISTRY_URL}${RegistryInitializer.JROG_CPLACE_ASSETS_NPM_REGISTRY}/`, 
+                `${RegistryInitializer.JROG_REGISTRY_URL}`, 
                 RegistryInitializer.JROG_CPLACE_ASSETS_NPM_REGISTRY, 
                 RegistryInitializer.JROG_CPLACE_ASSETS_NPM_REGISTRY);
         } catch (e) {
@@ -117,8 +117,8 @@ export class RegistryInitializer {
 
         RegistryInitializer.createNmprcIfNotExistent(this.npmrcPath)
         this.currentNpmrcConfig = fs.readFileSync(this.npmrcPath, {encoding: 'utf-8'}).toString();
-        if (!this.hasJfrogCredentials(scope, registryUrl)) {
-            this.appendToExistingNpmrc(scope, registryUrl);
+        if (!this.hasJfrogCredentials(scope, registryUrl, oldRegistryName) && !this.hasJfrogCredentials(scope, registryUrl, newRegistryName)) {
+            this.appendToExistingNpmrc(scope, registryUrl, newRegistryName);
         } else {
             this.updateNPMRC(registryUrl, oldRegistryName, newRegistryName);
         }
@@ -132,16 +132,18 @@ export class RegistryInitializer {
         }
     }
 
-    private hasJfrogCredentials(scope: string, registry: string): boolean {
-        return this.currentNpmrcConfig.includes(`${scope}:registry=https:${registry}`);
+    private hasJfrogCredentials(scope: string, registryUrl: string, registryName: string): boolean {
+        return this.currentNpmrcConfig.includes(`${scope}:registry=https:${registryUrl}${registryName}/`);
     }
 
-    private appendToExistingNpmrc(scope: string, registryUrl: string) {
+    private appendToExistingNpmrc(scope: string, registryUrl: string, registryName: string) {
         console.info("⟲ Append config to existing config at: ", this.npmrcPath);
-        let npmrc = `\n${scope}:registry=https:${registryUrl}\n`;
-        npmrc = npmrc + `${registryUrl}:_auth=${this.npmrcBasicAuthToken}\n`;
-        npmrc = npmrc + `${registryUrl}:always-auth=true\n`;
-        npmrc = npmrc + `${registryUrl}:email=${this.npmrcUser}\n`;
+
+        const fullRegistryPath = `${registryUrl}${registryName}/`;
+        let npmrc = `\n${scope}:registry=https:${fullRegistryPath}\n`;
+        npmrc = npmrc + `${fullRegistryPath}:_auth=${this.npmrcBasicAuthToken}\n`;
+        npmrc = npmrc + `${fullRegistryPath}:always-auth=true\n`;
+        npmrc = npmrc + `${fullRegistryPath}:email=${this.npmrcUser}\n`;
         fs.appendFileSync(this.npmrcPath, npmrc, {encoding: 'utf-8'});
         console.log(cgreen`✓`, 'Appended config to existing config at: ', this.npmrcPath);
     };
@@ -150,11 +152,12 @@ export class RegistryInitializer {
         console.info("⟲ Updating npm config at: ", this.npmrcPath);
         this.currentNpmrcConfig = this.currentNpmrcConfig.replace(new RegExp(oldRegistryName, 'g'), newRegistryName);
 
-        const authRegex = new RegExp(registryUrl.replace(/\./g, '\\.') + ':_auth *= *.*', 'i');
-        this.currentNpmrcConfig = this.currentNpmrcConfig.replace(authRegex, `${registryUrl}:_auth=${this.npmrcBasicAuthToken}`);
+        const fullRegistryPath = `${registryUrl}${newRegistryName}/`
+        const authRegex = new RegExp(fullRegistryPath.replace(/\./g, '\\.') + ':_auth *= *.*', 'i');
+        this.currentNpmrcConfig = this.currentNpmrcConfig.replace(authRegex, `${fullRegistryPath}:_auth=${this.npmrcBasicAuthToken}`);
 
-        const userRegex = new RegExp(registryUrl.replace(/\./g, '\\.') + ':email *= *.*', 'i');
-        this.currentNpmrcConfig = this.currentNpmrcConfig.replace(userRegex, `${registryUrl}:email=${this.npmrcUser}`);
+        const userRegex = new RegExp(fullRegistryPath.replace(/\./g, '\\.') + ':email *= *.*', 'i');
+        this.currentNpmrcConfig = this.currentNpmrcConfig.replace(userRegex, `${fullRegistryPath}:email=${this.npmrcUser}`);
 
         console.log(cgreen`✓`, 'Updated config at: ', this.npmrcPath);
         fs.writeFileSync(this.npmrcPath, this.currentNpmrcConfig, {encoding: 'utf-8'});
