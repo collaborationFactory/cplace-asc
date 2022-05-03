@@ -1,4 +1,4 @@
-import {cwarn} from "../utils";
+import { cwarn } from '../utils';
 
 /**
  * Checks improper LESS escaping
@@ -7,13 +7,20 @@ import {cwarn} from "../utils";
  */
 function checkImproperLessEscaping(cssOutput: string): string | undefined {
     const cssOutputArray = cssOutput.split('\n');
-    const foundImproperLessEscaping = cssOutputArray.reduce((acc: string[], val: string) => {
-        if (val.includes('calc(') && !val.includes('~') && !val.includes('--')) {
-            const spacer = '  ';
-            acc.push(spacer.concat(val.trim()));
-        }
-        return acc;
-    }, []);
+    const foundImproperLessEscaping = cssOutputArray.reduce(
+        (acc: string[], val: string) => {
+            if (
+                val.includes('calc(') &&
+                !val.includes('~') &&
+                !val.includes('--')
+            ) {
+                const spacer = '  ';
+                acc.push(spacer.concat(val.trim()));
+            }
+            return acc;
+        },
+        []
+    );
     if (foundImproperLessEscaping && foundImproperLessEscaping.length) {
         return foundImproperLessEscaping.join('\n');
     }
@@ -29,7 +36,10 @@ export function lessEscapePlugin(pluginName: string) {
     return {
         process: (src, extra) => {
             const improperLessEscaping = checkImproperLessEscaping(src);
-            if (improperLessEscaping && !improperLessEscapedFiles.has(extra.fileInfo.filename)) {
+            if (
+                improperLessEscaping &&
+                !improperLessEscapedFiles.has(extra.fileInfo.filename)
+            ) {
                 const spacer = ' ';
                 console.log(
                     cwarn`⇢ [${pluginName}] LESS not properly escaped in ${extra.fileInfo.filename}:`,
@@ -45,6 +55,6 @@ export function lessEscapePlugin(pluginName: string) {
                 }
             }
             return src;
-        }
-    }
+        },
+    };
 }

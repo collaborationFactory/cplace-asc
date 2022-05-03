@@ -3,7 +3,7 @@
  */
 
 import * as path from 'path';
-import {loader} from 'webpack';
+import { loader } from 'webpack';
 
 /*
     This file is configured by `TypescriptCompiler` as a loader for Webpack
@@ -11,12 +11,15 @@ import {loader} from 'webpack';
 
 export default function (this: loader.LoaderContext, source: string, map: any) {
     // @ts-ignore
-    if (this.resourcePath === path.resolve(this.rootContext, this.query.entry)) {
-        const requireContext = '\n//======================================================\n' +
+    if (
+        this.resourcePath === path.resolve(this.rootContext, this.query.entry)
+    ) {
+        const requireContext =
+            '\n//======================================================\n' +
             'exports.default = require.context(".", true, /.js$/);\n' +
             '//======================================================\n';
 
         source = source + requireContext;
     }
     this.callback(null, source, map);
-};
+}
