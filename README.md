@@ -1,12 +1,13 @@
 # Document Control / Repository Information
-Item | Value 
---- | ---
-Owner |	Christian Kaltenbach, Philip Stöhrer, Stefan Stadler
-Team |	none yet
-Project  | none
-Parent |	none
-Developed by |	collaboration Factory AG
-Description |	Unser Kommandozeilen-Werkzeug um Frontend Assets zu bauen.
+
+| Item         | Value                                                      |
+| ------------ | ---------------------------------------------------------- |
+| Owner        | Christian Kaltenbach, Philip Stöhrer, Stefan Stadler       |
+| Team         | none yet                                                   |
+| Project      | none                                                       |
+| Parent       | none                                                       |
+| Developed by | collaboration Factory AG                                   |
+| Description  | Unser Kommandozeilen-Werkzeug um Frontend Assets zu bauen. |
 
 # cplace-asc
 
@@ -25,7 +26,7 @@ $ npm install -g @cplace/asc
 The assets compiler supports multiple parameters:
 
 ```
-$ cplace-asc --help   
+$ cplace-asc --help
 ⇢ Checking whether newer version is available... ✓
 
 
@@ -88,7 +89,8 @@ $ cplace-asc --help
 </table>
 
 The tool will automatically check for updates on every run so you will be prompted with a large message when a newer version is available:
-``` 
+
+```
 $ cplace-asc --help
 ⇢ Checking whether newer version is available... ✓
 !---------------------------------------------!
@@ -107,23 +109,21 @@ To publish a new version on the NPM registry take the following steps:
 1. Manually bump the version number in `package.json` as desired (major / minor / patch).
 2. Push the update to GitHub.
 3. Create a new Release on GitHub:
-   1. Create _a new tag_ matching the version you want to publish, e.g. `v0.20.3`.
-   2. Put in the proper release notes as description of the Release.
+    1. Create _a new tag_ matching the version you want to publish, e.g. `v0.20.3`.
+    2. Put in the proper release notes as description of the Release.
 4. On creating the Release (_not as a draft_) the GitHub workflow will run and publish the package to NPM automatically.
 
 ## Source File Requirements
 
 ### TypeScript
+
 For each plugin there must be one main entry file `assets/ts/app.ts` which will be used as entry point for bundling. As such any other source file must be imported (transitively) by that file.
 
 If you have additional dependencies to typings files that are placed locally in your plugin you have to include an `extra-types.json` file. This file can have the following strucutre:
 
 ```json
 {
-    "declarations": [
-        "relative/path/to/typings/file",
-        "..."
-    ],
+    "declarations": ["relative/path/to/typings/file", "..."],
     "externals": {
         "nameOfImport": "_variableName"
     }
@@ -133,25 +133,28 @@ If you have additional dependencies to typings files that are placed locally in 
 As you can see you can specify the relative path (taken from the location of the `extra-types.json` file) to any typings definitions (`.d.ts`) file which will then be taken into account by the TypeScript compiler. Furthermore, in order for Webpack to complete the bundling process you most likely will also have to specify the externals that this typings file provides. These are given in the `externals` object. The key must equal to the name of the import in TypeScript (e.g. for `import * as myXs from 'xs'` the key would be `xs`). The value is equal to the global variable name to be resolved by Webpack.
 
 ### LESS
-For each plugin there must be one main entry file: either `assets/less/plugin.less` *or* `assets/less/cplace.less`. The generated CSS file will be called `assets/generated_css/plugin.css` *or* `assets/generated_css/cplace.css` respectively.
+
+For each plugin there must be one main entry file: either `assets/less/plugin.less` _or_ `assets/less/cplace.less`. The generated CSS file will be called `assets/generated_css/plugin.css` _or_ `assets/generated_css/cplace.css` respectively.
 
 ### Compress CSS
+
 For each plugin there must be one main entry file `assets/css/imports.css` which will be used as entry point for combining and compressing CSS code.
 
 ## Details
 
-- The compiler will spawn at most `X` number of compile processes in parallel where `X` equals the number of cores available on the system.
-- Compilation is run inside a subprocess via a scheduler. Cancelling the assets compiler may leave intermediate processing steps running for a short time in the background.
-- The TypeScript compiler is the one located in the `main` repository's `node_modules` directory.
-- The `clean-css` compiler is the one located in the `main` repository's `node_modules` directory.
+-   The compiler will spawn at most `X` number of compile processes in parallel where `X` equals the number of cores available on the system.
+-   Compilation is run inside a subprocess via a scheduler. Cancelling the assets compiler may leave intermediate processing steps running for a short time in the background.
+-   The TypeScript compiler is the one located in the `main` repository's `node_modules` directory.
+-   The `clean-css` compiler is the one located in the `main` repository's `node_modules` directory.
 
 ## Known Caveats
 
 ### Implicit Dependencies
 
-As of version 3.4 the TypeScript compiler supports *incremental* compilation. As such it tracks which files have to be recompiled due to changes of other source files. However, this does not cover implicit dependencies. See the following example:
+As of version 3.4 the TypeScript compiler supports _incremental_ compilation. As such it tracks which files have to be recompiled due to changes of other source files. However, this does not cover implicit dependencies. See the following example:
 
 **types.ts**:
+
 ```typescript
 export interface IComputationResult {
     status: number;
@@ -160,6 +163,7 @@ export interface IComputationResult {
 ```
 
 **utils.ts**
+
 ```typescript
 import { IComputationResult } from './types';
 export function computeValue(input: string): IComputationResult {
@@ -171,22 +175,24 @@ export function computeValue(input: string): IComputationResult {
 ```
 
 **component.ts**
+
 ```typescript
 import { computeValue } from './utils';
 
 export function componentLogic(): void {
     // does some things...
     const result = computeValue('my complex input');
-    
+
     console.log(result.status, result.content);
 }
 ```
 
-As you can see in the example above, `component.ts` has an implicit dependency on `types.ts` as it has the `result` variable with an inferred type of `IComputationResult`. Changing the `IComputationResult`, e.g. by renaming content to `output`, will *not* cause a compilation error if the TypeScript compiler is running in watch mode with incremental compilation (*default behavior*). Only a full recompilation will result in the error to be detected.
+As you can see in the example above, `component.ts` has an implicit dependency on `types.ts` as it has the `result` variable with an inferred type of `IComputationResult`. Changing the `IComputationResult`, e.g. by renaming content to `output`, will _not_ cause a compilation error if the TypeScript compiler is running in watch mode with incremental compilation (_default behavior_). Only a full recompilation will result in the error to be detected.
 
 In order to mitigate this issue you could use the following workaround by explicitly declaring the type of the variable you store the method result in (IntelliJ provides a quickfix for this: "Specify type explicitly"):
 
 **component.ts**
+
 ```typescript
 import { computeValue } from './utils';
 // !! See the new import making the dependency explicit
@@ -196,7 +202,7 @@ export function componentLogic(): void {
     // does some things...
     // !! See the explicit variable type
     const result: IComputationResult = computeValue('my complex input');
-    
+
     console.log(result.status, result.content);
 }
 ```

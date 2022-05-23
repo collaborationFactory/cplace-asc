@@ -1,29 +1,17 @@
 {
-  "compilerOptions": {
-    "rootDirs": [
-      "src",
-      "test"
-    ],
-    "target": "es2016",
-    "lib": [
-      "es2016",
-      "dom",
-      "es2017.string"
-    ],
-    "module": "commonjs",
-    "strict": true,
-    "noImplicitAny": false,
-    "declaration": false,
-    "declarationMap": false,
-    "sourceMap": true,
-    "outDir": "./dist"
-  },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "**/*.spec.ts"
-  ],
-  "compileOnSave": true
+    "compilerOptions": {
+        "rootDirs": ["src", "test"],
+        "target": "es2016",
+        "lib": ["es2016", "dom", "es2017.string"],
+        "module": "commonjs",
+        "strict": true,
+        "noImplicitAny": false,
+        "declaration": false,
+        "declarationMap": false,
+        "sourceMap": true,
+        "outDir": "./dist"
+    },
+    "include": ["src/**/*"],
+    "exclude": ["**/*.spec.ts"],
+    "compileOnSave": true
 }
-

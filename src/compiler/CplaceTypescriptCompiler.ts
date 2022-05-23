@@ -3,15 +3,15 @@
  */
 
 import * as path from 'path';
-import {CReplacePlugin} from './CReplacePlugin';
+import { CReplacePlugin } from './CReplacePlugin';
 import * as webpack from 'webpack';
-import {Configuration, ExternalsElement} from 'webpack';
-import {isFromLibrary} from '../model/utils';
-import {debug, isDebugEnabled} from '../utils';
+import { Configuration, ExternalsElement } from 'webpack';
+import { isFromLibrary } from '../model/utils';
+import { debug, isDebugEnabled } from '../utils';
 import * as fs from 'fs';
 import * as copyFiles from 'copyfiles';
-import {AbstractTypescriptCompiler} from './AbstractTypescriptCompiler';
-import {CplaceTSConfigGenerator} from "../model/CplaceTSConfigGenerator";
+import { AbstractTypescriptCompiler } from './AbstractTypescriptCompiler';
+import { CplaceTSConfigGenerator } from '../model/CplaceTSConfigGenerator';
 
 export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
     public static readonly DEST_DIR = 'generated_js';
@@ -22,15 +22,25 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
         d3: 'd3',
         moment: 'moment',
         underscore: '_',
-        draggable: 'Draggable'
+        draggable: 'Draggable',
     };
 
-    constructor(pluginName: string,
-                dependencyPaths: string[],
-                assetsPath: string,
-                mainRepoDir: string,
-                isProduction: boolean) {
-        super(pluginName, dependencyPaths, assetsPath, mainRepoDir, isProduction, 'ts', CplaceTypescriptCompiler.DEST_DIR);
+    constructor(
+        pluginName: string,
+        dependencyPaths: string[],
+        assetsPath: string,
+        mainRepoDir: string,
+        isProduction: boolean
+    ) {
+        super(
+            pluginName,
+            dependencyPaths,
+            assetsPath,
+            mainRepoDir,
+            isProduction,
+            'ts',
+            CplaceTypescriptCompiler.DEST_DIR
+        );
     }
 
     public static getJavaScriptOutputDir(assetsPath: string): string {
@@ -49,7 +59,11 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
     private runWebpack() {
         return new Promise((resolve, reject) => {
             // remove previously generated webpack bundle if exists (so it does not append)
-            const bundleFile = path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, 'tsc.js');
+            const bundleFile = path.resolve(
+                this.assetsPath,
+                CplaceTypescriptCompiler.DEST_DIR,
+                'tsc.js'
+            );
             if (fs.existsSync(bundleFile)) {
                 fs.unlinkSync(bundleFile);
             }
@@ -69,9 +83,12 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
 
     private getWebpackConfig(): Configuration {
         const config: Configuration = {
-            context: path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR),
+            context: path.resolve(
+                this.assetsPath,
+                CplaceTypescriptCompiler.DEST_DIR
+            ),
             entry: {
-                tsc: './' + CplaceTypescriptCompiler.ENTRY
+                tsc: './' + CplaceTypescriptCompiler.ENTRY,
             },
             externals: this.populateWebpackExternals(),
             mode: 'development',
@@ -80,24 +97,39 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                     {
                         test: /\.js$/,
                         exclude: /node_modules/,
-                        use: [{
-                            loader: path.resolve(__filename, '../contextInjectorLoader.js'),
-                            options: {
-                                entry: CplaceTypescriptCompiler.ENTRY
-                            }
-                        }]
+                        use: [
+                            {
+                                loader: path.resolve(
+                                    __filename,
+                                    '../contextInjectorLoader.js'
+                                ),
+                                options: {
+                                    entry: CplaceTypescriptCompiler.ENTRY,
+                                },
+                            },
+                        ],
                     },
                     {
-                        test: new RegExp(`\.(${CplaceTypescriptCompiler.STATIC_IMPORT_EXTENSIONS})$`),
-                        use: [{
-                            loader: path.resolve(__filename, '../../../node_modules/raw-loader')
-                        }]
-                    }
-                ]
+                        test: new RegExp(
+                            `\.(${CplaceTypescriptCompiler.STATIC_IMPORT_EXTENSIONS})$`
+                        ),
+                        use: [
+                            {
+                                loader: path.resolve(
+                                    __filename,
+                                    '../../../node_modules/raw-loader'
+                                ),
+                            },
+                        ],
+                    },
+                ],
             },
             output: {
                 filename: '[name].js',
-                path: path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR),
+                path: path.resolve(
+                    this.assetsPath,
+                    CplaceTypescriptCompiler.DEST_DIR
+                ),
                 pathinfo: true,
                 /**
                  * The plugin will be exported as a webpackContext with exported name in the app.ts.
@@ -106,7 +138,7 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                  * @link https://webpack.js.org/configuration/output/
                  */
                 library: '$' + this.pluginName.replace(/\./g, '_'),
-                libraryExport: 'default'
+                libraryExport: 'default',
             },
             plugins: [
                 new CReplacePlugin(),
@@ -115,8 +147,8 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                 })
             ],
             resolve: {
-                extensions: ['.ts', '.js']
-            }
+                extensions: ['.ts', '.js'],
+            },
         };
 
         if (!this.isProduction) {
@@ -125,10 +157,15 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
             config.module.rules.push({
                 test: /\.js$/,
                 exclude: /node_modules/,
-                use: [{
-                    loader: path.resolve(__filename, '../../../node_modules/source-map-loader')
-                }],
-                enforce: 'pre'
+                use: [
+                    {
+                        loader: path.resolve(
+                            __filename,
+                            '../../../node_modules/source-map-loader'
+                        ),
+                    },
+                ],
+                enforce: 'pre',
             });
         }
 
@@ -137,15 +174,25 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
 
     private populateWebpackExternals(): ExternalsElement[] {
         const pluginDir = path.dirname(this.assetsPath);
-        const extraTypes = CplaceTSConfigGenerator.getExtraTypes(pluginDir, this.dependencyPaths);
+        const extraTypes = CplaceTSConfigGenerator.getExtraTypes(
+            pluginDir,
+            this.dependencyPaths
+        );
 
-        return [{
-            ...CplaceTypescriptCompiler.DEFAULT_EXTERNALS,
-            ...(extraTypes ? extraTypes.externals : {})
-        }, this.resolveWebpackExternal.bind(this)];
+        return [
+            {
+                ...CplaceTypescriptCompiler.DEFAULT_EXTERNALS,
+                ...(extraTypes ? extraTypes.externals : {}),
+            },
+            this.resolveWebpackExternal.bind(this),
+        ];
     }
 
-    private resolveWebpackExternal(context: string, request: string, callback: Function) {
+    private resolveWebpackExternal(
+        context: string,
+        request: string,
+        callback: Function
+    ) {
         if (isFromLibrary(request)) {
             const newRequest = request.substr(1);
             return callback(null, newRequest);
@@ -156,14 +203,18 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
     private async copyStaticFiles(): Promise<void> {
         const tsAssetsPath = path.resolve(this.assetsPath, 'ts');
         const srcGlob = `${tsAssetsPath}/**/*.+(${CplaceTypescriptCompiler.STATIC_IMPORT_EXTENSIONS})`;
-        const dest = path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR) + path.sep;
+        const dest =
+            path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR) +
+            path.sep;
         const upLength = tsAssetsPath.split(path.sep).length;
         const options = {
             up: upLength,
-            verbose: isDebugEnabled()
+            verbose: isDebugEnabled(),
         };
 
-        debug(`(TypescriptCompiler) [${this.pluginName}] copying static files...`);
+        debug(
+            `(TypescriptCompiler) [${this.pluginName}] copying static files...`
+        );
         return new Promise((resolve, reject) => {
             copyFiles([srcGlob, dest], options, (error) => {
                 if (error) {

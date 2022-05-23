@@ -1,15 +1,15 @@
-import {CompilationResult, ICompiler} from "./interfaces";
+import { CompilationResult, ICompiler } from './interfaces';
 import * as fs from 'fs';
-import * as path from "path";
-import {NPMResolver} from "../model/NPMResolver";
-import {cerr, cgreen, debug, formatDuration} from "../utils";
-import {Configuration} from "webpack";
-import * as webpack from "webpack";
+import * as path from 'path';
+import { NPMResolver } from '../model/NPMResolver';
+import { cerr, cgreen, debug, formatDuration} from '../utils';
+import { Configuration } from 'webpack';
+import * as webpack from 'webpack';
 import {merge} from 'webpack-merge';
-import spawn = require("cross-spawn");
-import * as crypto from "crypto";
-import {CompressCssCompiler} from "./CompressCssCompiler";
-import {CplaceTypescriptCompiler} from "./CplaceTypescriptCompiler";
+import spawn = require('cross-spawn');
+import * as crypto from 'crypto';
+import { CompressCssCompiler } from './CompressCssCompiler';
+import { CplaceTypescriptCompiler } from './CplaceTypescriptCompiler';
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
@@ -20,17 +20,26 @@ export class VendorCompiler implements ICompiler {
     private static readonly VENDOR_ENTRY_HASH = 'index.js.hash';
     private static readonly VENDOR_JS_FILE = 'vendor.js';
     private static readonly VENDOR_CSS_FILE = 'vendor.css';
-    private static readonly JAVASCRIPT_TO_BE_COMPRESSED = 'javaScriptIncludesToBeCompressed.txt';
+    private static readonly JAVASCRIPT_TO_BE_COMPRESSED =
+        'javaScriptIncludesToBeCompressed.txt';
     private static readonly CSS_IMPORTS = 'imports.css';
     private static readonly PLUGIN_SPECIFIC_VENDOR_CONFIG = 'vendor.config.js';
 
     private compressCssCompiler: CompressCssCompiler;
 
-    constructor(private readonly pluginName: string,
-                private readonly dependencyPaths: string[],
-                private readonly assetsPath: string,
-                private readonly mainRepoDir: string) {
-        this.compressCssCompiler = new CompressCssCompiler(this.pluginName, this.dependencyPaths, this.assetsPath, this.mainRepoDir, true);
+    constructor(
+        private readonly pluginName: string,
+        private readonly dependencyPaths: string[],
+        private readonly assetsPath: string,
+        private readonly mainRepoDir: string
+    ) {
+        this.compressCssCompiler = new CompressCssCompiler(
+            this.pluginName,
+            this.dependencyPaths,
+            this.assetsPath,
+            this.mainRepoDir,
+            true
+        );
     }
 
     /**
@@ -40,13 +49,22 @@ export class VendorCompiler implements ICompiler {
         console.log(`⟲ [${this.pluginName}] starting vendors compilation...`);
         const startTime = new Date().getTime();
 
-        const dependenciesWereUpdated = NPMResolver.installPluginDependenciesAndCreateHash(this.pluginName, this.assetsPath);
+        const dependenciesWereUpdated =
+            NPMResolver.installPluginDependenciesAndCreateHash(
+                this.pluginName,
+                this.assetsPath
+            );
 
         const pluginIndexExists = this.tscPluginIndex();
 
         if (!pluginIndexExists) {
-            console.log(cgreen`⇢`, `[${this.pluginName}] index.ts not found. Bundling skipped!`);
-            debug(`(VendorCompiler) [${this.pluginName}] To bundle plugin vendors, please add the index.ts file!`);
+            console.log(
+                cgreen`⇢`,
+                `[${this.pluginName}] index.ts not found. Bundling skipped!`
+            );
+            debug(
+                `(VendorCompiler) [${this.pluginName}] To bundle plugin vendors, please add the index.ts file!`
+            );
             this.removeVendors();
             this.prepareVendorJSForCompression();
             await this.prepareVendorCSSForCompression();
@@ -58,7 +76,10 @@ export class VendorCompiler implements ICompiler {
 
         debug(`(VendorCompiler) [${this.pluginName}] comparing hash files...`);
         if (oldIndexHash === newIndexHash && !dependenciesWereUpdated) {
-            console.log(cgreen`✓`, `[${this.pluginName}] vendors are up to date`);
+            console.log(
+                cgreen`✓`,
+                `[${this.pluginName}] vendors are up to date`
+            );
             return Promise.resolve(CompilationResult.UNCHANGED);
         }
         debug(`(VendorCompiler) [${this.pluginName}] hash files changed`);
@@ -68,7 +89,12 @@ export class VendorCompiler implements ICompiler {
         await this.prepareVendorCSSForCompression();
 
         const endTime = new Date().getTime();
-        console.log(cgreen`✓`, `[${this.pluginName}] vendors compiled (${formatDuration(endTime - startTime)})`);
+        console.log(
+            cgreen`✓`,
+            `[${this.pluginName}] vendors compiled (${formatDuration(
+                endTime - startTime
+            )})`
+        );
 
         return Promise.resolve(CompilationResult.CHANGED);
     }
@@ -84,10 +110,18 @@ export class VendorCompiler implements ICompiler {
         if (!fs.existsSync(index)) {
             return false;
         }
-        const res = spawn.sync(tsc, [path.join(this.assetsPath, 'index.ts'), `--outDir`, path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR)]);
-        debug(`(VendorCompiler) [${this.pluginName}] index.ts tsc return code: ${res.status}`);
+        const res = spawn.sync(tsc, [
+            path.join(this.assetsPath, 'index.ts'),
+            `--outDir`,
+            path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR),
+        ]);
+        debug(
+            `(VendorCompiler) [${this.pluginName}] index.ts tsc return code: ${res.status}`
+        );
         if (res.status !== 0) {
-            debug(`(VendorCompiler) [${this.pluginName}] index.ts compilation failed with error ${res.stdout}`);
+            debug(
+                `(VendorCompiler) [${this.pluginName}] index.ts compilation failed with error ${res.stdout}`
+            );
             throw Error(`[${this.pluginName}] index.ts compilation failed!`);
         }
         debug(`(VendorCompiler) [${this.pluginName}] index.ts compiled`);
@@ -101,7 +135,7 @@ export class VendorCompiler implements ICompiler {
     private readIndexHash(): string | null {
         const hashPath = this.getIndexHashFilePath();
         if (fs.existsSync(hashPath)) {
-            return fs.readFileSync(hashPath, {encoding: 'utf8'});
+            return fs.readFileSync(hashPath, { encoding: 'utf8' });
         } else {
             return null;
         }
@@ -113,11 +147,9 @@ export class VendorCompiler implements ICompiler {
      */
     private createIndexHashFile(): string {
         const hash = this.getHash4Index();
-        fs.writeFileSync(
-            this.getIndexHashFilePath(),
-            hash,
-            {encoding: 'utf8'}
-        );
+        fs.writeFileSync(this.getIndexHashFilePath(), hash, {
+            encoding: 'utf8',
+        });
         return hash;
     }
 
@@ -127,7 +159,13 @@ export class VendorCompiler implements ICompiler {
      */
     private getHash4Index(): string {
         const hash = crypto.createHash('sha256');
-        const data = fs.readFileSync(path.join(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_ENTRY));
+        const data = fs.readFileSync(
+            path.join(
+                this.assetsPath,
+                CplaceTypescriptCompiler.DEST_DIR,
+                VendorCompiler.VENDOR_ENTRY
+            )
+        );
         hash.update(data);
         return hash.digest('hex');
     }
@@ -137,7 +175,11 @@ export class VendorCompiler implements ICompiler {
      * @private
      */
     private getIndexHashFilePath(): string {
-        return path.join(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_ENTRY_HASH);
+        return path.join(
+            this.assetsPath,
+            CplaceTypescriptCompiler.DEST_DIR,
+            VendorCompiler.VENDOR_ENTRY_HASH
+        );
     }
 
     /**
@@ -152,12 +194,12 @@ export class VendorCompiler implements ICompiler {
 
         console.log(`⟲ [${this.pluginName}] loading custom vendor webpack configuration...`);
         try {
-            const pluginSpecificConfig = require(pluginSpecificConfigFile);    
+            const pluginSpecificConfig = require(pluginSpecificConfigFile);
             return pluginSpecificConfig;
         } catch (e) {
             console.error(cerr`Error while loading configuration ${pluginSpecificConfigFile}`);
             throw e;
-        }     
+        }
     }
 
     /**
@@ -167,19 +209,26 @@ export class VendorCompiler implements ICompiler {
     private getPluginWebpackConfig(): Configuration {
         return {
             mode: 'production',
-            entry: path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_ENTRY),
+            entry: path.resolve(
+                this.assetsPath,
+                CplaceTypescriptCompiler.DEST_DIR,
+                VendorCompiler.VENDOR_ENTRY
+            ),
             externals: {
                 jquery: 'jQuery'
             },
             output: {
-                path: path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR),
-                filename: VendorCompiler.VENDOR_JS_FILE
+                path: path.resolve(
+                    this.assetsPath,
+                    CplaceTypescriptCompiler.DEST_DIR
+                ),
+                filename: VendorCompiler.VENDOR_JS_FILE,
             },
             resolveLoader: {
-                modules: [path.resolve(__dirname, '../../', 'node_modules')]
+                modules: [path.resolve(__dirname, '../../', 'node_modules')],
             },
             resolve: {
-                modules: [path.resolve(this.assetsPath, 'node_modules'), path.resolve(this.assetsPath, 'js'), path.resolve(this.assetsPath, '3rdParty')]
+                modules: [path.resolve(this.assetsPath, 'node_modules'), path.resolve(this.assetsPath, 'js'), path.resolve(this.assetsPath, '3rdParty')],
             },
             optimization: {
                 minimize: true,
@@ -193,7 +242,7 @@ export class VendorCompiler implements ICompiler {
                                     discardComments: { removeAll: true },
                                 },
                             ],
-                        }
+                        },
                     }),
                     new UglifyJsPlugin({
                         extractComments: true,
@@ -202,50 +251,45 @@ export class VendorCompiler implements ICompiler {
                             output: {
                                 comments: false,
                             },
-                        }
-                    })
-                ]
+                        },
+                    }),
+                ],
             },
             devtool: false,
             plugins: [
                 new MiniCssExtractPlugin({
-                    filename: `../${VendorCompiler.DEST_CSS_DIR}/${VendorCompiler.VENDOR_CSS_FILE}`
-                })
+                    filename: `../${VendorCompiler.DEST_CSS_DIR}/${VendorCompiler.VENDOR_CSS_FILE}`,
+                }),
             ],
             module: {
                 rules: [
                     {
                         test: /\.css$/,
-                        use: [
-                            MiniCssExtractPlugin.loader,
-                            'css-loader'
-                        ]
+                        use: [MiniCssExtractPlugin.loader, 'css-loader'],
                     },
                     {
                         test: /\.(sass|scss)$/,
                         use: [
                             MiniCssExtractPlugin.loader,
                             'css-loader',
-                            'sass-loader'
-                        ]
+                            'sass-loader',
+                        ],
                     },
                     {
                         test: /\.less$/,
                         use: [
                             MiniCssExtractPlugin.loader,
                             'css-loader',
-                            'less-loader'
-                        ]
+                            'less-loader',
+                        ],
                     },
                     {
                         test: /\.(woff(2)?|ttf|eot|svg|png|jpe?g|gif)$/i,
-                        use: [
-                            'file-loader'
-                        ]
-                    }
-                ]
-            }
-        }
+                        use: ['file-loader'],
+                    },
+                ],
+            },
+        };
     }
 
     /**
@@ -261,7 +305,11 @@ export class VendorCompiler implements ICompiler {
 
             this.removeVendors();
 
-            const entryFile = path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_ENTRY);
+            const entryFile = path.resolve(
+                this.assetsPath,
+                CplaceTypescriptCompiler.DEST_DIR,
+                VendorCompiler.VENDOR_ENTRY
+            );
             const buffer = fs.readFileSync(entryFile);
 
             if (!buffer.length) {
@@ -278,7 +326,12 @@ export class VendorCompiler implements ICompiler {
                     reject(`${stats.toString()}`);
                 } else {
                     const endTime = new Date().getTime();
-                    console.log(cgreen`✓`, `[${this.pluginName}] vendors bundled (${formatDuration(endTime - startTime)})`);
+                    console.log(
+                        cgreen`✓`,
+                        `[${this.pluginName}] vendors bundled (${formatDuration(
+                            endTime - startTime
+                        )})`
+                    );
                     resolve();
                 }
             });
@@ -290,8 +343,16 @@ export class VendorCompiler implements ICompiler {
      * @private
      */
     private removeVendors(): void {
-        const vendorJsFile = path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_JS_FILE)
-        const vendorCssFile = path.resolve(this.assetsPath, VendorCompiler.DEST_CSS_DIR, VendorCompiler.VENDOR_CSS_FILE);
+        const vendorJsFile = path.resolve(
+            this.assetsPath,
+            CplaceTypescriptCompiler.DEST_DIR,
+            VendorCompiler.VENDOR_JS_FILE
+        );
+        const vendorCssFile = path.resolve(
+            this.assetsPath,
+            VendorCompiler.DEST_CSS_DIR,
+            VendorCompiler.VENDOR_CSS_FILE
+        );
         this.removeFileIfExists(vendorJsFile);
         this.removeFileIfExists(vendorCssFile);
     }
@@ -301,13 +362,28 @@ export class VendorCompiler implements ICompiler {
      * @private
      */
     private prepareVendorJSForCompression(): void {
-        const vendorJsPath = path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR, VendorCompiler.VENDOR_JS_FILE);
-        const javaScriptToBeCompressedPath = path.join(this.assetsPath, VendorCompiler.JAVASCRIPT_TO_BE_COMPRESSED);
+        const vendorJsPath = path.resolve(
+            this.assetsPath,
+            CplaceTypescriptCompiler.DEST_DIR,
+            VendorCompiler.VENDOR_JS_FILE
+        );
+        const javaScriptToBeCompressedPath = path.join(
+            this.assetsPath,
+            VendorCompiler.JAVASCRIPT_TO_BE_COMPRESSED
+        );
         const pathToInclude = `/${CplaceTypescriptCompiler.DEST_DIR}/${VendorCompiler.VENDOR_JS_FILE}`;
 
-        debug(`(VendorCompiler) [${this.pluginName}] cleaning JS vendor imports...`);
-        const noJsVendor = this.cleanVendor(vendorJsPath, javaScriptToBeCompressedPath, pathToInclude);
-        debug(`(VendorCompiler) [${this.pluginName}] JS vendor imports cleaned`);
+        debug(
+            `(VendorCompiler) [${this.pluginName}] cleaning JS vendor imports...`
+        );
+        const noJsVendor = this.cleanVendor(
+            vendorJsPath,
+            javaScriptToBeCompressedPath,
+            pathToInclude
+        );
+        debug(
+            `(VendorCompiler) [${this.pluginName}] JS vendor imports cleaned`
+        );
 
         if (noJsVendor) {
             return;
@@ -320,7 +396,11 @@ export class VendorCompiler implements ICompiler {
      * @private
      */
     private prepareVendorCSSForCompression(): Promise<any> {
-        const vendorCssPath = path.join(this.assetsPath, VendorCompiler.DEST_CSS_DIR, VendorCompiler.VENDOR_CSS_FILE);
+        const vendorCssPath = path.join(
+            this.assetsPath,
+            VendorCompiler.DEST_CSS_DIR,
+            VendorCompiler.VENDOR_CSS_FILE
+        );
         const cssFolder = path.join(this.assetsPath, 'css');
         const cssImportsPath = path.join(cssFolder, VendorCompiler.CSS_IMPORTS);
         const pathToInclude = `@import url("../${VendorCompiler.DEST_CSS_DIR}/${VendorCompiler.VENDOR_CSS_FILE}");`;
@@ -329,9 +409,17 @@ export class VendorCompiler implements ICompiler {
             fs.mkdirSync(cssFolder);
         }
 
-        debug(`(VendorCompiler) [${this.pluginName}] cleaning CSS vendor imports...`);
-        const noCssVendor = this.cleanVendor(vendorCssPath, cssImportsPath, pathToInclude);
-        debug(`(VendorCompiler) [${this.pluginName}] CSS vendor imports cleaned`);
+        debug(
+            `(VendorCompiler) [${this.pluginName}] cleaning CSS vendor imports...`
+        );
+        const noCssVendor = this.cleanVendor(
+            vendorCssPath,
+            cssImportsPath,
+            pathToInclude
+        );
+        debug(
+            `(VendorCompiler) [${this.pluginName}] CSS vendor imports cleaned`
+        );
 
         if (noCssVendor) {
             /*
@@ -358,22 +446,26 @@ export class VendorCompiler implements ICompiler {
      * @param pathToInclude Import path to include
      * @private
      */
-    private writeVendorImport(fileToWrite: string, pathToInclude: string): void {
+    private writeVendorImport(
+        fileToWrite: string,
+        pathToInclude: string
+    ): void {
         let buffer = '';
 
-        debug(`(VendorCompiler) [${this.pluginName}] Writing vendor imports...`);
+        debug(
+            `(VendorCompiler) [${this.pluginName}] Writing vendor imports...`
+        );
         if (fs.existsSync(fileToWrite)) {
             buffer = fs.readFileSync(fileToWrite, 'utf8');
 
             if (buffer.includes(pathToInclude)) {
                 let includedPaths = buffer.replace(/\r/g, '').split('\n');
-                includedPaths = includedPaths
-                    .map((line, index) => {
-                        if (index === includedPaths.length - 1) {
-                            return line.trim();
-                        }
-                        return line;
-                    });
+                includedPaths = includedPaths.map((line, index) => {
+                    if (index === includedPaths.length - 1) {
+                        return line.trim();
+                    }
+                    return line;
+                });
                 const index = includedPaths.indexOf(pathToInclude);
                 // removes included path if already exists
                 includedPaths.splice(index, 1);
@@ -393,9 +485,12 @@ export class VendorCompiler implements ICompiler {
      * @param pathToInclude Import path to include
      * @private
      */
-    private cleanVendor(vendorFilePath: string, fileToWrite: string, pathToInclude: string): boolean {
+    private cleanVendor(
+        vendorFilePath: string,
+        fileToWrite: string,
+        pathToInclude: string
+    ): boolean {
         if (!fs.existsSync(vendorFilePath)) {
-
             // if there is no file to write import to, skip further process
             if (!fs.existsSync(fileToWrite)) {
                 return true;

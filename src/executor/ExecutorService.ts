@@ -2,14 +2,22 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 
-import {createPool, Factory, Pool} from 'generic-pool';
+import { createPool, Factory, Pool } from 'generic-pool';
 import * as path from 'path';
 import * as node_process from 'process';
-import {ChildProcess, fork} from 'child_process';
-import {CompilationResult, ICompileRequest, ICompileResponse, ProcessState} from '../compiler/interfaces';
-import {debug} from '../utils';
+import { ChildProcess, fork } from 'child_process';
+import {
+    CompilationResult,
+    ICompileRequest,
+    ICompileResponse,
+    ProcessState,
+} from '../compiler/interfaces';
+import { debug } from '../utils';
 
-const COMPILER_ENTRY_POINT = path.resolve(path.dirname(__filename), '../compiler/index.js');
+const COMPILER_ENTRY_POINT = path.resolve(
+    path.dirname(__filename),
+    '../compiler/index.js'
+);
 
 const Processfactory: Factory<ChildProcess> = {
     create: async () => {
@@ -17,7 +25,7 @@ const Processfactory: Factory<ChildProcess> = {
     },
     destroy: async (_process: ChildProcess) => {
         return _process.kill();
-    }
+    },
 };
 
 export class ExecutorService {
@@ -28,7 +36,7 @@ export class ExecutorService {
     constructor(private readonly maxParallelism: number) {
         debug(`(ExecutorService) got maxParallelism: ${maxParallelism}`);
         this.pool = createPool(Processfactory, {
-            max: maxParallelism
+            max: maxParallelism,
         });
     }
 
@@ -36,45 +44,51 @@ export class ExecutorService {
         return this.running < this.maxParallelism;
     }
 
-    public run(compileRequest: ICompileRequest, watchFiles: boolean): Promise<CompilationResult> {
+    public run(
+        compileRequest: ICompileRequest,
+        watchFiles: boolean
+    ): Promise<CompilationResult> {
         this.running++;
         return new Promise<CompilationResult>((resolve, reject) => {
-            this.pool.acquire().then((process) => {
-                if (!watchFiles) {
-                    this.pids.push(process.pid);
-                }
-                let resolved = false;
-                const exit = (code) => {
-                    if (!resolved) {
-                        this.pool.release(process);
-                        this.running--;
-                        reject(code);
+            this.pool.acquire().then(
+                (process) => {
+                    if (!watchFiles) {
+                        this.pids.push(process.pid);
                     }
-                };
-
-                process.send(compileRequest);
-
-                process.once('message', (message: ICompileResponse) => {
-                    process.removeListener('exit', exit);
-                    this.pool.release(process);
-                    resolved = true;
-                    if (message.state === ProcessState.DONE) {
-                        this.running--;
-                        resolve(message.result);
-                    } else {
-                        this.running--;
-                        if (watchFiles) {
-                            reject(2);
-                        } else {
-                            this.killAllProcesses();
+                    let resolved = false;
+                    const exit = (code) => {
+                        if (!resolved) {
+                            this.pool.release(process);
+                            this.running--;
+                            reject(code);
                         }
-                    }
-                });
-                process.once('exit', exit);
-            }, (e) => {
-                this.running--;
-                throw Error(`failed to acquire process: ${e}`);
-            });
+                    };
+
+                    process.send(compileRequest);
+
+                    process.once('message', (message: ICompileResponse) => {
+                        process.removeListener('exit', exit);
+                        this.pool.release(process);
+                        resolved = true;
+                        if (message.state === ProcessState.DONE) {
+                            this.running--;
+                            resolve(message.result);
+                        } else {
+                            this.running--;
+                            if (watchFiles) {
+                                reject(2);
+                            } else {
+                                this.killAllProcesses();
+                            }
+                        }
+                    });
+                    process.once('exit', exit);
+                },
+                (e) => {
+                    this.running--;
+                    throw Error(`failed to acquire process: ${e}`);
+                }
+            );
         });
     }
 
@@ -83,7 +97,7 @@ export class ExecutorService {
      * @private
      */
     private killAllProcesses(): void {
-        this.pids.forEach(pid => {
+        this.pids.forEach((pid) => {
             node_process.kill(pid);
         });
     }
@@ -96,6 +110,4 @@ export class ExecutorService {
         );
         return drainPromise;
     }
-
-
 }

@@ -1,25 +1,30 @@
-import {debug} from '../utils';
+import { debug } from '../utils';
 
 export class JobDetails {
     public readonly before: string[];
     public readonly after: string[];
 
-    constructor(public readonly key: string,
-                before: string[],
-                after: string[]) {
+    constructor(
+        public readonly key: string,
+        before: string[],
+        after: string[]
+    ) {
         this.before = [...before];
         this.after = [...after];
     }
 }
 
 export class JobTracker {
-    private readonly keyToDetails: Map<string, JobDetails> = new Map<string, JobDetails>();
+    private readonly keyToDetails: Map<string, JobDetails> = new Map<
+        string,
+        JobDetails
+    >();
     private readonly dirtyKeys = new Set<string>();
     private readonly pendingKeys = new Set<string>();
     private readonly alreadyCompletedOnce = new Set<string>();
 
     constructor(public readonly jobs: JobDetails[]) {
-        jobs.forEach(j => {
+        jobs.forEach((j) => {
             this.keyToDetails.set(j.key, j);
             this.dirtyKeys.add(j.key);
         });
@@ -40,9 +45,9 @@ export class JobTracker {
         this.dirtyKeys.add(key);
 
         if (recursive) {
-            this.getDetails(key)
-                .after
-                .forEach(after => this.markDirty(after, true));
+            this.getDetails(key).after.forEach((after) =>
+                this.markDirty(after, true)
+            );
         }
     }
 
@@ -72,7 +77,9 @@ export class JobTracker {
         }
         this.pendingKeys.delete(key);
 
-        debug(`(JobTracker) [${key}] completed - output changed: ${outputChanged}`);
+        debug(
+            `(JobTracker) [${key}] completed - output changed: ${outputChanged}`
+        );
 
         let firstCompletion = false;
         if (!this.alreadyCompletedOnce.has(key)) {
@@ -81,9 +88,9 @@ export class JobTracker {
         }
 
         if (outputChanged || firstCompletion) {
-            this.getDetails(key)
-                .after
-                .forEach(after => this.markDirty(after, true));
+            this.getDetails(key).after.forEach((after) =>
+                this.markDirty(after, true)
+            );
         }
 
         return firstCompletion;
@@ -103,16 +110,17 @@ export class JobTracker {
         }
 
         const ready = [...this.dirtyKeys.values()]
-            .map(key => this.getDetails(key))
+            .map((key) => this.getDetails(key))
             // Check if a dependency is still pending...
-            .filter(details => details
-                .before
-                .filter(beforeKey => this.isDirtyOrPending(beforeKey))
-                .length === 0
+            .filter(
+                (details) =>
+                    details.before.filter((beforeKey) =>
+                        this.isDirtyOrPending(beforeKey)
+                    ).length === 0
             )
             // Check if the same plugin is already being compiled (can't run in parallel)
-            .filter(details => !this.pendingKeys.has(details.key))
-            .map(details => details.key);
+            .filter((details) => !this.pendingKeys.has(details.key))
+            .map((details) => details.key);
         return ready.length > 0 ? ready[0] : undefined;
     }
 

@@ -2,21 +2,21 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 
-import {LessCompiler} from './LessCompiler';
-import {CplaceTypescriptCompiler} from './CplaceTypescriptCompiler';
+import { LessCompiler } from './LessCompiler';
+import { CplaceTypescriptCompiler } from './CplaceTypescriptCompiler';
 import {
     CompilationResult,
     ICompiler,
     ICompilerConstructor,
     ICompileRequest,
     ICompileResponse,
-    ProcessState
+    ProcessState,
 } from './interfaces';
-import {cerr, enableDebug} from '../utils';
-import {CompressCssCompiler} from './CompressCssCompiler';
-import {E2ETypescriptCompiler} from "./E2ETypescriptCompiler";
-import {OpenAPIYamlCompiler} from "./OpenAPIYamlCompiler";
-import {VendorCompiler} from "./VendorCompiler";
+import { cerr, enableDebug } from '../utils';
+import { CompressCssCompiler } from './CompressCssCompiler';
+import { E2ETypescriptCompiler } from './E2ETypescriptCompiler';
+import { OpenAPIYamlCompiler } from './OpenAPIYamlCompiler';
+import { VendorCompiler } from './VendorCompiler';
 
 /* ==================
  *      This file will be called as main process by `ExecutorService` as specified by
@@ -32,7 +32,7 @@ if (require.main === module) {
                 }
                 const response: ICompileResponse = {
                     state: ProcessState.DONE,
-                    result
+                    result,
                 };
                 process.send(response);
             })
@@ -42,14 +42,16 @@ if (require.main === module) {
                 console.error();
                 if (process.send) {
                     const response: ICompileResponse = {
-                        state: ProcessState.FAILED
+                        state: ProcessState.FAILED,
                     };
                     process.send(response);
                 }
             });
     });
 
-    function handleRequest(request: ICompileRequest): Promise<CompilationResult> {
+    function handleRequest(
+        request: ICompileRequest
+    ): Promise<CompilationResult> {
         enableDebug(request.verbose);
 
         // verify that all required values are present
@@ -61,7 +63,7 @@ if (require.main === module) {
         if (request.vendor) {
             CompilerConstructor = VendorCompiler;
         } else if (request.ts) {
-            CompilerConstructor = CplaceTypescriptCompiler
+            CompilerConstructor = CplaceTypescriptCompiler;
         } else if (request.tsE2E) {
             CompilerConstructor = E2ETypescriptCompiler;
         } else if (request.less) {
