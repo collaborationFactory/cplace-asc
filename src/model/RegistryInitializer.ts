@@ -166,9 +166,9 @@ export class RegistryInitializer {
         this.currentNpmrcConfig = fs
             .readFileSync(this.npmrcPath, { encoding: 'utf-8' })
             .toString();
-        if (!!this.hasJfrogCredentials(scope, registryUrl, oldRegistryName) && !this.hasJfrogCredentials(scope, registryUrl, newRegistryName)) {
+        if (!this.hasJfrogCredentials(scope, registryUrl, oldRegistryName) && !this.hasJfrogCredentials(scope, registryUrl, newRegistryName)) {
             this.appendToExistingNpmrc(scope, registryUrl, newRegistryName);
-        } else if (!this.hasLatestJfrogCredentials(registryUrl)) {
+        } else {
             this.updateNPMRC(registryUrl, oldRegistryName, newRegistryName);
         }
     }
