@@ -31,3 +31,91 @@ jobs:
       - name: Run Jest
         run: node_modules/.bin/jest --verbose
 
+  compile:
+    env:
+      ENV_CPLACE_ARTIFACTORY_ACTOR: ${{ secrets.ENV_CPLACE_ARTIFACTORY_ACTOR }}
+      ENV_CPLACE_ARTIFACTORY_TOKEN: ${{ secrets.ENV_CPLACE_ARTIFACTORY_TOKEN }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        node_version:
+          - 12.x
+    name: Node ${{ matrix.node_version }} - ${{ matrix.architecture }} on ${{ matrix.os }}
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Checkout cplace-asc
+        uses: actions/checkout@v3
+
+      - name: Checkout cplace
+        uses: actions/checkout@v3
+        with:
+          repository: collaborationFactory/cplace
+          path: main
+          token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
+
+      - name: Checkout cplace-project-planning
+        uses: actions/checkout@v3
+        with:
+          repository: collaborationFactory/cplace-project-planning
+          path: cplace-project-planning
+          token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
+
+      - name: Checkout cplace-paw
+        uses: actions/checkout@v3
+        with:
+          repository: collaborationFactory/cplace-paw
+          path: cplace-paw
+          token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
+
+      - name: Setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node_version }}
+          architecture: ${{ matrix.architecture }}
+
+      - name: Cache Node Modules
+        id: npm-cache
+        uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/npm-shrinkwrap.json') }}
+
+      - name: Install modules
+        run: npm ci
+
+      - name: Setup JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+
+      - name: Create plugin descriptors in main
+        working-directory: ./main
+        run: ./gradlew generatePluginDescriptor
+
+      - name: Create plugin descriptors cplace-project-planning
+        working-directory: ./cplace-project-planning
+        run: ./gradlew generatePluginDescriptor
+
+      - name: Create plugin descriptors cplace-paw
+        working-directory: ./cplace-paw
+        run: ./gradlew generatePluginDescriptor
+
+      - name: Build
+        run: npm run prepare
+
+      - name: Compile main
+        working-directory: ./main
+        run: node ../dist/index.js
+
+      - name: Compile cplace-project-planning
+        working-directory: ./cplace-project-planning
+        run: node ../dist/index.js
