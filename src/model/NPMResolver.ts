@@ -92,7 +92,7 @@ export class NPMResolver {
         const oldCwd = process.cwd();
         process.chdir(assetsPath);
         console.log(`⟲ [${pluginName}] (NPM) installing dependencies...`);
-        const res = spawn.sync('npm', ['install', '--no-save']);
+        const res = spawn.sync('npm', ['install']);
         if (res.status !== 0) {
             debug(
                 `[${pluginName}] (NPM) installing dependencies failed with error ${res.stderr}`
