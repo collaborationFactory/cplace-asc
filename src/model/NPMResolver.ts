@@ -11,7 +11,7 @@ import * as spawn from 'cross-spawn';
 import * as chokidar from 'chokidar';
 import { FSWatcher } from 'chokidar';
 import { Scheduler } from '../executor';
-import { cerr, cgreen, cred, debug, sleepBusy } from '../utils';
+import {cerr, cgreen, cred, cwarn, debug, sleepBusy} from '../utils';
 import { PackageVersion } from './PackageVersion';
 import rimraf = require('rimraf');
 import Timeout = NodeJS.Timeout;
@@ -20,6 +20,8 @@ import { RegistryInitializer } from './RegistryInitializer';
 export class NPMResolver {
     private static readonly PACKAGE_LOCK_HASH = 'package-lock.hash';
     private static readonly PACKAGE_LOCK_JSON = 'package-lock.json';
+    private static readonly PACKAGE_JSON = 'package.json';
+    private static readonly PACKAGE_JSON_HASH = 'package.json.hash';
     private static readonly NODE_MODULES = 'node_modules';
 
     private readonly mainRepo: string;
@@ -42,20 +44,21 @@ export class NPMResolver {
         assetsPath: string
     ): boolean {
         if (fs.existsSync(NPMResolver.getPluginHashFilePath(assetsPath))) {
-            const packageLockUpdated = NPMResolver.packageLockWasUpdated(
+            const pluginPackageJsonPath = NPMResolver.getPluginPackageJsonPath(assetsPath);
+            const pluginPackageJsonUpdated = NPMResolver.hashRootWasUpdated(
                 NPMResolver.getPluginHashFilePath(assetsPath),
-                NPMResolver.getPluginPackageLockPath(assetsPath),
+                pluginPackageJsonPath,
                 pluginName
             );
-            if (packageLockUpdated) {
+            if (pluginPackageJsonUpdated) {
                 console.log(
                     cgreen`⇢`,
-                    `[${pluginName}] (NPM) package-lock.json was updated...`
+                    `[${pluginName}] (NPM) package.json was updated...`
                 );
             }
             const hasNodeModules =
                 NPMResolver.getPluginNodeModulesPath(assetsPath);
-            if (!hasNodeModules || packageLockUpdated) {
+            if (!hasNodeModules || pluginPackageJsonUpdated) {
                 return NPMResolver.installPluginDependencies(
                     pluginName,
                     assetsPath
@@ -80,6 +83,53 @@ export class NPMResolver {
     }
 
     /**
+     * Plugin dependencies should have exact versions. This method will log if there are any dependencies with non-exact
+     * version
+     * @param pluginName Name of a cplace plugin
+     * @param packageJsonPath package.json path
+     * @private
+     */
+    private static warnNonExactPluginDependenciesVersions(pluginName: string, packageJsonPath: string): void {
+        const nonExactVersions = NPMResolver.getNonExactPluginDependenciesVersions(pluginName, packageJsonPath);
+        if (nonExactVersions.length) {
+            console.log(
+                cwarn`⇢ [${pluginName}] (NPM) The following dependencies should have strict versions:`,
+                cwarn`\n\n${nonExactVersions.join("\r\n")}\n\n`,
+                cwarn`To avoid potential malfunctions, please install dependencies the following way:\n`,
+                cwarn`npm install yourdependency --save-exact\n`
+            );
+        }
+    }
+
+    /**
+     * Gets all non-exact versions from the plugin package.json
+     * @param pluginName Name of a cplace plugin
+     * @param packageJsonPath package.json path
+     * @private
+     */
+    private static getNonExactPluginDependenciesVersions(pluginName: string, packageJsonPath: string): string[] {
+        const packageJsonString = fs.readFileSync(packageJsonPath, { encoding: 'utf8' });
+        let packageJson;
+        try {
+            packageJson = JSON.parse(packageJsonString);
+        } catch (e) {
+            debug(`[${pluginName}] (NPM) can't parse ${packageJsonPath}`);
+            return [];
+        }
+        const dependencies = packageJson.dependencies;
+        if (!dependencies) {
+            return [];
+        }
+        return Object.keys(dependencies).reduce((acc: string[], dependency: string) => {
+            const version: string = dependencies[dependency];
+            if (version.includes('^') || version.includes('~')) {
+                acc.push(dependency.concat(':').concat(version));
+            }
+            return acc;
+        }, []);
+    }
+
+    /**
      * Installs plugin dependencies
      * @param pluginName Plugin name
      * @param assetsPath Assets folder path
@@ -89,10 +139,12 @@ export class NPMResolver {
         pluginName: string,
         assetsPath: string
     ): boolean {
+        NPMResolver.warnNonExactPluginDependenciesVersions(pluginName, NPMResolver.getPluginPackageJsonPath(assetsPath))
         const oldCwd = process.cwd();
         process.chdir(assetsPath);
         console.log(`⟲ [${pluginName}] (NPM) installing dependencies...`);
-        const res = spawn.sync('npm', ['install']);
+        debug(`[${pluginName}] (NPM) running: npm install --package-lock false`);
+        const res = spawn.sync('npm', ['install', '--package-lock', 'false']);
         if (res.status !== 0) {
             debug(
                 `[${pluginName}] (NPM) installing dependencies failed with error ${res.stderr}`
@@ -136,27 +188,27 @@ export class NPMResolver {
     }
 
     /**
-     * Gets package-lock.json hash
-     * @param packageLockPath package-lock.json path
+     * Gets hash for the given file
+     * @param filePath Provided file path
      * @private
      */
-    private static getHash4PackageLock(packageLockPath: string): string {
+    private static getHashForFile(filePath: string): string {
         const hash = crypto.createHash('sha256');
-        const data = fs.readFileSync(packageLockPath);
+        const data = fs.readFileSync(filePath);
         hash.update(data);
         return hash.digest('hex');
     }
 
     /**
      * Gets plugin hash file path
-     * @param assetsPath
+     * @param assetsPath Assets path
      * @private
      */
     private static getPluginHashFilePath(assetsPath: string): string {
         return path.join(
             assetsPath,
             NPMResolver.NODE_MODULES,
-            NPMResolver.PACKAGE_LOCK_HASH
+            NPMResolver.PACKAGE_JSON_HASH
         );
     }
 
@@ -165,8 +217,8 @@ export class NPMResolver {
      * @param assetsPath Assets path
      * @private
      */
-    private static getPluginPackageLockPath(assetsPath: string): string {
-        return path.resolve(assetsPath, NPMResolver.PACKAGE_LOCK_JSON);
+    private static getPluginPackageJsonPath(assetsPath: string): string {
+        return path.resolve(assetsPath, NPMResolver.PACKAGE_JSON);
     }
 
     /**
@@ -177,27 +229,27 @@ export class NPMResolver {
     private static createPluginHashFile(assetsPath: string): void {
         fs.writeFileSync(
             NPMResolver.getPluginHashFilePath(assetsPath),
-            NPMResolver.getHash4PackageLock(
-                NPMResolver.getPluginPackageLockPath(assetsPath)
+            NPMResolver.getHashForFile(
+                NPMResolver.getPluginPackageJsonPath(assetsPath)
             ),
             { encoding: 'utf8' }
         );
     }
 
     /**
-     * Checks if package-lock.json was updated
+     * Checks if the root of the hash file was updated
      * @param hashFilePath Hash file path
-     * @param packageLockPath package-lock.json path
+     * @param hashFileRoot Root of the hash file (package-lock.json or plugin package.json)
      * @param pluginName Provided plugin name
      * @private
      */
-    private static packageLockWasUpdated(
+    private static hashRootWasUpdated(
         hashFilePath: string,
-        packageLockPath: string,
+        hashFileRoot: string,
         pluginName?: string
     ): boolean {
         const oldHash = fs.readFileSync(hashFilePath, { encoding: 'utf8' });
-        if (oldHash === NPMResolver.getHash4PackageLock(packageLockPath)) {
+        if (oldHash === NPMResolver.getHashForFile(hashFileRoot)) {
             const pluginLog = pluginName ? `[${pluginName}] ` : '';
             console.log(
                 cgreen`✓`,
@@ -339,7 +391,7 @@ export class NPMResolver {
         } else {
             if (fs.existsSync(this.hashFilePath)) {
                 if (
-                    NPMResolver.packageLockWasUpdated(
+                    NPMResolver.hashRootWasUpdated(
                         this.hashFilePath,
                         this.getPackageLockPath()
                     )
@@ -376,7 +428,7 @@ export class NPMResolver {
     private createHashFile() {
         fs.writeFileSync(
             this.hashFilePath,
-            NPMResolver.getHash4PackageLock(this.getPackageLockPath()),
+            NPMResolver.getHashForFile(this.getPackageLockPath()),
             { encoding: 'utf8' }
         );
     }
