@@ -133,10 +133,14 @@ export class NPMResolver {
         if (!dependencies) {
             return [];
         }
+        const rangeCharacters = ['^', '~', '>', '<', 'x', '*', '||'];
         return Object.keys(dependencies).reduce(
             (acc: string[], dependency: string) => {
                 const version: string = dependencies[dependency];
-                if (version.includes('^') || version.includes('~')) {
+                const hasRangeCharacter = rangeCharacters.some(
+                    (rangeCharacter) => version.includes(rangeCharacter)
+                );
+                if (hasRangeCharacter) {
                     acc.push(dependency.concat(':').concat(version));
                 }
                 return acc;
@@ -163,9 +167,14 @@ export class NPMResolver {
         process.chdir(assetsPath);
         console.log(`⟲ [${pluginName}] (NPM) installing dependencies...`);
         debug(
-            `[${pluginName}] (NPM) running: npm install --package-lock false`
+            `[${pluginName}] (NPM) running: npm install --force --package-lock false`
         );
-        const res = spawn.sync('npm', ['install', '--package-lock', 'false']);
+        const res = spawn.sync('npm', [
+            'install',
+            '--force',
+            '--package-lock',
+            'false',
+        ]);
         if (res.status !== 0) {
             debug(
                 `[${pluginName}] (NPM) installing dependencies failed with error ${res.stderr}`
