@@ -5,13 +5,12 @@ import * as fs from 'fs';
 import * as os from 'os';
 
 export class RegistryInitializer {
-    public static readonly JROG_REGISTRY = 'cplace-npm';
-    public static readonly JROG_REGISTRY_URL =
-        '//cplace.jfrog.io/artifactory/api/npm/' +
-        RegistryInitializer.JROG_REGISTRY +
-        '/';
-    public static readonly GRADLE_HOME = '.gradle';
-    public static readonly GRADLE_PROPERTIES = 'gradle.properties';
+    public static readonly JROG_CPLACE_NPM_REGISTRY = 'cplace-npm';
+    public static readonly JROG_CPLACE_ASSETS_NPM_REGISTRY = 'cplace-assets-npm';
+    public static readonly JROG_REGISTRY_URL = '//cplace.jfrog.io/artifactory/api/npm/';
+    public static readonly GRADLE_HOME = '.gradle'
+    public static readonly GRADLE_PROPERTIES = 'gradle.properties'
+
 
     private currentNpmrcConfig: string = '';
     private npmrcUser: string = '';
@@ -30,7 +29,16 @@ export class RegistryInitializer {
                 this.extractTokenFromGradleProps();
             }
 
-            this.initOrUpdateJfrogCredentials();
+            this.initOrUpdateJfrogCredentials(
+                '@cplace-next',
+                `${RegistryInitializer.JROG_REGISTRY_URL}`,
+                'cplace-npm-local',
+                RegistryInitializer.JROG_CPLACE_NPM_REGISTRY);
+            this.initOrUpdateJfrogCredentials(
+                '@cplace-3rdparty-modified',
+                `${RegistryInitializer.JROG_REGISTRY_URL}`,
+                RegistryInitializer.JROG_CPLACE_ASSETS_NPM_REGISTRY,
+                RegistryInitializer.JROG_CPLACE_ASSETS_NPM_REGISTRY);
         } catch (e) {
             console.error(
                 cred`✗`,
@@ -142,7 +150,7 @@ export class RegistryInitializer {
         this.npmrcPath = cleanNpmrcPath;
     }
 
-    private initOrUpdateJfrogCredentials() {
+    private initOrUpdateJfrogCredentials(scope: string, registryUrl: string, oldRegistryName: string, newRegistryName: string) {
         if (
             !(
                 this.npmrcUser &&
@@ -158,10 +166,10 @@ export class RegistryInitializer {
         this.currentNpmrcConfig = fs
             .readFileSync(this.npmrcPath, { encoding: 'utf-8' })
             .toString();
-        if (!this.hasJfrogCredentials()) {
-            this.appendToExistingNpmrc();
-        } else if (!this.hasLatestJfrogCredentials()) {
-            this.updateNPMRC();
+        if (!this.hasJfrogCredentials(scope, registryUrl, oldRegistryName) && !this.hasJfrogCredentials(scope, registryUrl, newRegistryName)) {
+            this.appendToExistingNpmrc(scope, registryUrl, newRegistryName);
+        } else {
+            this.updateNPMRC(registryUrl, oldRegistryName, newRegistryName);
         }
     }
 
@@ -176,34 +184,36 @@ export class RegistryInitializer {
         }
     }
 
-    private hasJfrogCredentials(): boolean {
+    private hasJfrogCredentials(scope: string, registryUrl: string, registryName: string): boolean {
         return this.currentNpmrcConfig.includes(
-            '@cplace-next:registry=https://cplace.jfrog.io/artifactory/api/npm/cplace-npm'
+            `${scope}:registry=https:${registryUrl}${registryName}/`
         );
     }
 
-    private hasLatestJfrogCredentials(): boolean {
+    private hasLatestJfrogCredentials(registryUrl: string): boolean {
         return (
             this.currentNpmrcConfig.includes(
-                RegistryInitializer.JROG_REGISTRY_URL
+                registryUrl
             ) &&
             this.currentNpmrcConfig.includes(this.npmrcBasicAuthToken) &&
             this.currentNpmrcConfig.includes(this.npmrcUser)
         );
     }
 
-    private appendToExistingNpmrc() {
+    private appendToExistingNpmrc(scope: string, registryUrl: string, registryName: string) {
         console.info('⟲ Append config to existing config at: ', this.npmrcPath);
-        let npmrc = `\n@cplace-next:registry=https:${RegistryInitializer.JROG_REGISTRY_URL}\n`;
+
+        const fullRegistryPath = `${registryUrl}${registryName}/`;
+        let npmrc = `\n${scope}:registry=https:${fullRegistryPath}\n`;
         npmrc =
             npmrc +
-            `${RegistryInitializer.JROG_REGISTRY_URL}:_auth=${this.npmrcBasicAuthToken}\n`;
+            `${fullRegistryPath}:_auth=${this.npmrcBasicAuthToken}\n`;
         npmrc =
             npmrc +
-            `${RegistryInitializer.JROG_REGISTRY_URL}:always-auth=true\n`;
+            `${fullRegistryPath}:always-auth=true\n`;
         npmrc =
             npmrc +
-            `${RegistryInitializer.JROG_REGISTRY_URL}:email=${this.npmrcUser}\n`;
+            `${fullRegistryPath}:email=${this.npmrcUser}\n`;
         fs.appendFileSync(this.npmrcPath, npmrc, { encoding: 'utf-8' });
         console.log(
             cgreen`✓`,
@@ -212,20 +222,29 @@ export class RegistryInitializer {
         );
     }
 
-    private updateNPMRC() {
+    private updateNPMRC(registryUrl: string, oldRegistryName: string, newRegistryName: string) {
         console.info('⟲ Updating npm config at: ', this.npmrcPath);
         this.currentNpmrcConfig = this.currentNpmrcConfig.replace(
-            /cplace-npm-local/g,
-            RegistryInitializer.JROG_REGISTRY
+            new RegExp(oldRegistryName, 'g'),
+            newRegistryName
         );
+
+        const fullRegistryPath = `${registryUrl}${newRegistryName}/`
+        const authRegex = new RegExp(fullRegistryPath.replace(/\./g, '\\.') + ':_auth *= *.*', 'i');
         this.currentNpmrcConfig = this.currentNpmrcConfig.replace(
-            /\/\/cplace\.jfrog\.io\/artifactory\/api\/npm\/cplace-npm\/:_auth *= *.*/i,
-            `${RegistryInitializer.JROG_REGISTRY_URL}:_auth=${this.npmrcBasicAuthToken}`
+            authRegex,
+            `${fullRegistryPath}:_auth=${this.npmrcBasicAuthToken}`
         );
         this.currentNpmrcConfig = this.currentNpmrcConfig.replace(
             /^\/\/cplace.jfrog.io\/artifactory\/api\/npm\/cplace-npm\/:email *= *.*$/i,
             `${RegistryInitializer.JROG_REGISTRY_URL}:email=${this.npmrcUser}`
         );
+        const userRegex = new RegExp(fullRegistryPath.replace(/\./g, '\\.') + ':email *= *.*', 'i');
+        this.currentNpmrcConfig = this.currentNpmrcConfig.replace(
+            userRegex,
+            `${fullRegistryPath}:email=${this.npmrcUser}`
+        );
+
         console.log(cgreen`✓`, 'Updated config at: ', this.npmrcPath);
         fs.writeFileSync(this.npmrcPath, this.currentNpmrcConfig, {
             encoding: 'utf-8',

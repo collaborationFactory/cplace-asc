@@ -2,9 +2,10 @@ import { CompilationResult, ICompiler } from './interfaces';
 import * as fs from 'fs';
 import * as path from 'path';
 import { NPMResolver } from '../model/NPMResolver';
-import { cgreen, debug, formatDuration } from '../utils';
+import { cerr, cgreen, debug, formatDuration} from '../utils';
 import { Configuration } from 'webpack';
 import * as webpack from 'webpack';
+import {merge} from 'webpack-merge';
 import spawn = require('cross-spawn');
 import * as crypto from 'crypto';
 import { CompressCssCompiler } from './CompressCssCompiler';
@@ -22,6 +23,7 @@ export class VendorCompiler implements ICompiler {
     private static readonly JAVASCRIPT_TO_BE_COMPRESSED =
         'javaScriptIncludesToBeCompressed.txt';
     private static readonly CSS_IMPORTS = 'imports.css';
+    private static readonly PLUGIN_SPECIFIC_VENDOR_CONFIG = 'vendor.config.js';
 
     private compressCssCompiler: CompressCssCompiler;
 
@@ -181,6 +183,26 @@ export class VendorCompiler implements ICompiler {
     }
 
     /**
+     * Load plugin specific webpack config file in the assets of a plugin
+     * @private
+     */
+    private getPluginSpecificWebpackConfig(): Configuration {
+        const pluginSpecificConfigFile = path.join(this.assetsPath, VendorCompiler.PLUGIN_SPECIFIC_VENDOR_CONFIG);
+        if (!fs.existsSync(pluginSpecificConfigFile)) {
+            return {};
+        }
+
+        console.log(`⟲ [${this.pluginName}] loading custom vendor webpack configuration...`);
+        try {
+            const pluginSpecificConfig = require(pluginSpecificConfigFile);
+            return pluginSpecificConfig;
+        } catch (e) {
+            console.error(cerr`Error while loading configuration ${pluginSpecificConfigFile}`);
+            throw e;
+        }
+    }
+
+    /**
      * Gets plugin webpack config
      * @private
      */
@@ -192,6 +214,9 @@ export class VendorCompiler implements ICompiler {
                 CplaceTypescriptCompiler.DEST_DIR,
                 VendorCompiler.VENDOR_ENTRY
             ),
+            externals: {
+                jquery: 'jQuery'
+            },
             output: {
                 path: path.resolve(
                     this.assetsPath,
@@ -203,7 +228,7 @@ export class VendorCompiler implements ICompiler {
                 modules: [path.resolve(__dirname, '../../', 'node_modules')],
             },
             resolve: {
-                modules: [path.resolve(this.assetsPath, 'node_modules')],
+                modules: [path.resolve(this.assetsPath, 'node_modules'), path.resolve(this.assetsPath, 'js'), path.resolve(this.assetsPath, '3rdParty')],
             },
             optimization: {
                 minimize: true,
@@ -276,6 +301,7 @@ export class VendorCompiler implements ICompiler {
         console.log(`⟲ [${this.pluginName}] bundling vendors...`);
         return new Promise<any>((resolve, reject) => {
             const config = this.getPluginWebpackConfig();
+            const pluginSpecificConfig = this.getPluginSpecificWebpackConfig();
 
             this.removeVendors();
 
@@ -292,7 +318,8 @@ export class VendorCompiler implements ICompiler {
                 return;
             }
 
-            webpack(config, (err, stats) => {
+            const mergedConfig = merge(config, pluginSpecificConfig);
+            webpack(mergedConfig, (err, stats) => {
                 if (err) {
                     reject(`${err.message}`);
                 } else if (stats.hasErrors()) {
@@ -432,7 +459,7 @@ export class VendorCompiler implements ICompiler {
             buffer = fs.readFileSync(fileToWrite, 'utf8');
 
             if (buffer.includes(pathToInclude)) {
-                let includedPaths = buffer.split('\n');
+                let includedPaths = buffer.replace(/\r/g, '').split('\n');
                 includedPaths = includedPaths.map((line, index) => {
                     if (index === includedPaths.length - 1) {
                         return line.trim();
@@ -446,7 +473,7 @@ export class VendorCompiler implements ICompiler {
             }
         }
 
-        const content = buffer + `\n${pathToInclude}`;
+        const content = `${pathToInclude}\n` + buffer;
         fs.writeFileSync(fileToWrite, content);
         debug(`(VendorCompiler) [${this.pluginName}] Vendor imports written`);
     }

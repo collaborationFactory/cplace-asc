@@ -140,7 +140,12 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                 library: '$' + this.pluginName.replace(/\./g, '_'),
                 libraryExport: 'default',
             },
-            plugins: [new CReplacePlugin()],
+            plugins: [
+                new CReplacePlugin(),
+                new webpack.IgnorePlugin({
+                    resourceRegExp: /(index\.js|vendor\.js)$/
+                })
+            ],
             resolve: {
                 extensions: ['.ts', '.js'],
             },

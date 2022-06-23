@@ -48,6 +48,16 @@ describe('configuring jfrog credentials', () => {
         '//cplace.jfrog.io/artifactory/api/npm/cplace-npm/:always-auth=true\n' +
         '//cplace.jfrog.io/artifactory/api/npm/cplace-npm/:email=max.mustermann@collaboration-factory.de';
 
+    const assets_outdated_token = '@cplace-3rdparty-modified:registry=https://cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/\n' +
+        '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:_auth=outdatedtoken\n' +
+        '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:always-auth=true\n' +
+        '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:email=max.mustermann@collaboration-factory.de\n';
+
+    const assets_registry ='@cplace-3rdparty-modified:registry=https://cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/\n' +
+        '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:_auth=bWF4Lm11c3Rlcm1hbm5AY29sbGFib3JhdGlvbi1mYWN0b3J5LmRlOnRva2Vu\n' +
+        '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:always-auth=true\n' +
+        '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:email=max.mustermann@collaboration-factory.de\n';
+
     let tmpTestFolder: tmp.DirSyncObject;
     let basePath: string;
     let gradleHome: string;
@@ -108,7 +118,8 @@ describe('configuring jfrog credentials', () => {
 
         expect(npmrcContent).toContain(npmrc_not_configured);
         expect(npmrcContent).toContain(npmrcConfigured_new_registry);
-        expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(4);
+        expect(npmrcContent).toContain(assets_registry);
+        expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(8);
     });
 
     test('cplace-asc can update old registry url', () => {
@@ -117,7 +128,8 @@ describe('configuring jfrog credentials', () => {
         registryInitializerPrototype.initRegistry();
         const npmrcContent = fs.readFileSync(npmrcPath).toString();
         expect(npmrcContent).toContain(npmrcConfigured_new_registry);
-        expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(4);
+        expect(npmrcContent).toContain(assets_registry);
+        expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(8);
     });
 
     test('cplace-asc can update outdated auth token', () => {
@@ -126,7 +138,18 @@ describe('configuring jfrog credentials', () => {
         registryInitializerPrototype.initRegistry();
         const npmrcContent = fs.readFileSync(npmrcPath).toString();
         expect(npmrcContent).toContain(npmrcConfigured_new_registry);
-        expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(4);
+        expect(npmrcContent).toContain(assets_registry);
+        expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(8);
+    });
+
+    test('cplace-asc can update assets-registry outdated auth token', () => {
+        const registryInitializerPrototype = setupRegistryInitializerMock();
+        fs.writeFileSync(npmrcPath, assets_outdated_token);
+        registryInitializerPrototype.initRegistry();
+        const npmrcContent = fs.readFileSync(npmrcPath).toString();
+        expect(npmrcContent).toContain(npmrcConfigured_new_registry);
+        expect(npmrcContent).toContain(assets_registry);
+        expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(8);
     });
 
     test('cplace-asc does not exit if gradle home exists without gradle properties', () => {
