@@ -2,6 +2,7 @@ import * as path from 'path';
 
 import { CompilationResult, ICompiler } from './interfaces';
 import { debug, formatDuration, GREEN_CHECK } from '../utils';
+import { NPMResolver } from '../model/NPMResolver';
 import * as spawn from 'cross-spawn';
 import * as fs from 'fs';
 import rimraf = require('rimraf');
@@ -55,6 +56,11 @@ export class CompressCssCompiler implements ICompiler {
             if (!fs.existsSync(generatedCssDir)) {
                 fs.mkdirSync(generatedCssDir);
             }
+
+            NPMResolver.installPluginDependenciesAndCreateHash(
+                this.pluginName,
+                this.assetsPath
+            );
 
             const start = new Date().getTime();
             console.log(`⟲ [${this.pluginName}] starting CSS compression...`);
