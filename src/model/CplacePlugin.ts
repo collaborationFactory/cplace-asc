@@ -13,6 +13,7 @@ import { CompressCssCompiler } from '../compiler/CompressCssCompiler';
 import { E2ETSConfigGenerator } from './E2ETSConfigGenerator';
 import { getDependencyParser } from './DependencyParser';
 import { NPMResolver } from './NPMResolver';
+import { PluginDescriptor } from './PluginDescriptorParser';
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined;
@@ -39,10 +40,11 @@ export default class CplacePlugin {
     public readonly hasCompressCssAssets: boolean;
     public readonly hasVendors: boolean;
 
+    // public pluginDescriptor: PluginDescriptor;
     /**
      * Plugin dependencies this plugin depends on (parsed from IML), i.e. outgoing dependencies
      */
-    public readonly dependencies: string[];
+    public readonly dependencies: PluginDescriptor[];
     /**
      * Plugins that depend on this plugin (set explicitly afterwards), i.e. incoming dependencies
      */
@@ -54,6 +56,7 @@ export default class CplacePlugin {
     ) {
         this.dependencies = [];
         this.dependents = [];
+        // this.pluginDescriptor = this.parsePluginDescriptor();
 
         this.repo = path.basename(path.dirname(path.resolve(pluginDir)));
         this.assetsDir = CplacePlugin.getAssetsDir(this.pluginDir);
@@ -130,8 +133,8 @@ export default class CplacePlugin {
         }
 
         const dependenciesWithTypeScript = this.dependencies
-            .map((pluginName) => {
-                const plugin = pluginResolver(pluginName);
+            .map((pluginDescriptor) => {
+                const plugin = pluginResolver(pluginDescriptor.name);
                 if (!plugin) {
                     throw Error(
                         `[${this.pluginName}] could not resolve dependency ${this.pluginName}`
@@ -172,8 +175,8 @@ export default class CplacePlugin {
             );
         }
         const dependenciesWithE2ETypeScript = this.dependencies
-            .map((pluginName) => {
-                const plugin = pluginResolver(pluginName);
+            .map((pluginDescriptor) => {
+                const plugin = pluginResolver(pluginDescriptor.name);
                 if (!plugin) {
                     throw Error(
                         `[${this.pluginName}] could not resolve dependency ${this.pluginName}`
@@ -230,6 +233,11 @@ export default class CplacePlugin {
             );
         }
     }
+
+    // public parsePluginDescriptor(): PluginDescriptor {
+    //     const descriptorParser = new PluginDescriptorParser(this.pluginDir);
+    //     return descriptorParser.getPluginDescriptor();
+    // }
 
     public parseDependencies(excludeTestDependencies: boolean = false): void {
         getDependencyParser()

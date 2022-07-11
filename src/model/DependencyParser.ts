@@ -1,7 +1,7 @@
 import { PackageVersion } from './PackageVersion';
 import * as path from 'path';
 import { ImlParser } from './ImlParser';
-import { PluginDescriptorParser } from './PluginDescriptorParser';
+import { PluginDescriptor, PluginDescriptorParser } from './PluginDescriptorParser';
 import { debug } from '../utils';
 
 export interface DependencyParser {
@@ -9,7 +9,7 @@ export interface DependencyParser {
         pluginDir: string,
         pluginName: string,
         excludeTestDependencies: boolean
-    ): string[];
+    ): PluginDescriptor[];
 }
 
 export function getDependencyParser(): DependencyParser {
@@ -25,7 +25,7 @@ class ImlDependencyParser implements DependencyParser {
         pluginDir: string,
         pluginName: string,
         excludeTestDependencies: boolean
-    ): string[] {
+    ): PluginDescriptor[] {
         const pathToIml = path.join(pluginDir, `${pluginName}.iml`);
         const imlParser = new ImlParser(pathToIml);
 
@@ -41,7 +41,11 @@ class ImlDependencyParser implements DependencyParser {
                 }
                 return includeDependency;
             })
-            .map((module) => module.moduleName);
+            .map((module) => {
+                return {
+                    name: module.moduleName
+                } as PluginDescriptor
+            });
     }
 }
 
@@ -50,7 +54,7 @@ class PluginDescriptorDependencyParser implements DependencyParser {
         pluginDir: string,
         pluginName: string,
         excludeTestDependencies: boolean
-    ): string[] {
+    ): PluginDescriptor[] {
         const descriptorParser = new PluginDescriptorParser(pluginDir);
         const pluginDescriptor = descriptorParser.getPluginDescriptor();
         if (pluginName !== pluginDescriptor.name) {

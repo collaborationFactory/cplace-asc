@@ -8,13 +8,22 @@ export interface PluginDescriptor {
      */
     readonly name: string;
     /**
-     * List of plugin names this plugin depends on for production
+     * Group id of the plugin
      */
-    readonly dependencies?: string[];
+     readonly group: string;
+     /**
+     * Name of the plugin's repository
+     */
+    readonly repoName: string;
+    // additional info such as hasAssets, hasLess, hasVendors etc.
     /**
-     * List of plugin names this plugin depends on for production
+     * List of descriptors of plugins that this plugin depends on for production
      */
-    readonly testDependencies?: string[];
+    readonly dependencies?: PluginDescriptor[];
+    /**
+     * List of descriptors of plugin that this plugin depends on for production
+     */
+    readonly testDependencies?: PluginDescriptor[];
 }
 
 export class PluginDescriptorParser {
@@ -45,14 +54,14 @@ export class PluginDescriptorParser {
         this.descriptor = this.parseFile();
     }
 
-    public static getPathToDescriptor(pluginDir) {
+    private static getPathToDescriptor(pluginDir) {
         return path.join(
             pluginDir,
             PluginDescriptorParser.DESCRIPTOR_FILE_NAME
         );
     }
 
-    public static getPathToBuildGradle(pluginDir) {
+    private static getPathToBuildGradle(pluginDir) {
         return path.join(
             pluginDir,
             PluginDescriptorParser.BUILD_GRADLE_FILE_NAME
@@ -76,6 +85,20 @@ export class PluginDescriptorParser {
         const content = fs.readFileSync(this.pathToDescriptor, {
             encoding: 'utf8',
         });
-        return JSON.parse(content) as PluginDescriptor;
+        const pluginDescriptor = JSON.parse(content) as PluginDescriptor;
+        if (pluginDescriptor?.dependencies?.length && 
+            (typeof pluginDescriptor.dependencies[0] === 'string' || pluginDescriptor.dependencies[0] instanceof String)) {
+                
+                const newDependencies: PluginDescriptor[] = [];
+                pluginDescriptor.dependencies.forEach(dependency => {
+                    newDependencies.push({
+                        name: dependency + ""
+                    } as PluginDescriptor);
+                });
+                pluginDescriptor.dependencies.splice(0);
+                pluginDescriptor.dependencies.push(...newDependencies);
+        }
+
+        return pluginDescriptor;
     }
 }

@@ -227,7 +227,7 @@ export class Scheduler {
             const compileRequest: ICompileRequest = {
                 pluginName: plugin.pluginName,
                 dependencyPaths: plugin.dependencies.map(
-                    (d) => this.plugins.get(d)!.pluginDir
+                    (pluginDescriptor) => this.plugins.get(pluginDescriptor.name)!.pluginDir
                 ),
                 assetsPath: plugin.assetsDir,
                 mainRepoDir: this.mainRepoDir,
@@ -319,7 +319,7 @@ export class Scheduler {
             (plugin) =>
                 new JobDetails(
                     plugin.pluginName,
-                    this.filterTypeScriptPlugins(plugin.dependencies),
+                    this.filterTypeScriptPlugins(plugin.dependencies.map(pluginDescriptor => pluginDescriptor.name)),
                     this.filterTypeScriptPlugins(plugin.dependents)
                 )
         );
@@ -341,7 +341,7 @@ export class Scheduler {
             (plugin) =>
                 new JobDetails(
                     plugin.pluginName,
-                    this.filterTypeScriptE2EPlugins(plugin.dependencies),
+                    this.filterTypeScriptE2EPlugins(plugin.dependencies.map(pluginDescriptor => pluginDescriptor.name)),
                     this.filterTypeScriptE2EPlugins(plugin.dependents)
                 )
         );
@@ -360,7 +360,7 @@ export class Scheduler {
             (plugin) =>
                 new JobDetails(
                     plugin.pluginName,
-                    this.filterLessPlugins(plugin.dependencies),
+                    this.filterLessPlugins(plugin.dependencies.map(pluginDescriptor => pluginDescriptor.name)),
                     this.filterLessPlugins(plugin.dependents)
                 )
         );
@@ -378,7 +378,7 @@ export class Scheduler {
             (plugin) =>
                 new JobDetails(
                     plugin.pluginName,
-                    this.filterVendorPlugins(plugin.dependencies),
+                    this.filterVendorPlugins(plugin.dependencies.map(pluginDescriptor => pluginDescriptor.name)),
                     this.filterVendorPlugins(plugin.dependents)
                 )
         );
@@ -406,7 +406,7 @@ export class Scheduler {
             (plugin) =>
                 new JobDetails(
                     plugin.pluginName,
-                    this.filterOpenAPIYamlPlugins(plugin.dependencies),
+                    this.filterOpenAPIYamlPlugins(plugin.dependencies.map(pluginDescriptor => pluginDescriptor.name)),
                     this.filterOpenAPIYamlPlugins(plugin.dependents)
                 )
         );

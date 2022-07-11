@@ -365,20 +365,20 @@ export class AssetsCompiler {
         project.parseDependencies(runConfig.production);
         projects.set(pluginName, project);
 
-        project.dependencies.forEach((depName) => {
-            if (projects.has(depName)) {
+        project.dependencies.forEach((pluginDescriptor) => {
+            if (projects.has(pluginDescriptor.name)) {
                 return;
             }
             const pluginPath = this.findPluginPath(
                 repositoryDir,
-                depName,
+                pluginDescriptor.name,
                 repoDependencies
             );
             this.addProjectDependenciesRecursively(
                 repositoryDir,
                 projects,
                 repoDependencies,
-                depName,
+                pluginDescriptor.name,
                 pluginPath,
                 runConfig
             );
@@ -388,7 +388,7 @@ export class AssetsCompiler {
     private static setDependents(projects: Map<string, CplacePlugin>) {
         for (const plugin of projects.values()) {
             plugin.dependencies
-                .map((dep) => projects.get(dep))
+                .map((pluginDescriptor) => projects.get(pluginDescriptor.name))
                 .forEach((p) => {
                     if (!!p) {
                         p.dependents.push(plugin.pluginName);
