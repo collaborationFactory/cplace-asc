@@ -342,7 +342,7 @@ export class AssetsCompiler {
     ): boolean {
         return (
             (ImlParser.doesImlExist(pluginPath, potentialPluginName) ||
-                PluginDescriptorParser.isCplacePluginWithGradleAndContainsPluginDescriptor(
+                CplacePlugin.isCplacePluginWithGradleAndContainsPluginDescriptor(
                     pluginPath
                 )) &&
             fs.existsSync(path.join(pluginPath, 'src'))
@@ -361,11 +361,12 @@ export class AssetsCompiler {
             return;
         }
 
-        const project = new CplacePlugin(pluginName, pluginPath);
-        project.parseDependencies(runConfig.production);
+        const project = new CplacePlugin(pluginName, pluginPath, runConfig.production);
+
+
         projects.set(pluginName, project);
 
-        project.dependencies.forEach((pluginDescriptor) => {
+        project.pluginDescriptor.dependencies.forEach((pluginDescriptor) => {
             if (projects.has(pluginDescriptor.name)) {
                 return;
             }
@@ -387,11 +388,11 @@ export class AssetsCompiler {
 
     private static setDependents(projects: Map<string, CplacePlugin>) {
         for (const plugin of projects.values()) {
-            plugin.dependencies
+            plugin.pluginDescriptor.dependencies
                 .map((pluginDescriptor) => projects.get(pluginDescriptor.name))
                 .forEach((p) => {
                     if (!!p) {
-                        p.dependents.push(plugin.pluginName);
+                        p.dependents.push(plugin.pluginDescriptor);
                     }
                 });
         }

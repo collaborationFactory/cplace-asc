@@ -1,41 +1,17 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { cerr } from '../utils';
+import { PluginDescriptor } from './PluginDescriptor';
+import { DescriptorParser } from './DescriptorParser';
+import CplacePlugin from './CplacePlugin';
 
-export interface PluginDescriptor {
-    /**
-     * Name of the plugin
-     */
-    readonly name: string;
-    /**
-     * Group id of the plugin
-     */
-     readonly group: string;
-     /**
-     * Name of the plugin's repository
-     */
-    readonly repoName: string;
-    // additional info such as hasAssets, hasLess, hasVendors etc.
-    /**
-     * List of descriptors of plugins that this plugin depends on for production
-     */
-    readonly dependencies?: PluginDescriptor[];
-    /**
-     * List of descriptors of plugin that this plugin depends on for production
-     */
-    readonly testDependencies?: PluginDescriptor[];
-}
-
-export class PluginDescriptorParser {
-    public static readonly DESCRIPTOR_FILE_NAME = 'pluginDescriptor.json';
-    public static readonly BUILD_GRADLE_FILE_NAME = 'build.gradle';
-
+export class PluginDescriptorParser implements DescriptorParser {
     private readonly pathToDescriptor: string;
     private readonly descriptor: PluginDescriptor;
 
     constructor(private pluginDir: string) {
         this.pathToDescriptor =
-            PluginDescriptorParser.getPathToDescriptor(pluginDir);
+            CplacePlugin.getPathToDescriptor(pluginDir);
         if (!fs.existsSync(this.pathToDescriptor)) {
             console.error(
                 cerr`(PluginDescriptor) Failed to find plugin descriptor for ${path.basename(
@@ -52,29 +28,6 @@ export class PluginDescriptorParser {
             );
         }
         this.descriptor = this.parseFile();
-    }
-
-    private static getPathToDescriptor(pluginDir) {
-        return path.join(
-            pluginDir,
-            PluginDescriptorParser.DESCRIPTOR_FILE_NAME
-        );
-    }
-
-    private static getPathToBuildGradle(pluginDir) {
-        return path.join(
-            pluginDir,
-            PluginDescriptorParser.BUILD_GRADLE_FILE_NAME
-        );
-    }
-
-    public static isCplacePluginWithGradleAndContainsPluginDescriptor(
-        pluginDir: string
-    ): boolean {
-        return (
-            fs.existsSync(this.getPathToDescriptor(pluginDir)) &&
-            fs.existsSync(this.getPathToBuildGradle(pluginDir))
-        );
     }
 
     public getPluginDescriptor(): PluginDescriptor {
