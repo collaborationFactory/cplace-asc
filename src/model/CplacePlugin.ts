@@ -234,7 +234,9 @@ export default class CplacePlugin {
         }
     }
 
-    public parsePluginDescriptor(excludeTestDependencies: boolean = false): PluginDescriptor {
+    public parsePluginDescriptor(
+        excludeTestDependencies: boolean = false
+    ): PluginDescriptor {
         return getDescriptorParser(
             this.pluginDir,
             this.pluginName,
@@ -251,14 +253,18 @@ export default class CplacePlugin {
         );
     }
 
-    public static getPathToDescriptor(pluginDir) {
+    public static getPathToDescriptor(
+        pluginDir: string
+    ) {
         return path.join(
             pluginDir,
             CplacePlugin.DESCRIPTOR_FILE_NAME
         );
     }
 
-    private static getPathToBuildGradle(pluginDir) {
+    private static getPathToBuildGradle(
+        pluginDir: string
+    ) {
         return path.join(
             pluginDir,
             CplacePlugin.BUILD_GRADLE_FILE_NAME

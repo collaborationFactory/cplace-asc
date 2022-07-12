@@ -8,8 +8,15 @@ export class ImlDescriptorParser implements DescriptorParser {
 
     private readonly descriptor: PluginDescriptor;
 
-    constructor(pluginDir: string, pluginName: string, excludeTestDependencies: boolean) {
-        this.descriptor = this.parseFile(pluginDir, pluginName, excludeTestDependencies);
+    constructor(
+        pluginDir: string, 
+        pluginName: string, 
+        excludeTestDependencies: boolean
+    ) {
+        this.descriptor = this.parseFile(
+            pluginDir, 
+            pluginName,
+            excludeTestDependencies);
     }
 
     public getPluginDescriptor(): PluginDescriptor {

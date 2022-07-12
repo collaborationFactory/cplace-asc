@@ -363,7 +363,6 @@ export class AssetsCompiler {
 
         const project = new CplacePlugin(pluginName, pluginPath, runConfig.production);
 
-
         projects.set(pluginName, project);
 
         project.pluginDescriptor.dependencies.forEach((pluginDescriptor) => {
