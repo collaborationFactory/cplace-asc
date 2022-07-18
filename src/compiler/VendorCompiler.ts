@@ -48,7 +48,7 @@ export class VendorCompiler implements ICompiler {
         const startTime = new Date().getTime();
 
         const dependenciesWereUpdated =
-            NPMResolver.installPluginDependenciesAndCreateHash(
+            NPMResolver.installPluginDependencies(
                 this.pluginName,
                 this.assetsPath
             );

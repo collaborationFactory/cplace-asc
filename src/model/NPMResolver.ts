@@ -21,7 +21,6 @@ export class NPMResolver {
     private static readonly PACKAGE_LOCK_HASH = 'package-lock.hash';
     private static readonly PACKAGE_LOCK_JSON = 'package-lock.json';
     private static readonly PACKAGE_JSON = 'package.json';
-    private static readonly PACKAGE_JSON_HASH = 'package.json.hash';
     private static readonly NODE_MODULES = 'node_modules';
 
     private readonly mainRepo: string;
@@ -35,43 +34,46 @@ export class NPMResolver {
     }
 
     /**
-     * Installs plugin dependencies and create hash
+     * Installs plugin dependencies
      * @param pluginName Plugin name
      * @param assetsPath Assets folder path
+     * @private
      */
-    public static installPluginDependenciesAndCreateHash(
+    public static installPluginDependencies(
         pluginName: string,
         assetsPath: string
     ): boolean {
-        if (fs.existsSync(NPMResolver.getPluginHashFilePath(assetsPath))) {
-            const pluginPackageJsonPath =
-                NPMResolver.getPluginPackageJsonPath(assetsPath);
-            const pluginPackageJsonUpdated = NPMResolver.hashRootWasUpdated(
-                NPMResolver.getPluginHashFilePath(assetsPath),
-                pluginPackageJsonPath,
-                pluginName
+        NPMResolver.warnNonExactPluginDependenciesVersions(
+            pluginName,
+            NPMResolver.getPluginPackageJsonPath(assetsPath)
+        );
+        const oldCwd = process.cwd();
+        process.chdir(assetsPath);
+        console.log(`⟲ [${pluginName}] (NPM) installing dependencies...`);
+        debug(
+            `[${pluginName}] (NPM) running: npm install --force --package-lock false`
+        );
+        const res = spawn.sync('npm', [
+            'install',
+            '--force',
+            '--package-lock',
+            'false',
+        ]);
+        if (res.status !== 0) {
+            debug(
+                `[${pluginName}] (NPM) installing dependencies failed with error ${res.stderr}`
             );
-            if (pluginPackageJsonUpdated) {
-                console.log(
-                    cgreen`⇢`,
-                    `[${pluginName}] (NPM) package.json was updated...`
-                );
-            }
-            const hasNodeModules =
-                NPMResolver.getPluginNodeModulesPath(assetsPath);
-            if (!hasNodeModules || pluginPackageJsonUpdated) {
-                return NPMResolver.installPluginDependencies(
-                    pluginName,
-                    assetsPath
-                );
-            }
-            return false;
-        } else {
-            return NPMResolver.installPluginDependencies(
-                pluginName,
-                assetsPath
+            throw Error(
+                `[${pluginName}] (NPM) installing dependencies failed!`
             );
         }
+        console.log(
+            cgreen`✓`,
+            `[${pluginName}] (NPM) dependencies successfully installed`
+        );
+        NPMResolver.removePluginSymlinks(pluginName, assetsPath);
+        process.chdir(oldCwd);
+        return true;
     }
 
     /**
@@ -150,50 +152,6 @@ export class NPMResolver {
     }
 
     /**
-     * Installs plugin dependencies
-     * @param pluginName Plugin name
-     * @param assetsPath Assets folder path
-     * @private
-     */
-    private static installPluginDependencies(
-        pluginName: string,
-        assetsPath: string
-    ): boolean {
-        NPMResolver.warnNonExactPluginDependenciesVersions(
-            pluginName,
-            NPMResolver.getPluginPackageJsonPath(assetsPath)
-        );
-        const oldCwd = process.cwd();
-        process.chdir(assetsPath);
-        console.log(`⟲ [${pluginName}] (NPM) installing dependencies...`);
-        debug(
-            `[${pluginName}] (NPM) running: npm install --force --package-lock false`
-        );
-        const res = spawn.sync('npm', [
-            'install',
-            '--force',
-            '--package-lock',
-            'false',
-        ]);
-        if (res.status !== 0) {
-            debug(
-                `[${pluginName}] (NPM) installing dependencies failed with error ${res.stderr}`
-            );
-            throw Error(
-                `[${pluginName}] (NPM) installing dependencies failed!`
-            );
-        }
-        console.log(
-            cgreen`✓`,
-            `[${pluginName}] (NPM) dependencies successfully installed`
-        );
-        NPMResolver.createPluginHashFile(assetsPath);
-        NPMResolver.removePluginSymlinks(pluginName, assetsPath);
-        process.chdir(oldCwd);
-        return true;
-    }
-
-    /**
      * Removes symlinks inside plugin node_modules folder
      * @param pluginName Plugin name
      * @param assetsPath Assets folder path
@@ -218,28 +176,15 @@ export class NPMResolver {
     }
 
     /**
-     * Gets hash for the given file
-     * @param filePath Provided file path
+     * Gets package-lock.json hash
+     * @param packageLockPath package-lock.json path
      * @private
      */
-    private static getHashForFile(filePath: string): string {
+    private static getHash4PackageLock(packageLockPath: string): string {
         const hash = crypto.createHash('sha256');
-        const data = fs.readFileSync(filePath);
+        const data = fs.readFileSync(packageLockPath);
         hash.update(data);
         return hash.digest('hex');
-    }
-
-    /**
-     * Gets plugin hash file path
-     * @param assetsPath Assets path
-     * @private
-     */
-    private static getPluginHashFilePath(assetsPath: string): string {
-        return path.join(
-            assetsPath,
-            NPMResolver.NODE_MODULES,
-            NPMResolver.PACKAGE_JSON_HASH
-        );
     }
 
     /**
@@ -252,34 +197,19 @@ export class NPMResolver {
     }
 
     /**
-     * Creates plugin hash file
-     * @param assetsPath Assets path
-     * @private
-     */
-    private static createPluginHashFile(assetsPath: string): void {
-        fs.writeFileSync(
-            NPMResolver.getPluginHashFilePath(assetsPath),
-            NPMResolver.getHashForFile(
-                NPMResolver.getPluginPackageJsonPath(assetsPath)
-            ),
-            { encoding: 'utf8' }
-        );
-    }
-
-    /**
-     * Checks if the root of the hash file was updated
+     * Checks if package-lock.json was updated
      * @param hashFilePath Hash file path
-     * @param hashFileRoot Root of the hash file (package-lock.json or plugin package.json)
+     * @param packageLockPath package-lock.json path
      * @param pluginName Provided plugin name
      * @private
      */
-    private static hashRootWasUpdated(
+    private static packageLockWasUpdated(
         hashFilePath: string,
-        hashFileRoot: string,
+        packageLockPath: string,
         pluginName?: string
     ): boolean {
         const oldHash = fs.readFileSync(hashFilePath, { encoding: 'utf8' });
-        if (oldHash === NPMResolver.getHashForFile(hashFileRoot)) {
+        if (oldHash === NPMResolver.getHash4PackageLock(packageLockPath)) {
             const pluginLog = pluginName ? `[${pluginName}] ` : '';
             console.log(
                 cgreen`✓`,
@@ -421,7 +351,7 @@ export class NPMResolver {
         } else {
             if (fs.existsSync(this.hashFilePath)) {
                 if (
-                    NPMResolver.hashRootWasUpdated(
+                    NPMResolver.packageLockWasUpdated(
                         this.hashFilePath,
                         this.getPackageLockPath()
                     )
@@ -458,7 +388,7 @@ export class NPMResolver {
     private createHashFile() {
         fs.writeFileSync(
             this.hashFilePath,
-            NPMResolver.getHashForFile(this.getPackageLockPath()),
+            NPMResolver.getHash4PackageLock(this.getPackageLockPath()),
             { encoding: 'utf8' }
         );
     }
