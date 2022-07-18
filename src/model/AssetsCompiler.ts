@@ -59,6 +59,11 @@ export interface IAssetsCompilerConfiguration {
      * Indicates whether parent repositories should be excluded from compilation
      */
     noParents: boolean;
+
+    /**
+     * Indicates that npm artifacts should be used for the parent repos, instead of checkout out parent repos.
+     */
+    withParentArtifacts: boolean;
 }
 
 /**
@@ -123,6 +128,15 @@ export class AssetsCompiler {
             for (const plugin of this.projects.values()) {
                 if (this.isInCompilationScope(plugin)) {
                     await plugin.cleanGeneratedOutput();
+                }
+            }
+        }
+        
+        if (this.runConfig.withParentArtifacts) {
+            debug(`(AssetsCompiler) generating package.json for all plugins...`);
+            for (const plugin of this.projects.values()) {
+                if (this.isInCompilationScope(plugin)) {
+                    plugin.generatePackageJson(this.repositoryDir);
                 }
             }
         }

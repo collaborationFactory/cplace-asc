@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as glob from 'glob';
 import { CplaceTSConfigGenerator } from './CplaceTSConfigGenerator';
-import { cerr, debug, GREEN_CHECK } from '../utils';
+import { cerr, cgreen, debug, GREEN_CHECK } from '../utils';
 import * as rimraf from 'rimraf';
 import { CplaceTypescriptCompiler } from '../compiler/CplaceTypescriptCompiler';
 import { CompressCssCompiler } from '../compiler/CompressCssCompiler';
@@ -14,6 +14,8 @@ import { E2ETSConfigGenerator } from './E2ETSConfigGenerator';
 import { NPMResolver } from './NPMResolver';
 import { PluginDescriptor } from './PluginDescriptor';
 import { getDescriptorParser } from './DescriptorParser';
+import { PackageJsonGenerator } from './PackageJsonGenerator';
+import * as spawn from 'cross-spawn';
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined;
@@ -164,6 +166,30 @@ export default class CplacePlugin {
         }
     }
 
+    public generatePackageJson(repositoryDir: string): void {
+        if (!this.hasTypeScriptAssets) {
+            console.log(
+                cgreen`⇢`,
+                `[${this.pluginName}] plugin does not have TypeScript assets`
+            );
+            return;
+        }
+
+        const packageJsonGenerator = new PackageJsonGenerator(this, repositoryDir);
+        const packageJsonPath = packageJsonGenerator.createContentAndGetPath();
+
+        if (!fs.existsSync(packageJsonPath)) {
+            console.error(
+                cerr`[${this.pluginName}] Could not generate package.json file...`
+            );
+            throw Error(`[${this.pluginName}] package.json generation failed`);
+        } else {
+            console.log(
+                `${GREEN_CHECK} [${this.pluginName}] wrote package.json`
+            );
+        }
+    }
+
     public generateTsE2EConfig(
         pluginResolver: ICplacePluginResolver,
         isProduction: boolean,
@@ -225,6 +251,12 @@ export default class CplacePlugin {
             );
             promises.push(this.removeDir(pluginNodeModules));
         }
+        if (!this.isFileTracked(path.resolve(this.pluginDir, 'assets', 'package.json'))) {
+            promises.push(this.removeDir(path.resolve(this.pluginDir, 'assets', 'package.json')));
+            if (fs.existsSync(path.resolve(this.pluginDir, 'assets', 'package-lock.json'))) {
+                promises.push(this.removeDir(path.resolve(this.pluginDir, 'assets', 'package-lock.json')));
+            }
+        }
         await Promise.all(promises);
 
         if (promises.length) {
@@ -284,5 +316,26 @@ export default class CplacePlugin {
                 }
             });
         });
+    }
+
+    /**
+     * Check if a file in the plugin is tracked
+     * 
+     * @param pathToFile path to file relative to pluginDir
+     */
+    private isFileTracked(pathToFile: string): boolean {
+        const res = spawn.sync(
+            'git', ['ls-files', '--error-unmatch', pathToFile],
+            {
+                cwd: this.pluginDir,
+            }
+        );
+        if (res.status !== 0) {
+            debug(
+                `[${this.pluginName}] (CplacePlugin) file ${pathToFile} is not tracked`
+            );
+            return false;
+        }
+        return true;
     }
 }
