@@ -130,7 +130,7 @@ export class RegistryInitializer {
 
     private getNpmrcPath() {
         const npmConfig: string = execSync('npm config ls -l').toString();
-        console.debug('Found user config', npmConfig);
+        debug(`Found user config ${npmConfig}`);
 
         const npmrcPath: string | undefined = (npmConfig.match(
             /userconfig *= *".*"/gi
