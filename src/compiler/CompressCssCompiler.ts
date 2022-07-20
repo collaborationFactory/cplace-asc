@@ -58,7 +58,7 @@ export class CompressCssCompiler implements ICompiler {
             }
 
             if (fs.existsSync(path.resolve(this.assetsPath, 'package.json'))) {
-                NPMResolver.installPluginDependenciesAndCreateHash(
+                NPMResolver.installPluginDependencies(
                     this.pluginName,
                     this.assetsPath
                 );
