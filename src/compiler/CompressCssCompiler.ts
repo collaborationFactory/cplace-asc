@@ -57,13 +57,6 @@ export class CompressCssCompiler implements ICompiler {
                 fs.mkdirSync(generatedCssDir);
             }
 
-            if (fs.existsSync(path.resolve(this.assetsPath, 'package.json'))) {
-                NPMResolver.installPluginDependencies(
-                    this.pluginName,
-                    this.assetsPath
-                );
-            }
-
             const start = new Date().getTime();
             console.log(`⟲ [${this.pluginName}] starting CSS compression...`);
 

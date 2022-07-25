@@ -418,6 +418,7 @@ export class Scheduler {
         this.plugins.forEach((plugin) => {
             if (
                 plugin.hasCompressCssAssets &&
+                !plugin.hasVendors &&
                 this.isInCompilationScope(plugin)
             ) {
                 compressPlugins.push(plugin);
