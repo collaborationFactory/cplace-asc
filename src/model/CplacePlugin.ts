@@ -14,11 +14,35 @@ import { E2ETSConfigGenerator } from './E2ETSConfigGenerator';
 import { NPMResolver } from './NPMResolver';
 import { PluginDescriptor } from './PluginDescriptor';
 import { getDescriptorParser } from './DescriptorParser';
-import { PackageJsonGenerator } from './PackageJsonGenerator';
-import * as spawn from 'cross-spawn';
+import { AbstractPackageJsonGenerator, IPackageJsonDependency } from './AbstractPackageJsonGenerator';
+import { isFileTracked } from './utils';
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined;
+}
+
+export class PluginPackageJsonGenerator extends AbstractPackageJsonGenerator {
+    constructor(
+        private plugin: CplacePlugin, 
+        repositoryDir: string
+    ) {
+        super(repositoryDir);
+    }
+
+    public getFilePath() {
+        return path.join(
+            this.plugin.assetsDir,
+            this.packageJsonFile
+        );
+    }
+
+    public getPackageName() {
+        return `@${this.plugin.pluginDescriptor.group.replace(/\./g, '-')}/${this.plugin.pluginDescriptor.name.replace(/\./g, '-')}`;
+    }
+
+    public getPluginDependencies(): IPackageJsonDependency[] {
+        return [];
+    }
 }
 
 /**
@@ -166,6 +190,9 @@ export default class CplacePlugin {
         }
     }
 
+    /**
+     * Generate empty package.json file (only name and version) in assets folder for publishing purposes.
+     */
     public generatePackageJson(repositoryDir: string): void {
         if (!this.hasTypeScriptAssets) {
             console.log(
@@ -175,8 +202,8 @@ export default class CplacePlugin {
             return;
         }
 
-        const packageJsonGenerator = new PackageJsonGenerator(this, repositoryDir);
-        const packageJsonPath = packageJsonGenerator.createContentAndGetPath();
+        const packageJsonGenerator = new PluginPackageJsonGenerator(this, repositoryDir);
+        const packageJsonPath = packageJsonGenerator.generatePackageJson();
 
         if (!fs.existsSync(packageJsonPath)) {
             console.error(
@@ -251,7 +278,7 @@ export default class CplacePlugin {
             );
             promises.push(this.removeDir(pluginNodeModules));
         }
-        if (!this.isFileTracked(path.resolve(this.pluginDir, 'assets', 'package.json'))) {
+        if (!isFileTracked(this.pluginDir, path.resolve(this.pluginDir, 'assets', 'package.json'))) {
             promises.push(this.removeDir(path.resolve(this.pluginDir, 'assets', 'package.json')));
             if (fs.existsSync(path.resolve(this.pluginDir, 'assets', 'package-lock.json'))) {
                 promises.push(this.removeDir(path.resolve(this.pluginDir, 'assets', 'package-lock.json')));
@@ -316,26 +343,5 @@ export default class CplacePlugin {
                 }
             });
         });
-    }
-
-    /**
-     * Check if a file in the plugin is tracked
-     * 
-     * @param pathToFile path to file relative to pluginDir
-     */
-    private isFileTracked(pathToFile: string): boolean {
-        const res = spawn.sync(
-            'git', ['ls-files', '--error-unmatch', pathToFile],
-            {
-                cwd: this.pluginDir,
-            }
-        );
-        if (res.status !== 0) {
-            debug(
-                `[${this.pluginName}] (CplacePlugin) file ${pathToFile} is not tracked`
-            );
-            return false;
-        }
-        return true;
     }
 }

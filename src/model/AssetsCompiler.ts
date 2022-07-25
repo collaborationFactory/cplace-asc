@@ -17,6 +17,9 @@ import {
 import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
 import { PluginDescriptorParser } from './PluginDescriptorParser';
+import { RootPackageJsonGenerator } from './RootPackageJsonGenerator';
+import { isFileTracked } from './utils';
+import rimraf = require('rimraf');
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -130,6 +133,12 @@ export class AssetsCompiler {
                     await plugin.cleanGeneratedOutput();
                 }
             }
+
+            debug(`(AssetsCompiler) cleaning generated package.json file...`);
+            if (!isFileTracked(this.repositoryDir, path.resolve('package.json'))) {
+                rimraf.sync(path.resolve(this.repositoryDir, 'package.json'));
+                rimraf.sync(path.resolve(this.repositoryDir, 'package-lock.json'));
+            }
         }
         
         if (this.runConfig.withParentArtifacts) {
@@ -139,6 +148,13 @@ export class AssetsCompiler {
                     plugin.generatePackageJson(this.repositoryDir);
                 }
             }
+
+            const rootPackageJsonGenerator: RootPackageJsonGenerator = new RootPackageJsonGenerator(
+                this.repositoryDir,
+                this.repositoryName,
+                this.projects
+            );
+            rootPackageJsonGenerator.generatePackageJson();
         }
 
         this.npmResolver = new NPMResolver(
