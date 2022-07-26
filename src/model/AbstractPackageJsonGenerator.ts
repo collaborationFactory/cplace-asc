@@ -45,6 +45,25 @@ export abstract class AbstractPackageJsonGenerator {
             console.log(
                 `${GREEN_CHECK} created package.json file in ${filePath}`
             );
+        } else {
+            // update package name and version
+            console.log(
+                `⟲ Updating version and name in package.json ${filePath}`
+            );
+            const content = fs.readFileSync(filePath, {
+                encoding: 'utf8',
+            });
+            this.packageJsonContent = JSON.parse(content);
+            this.packageJsonContent["name"] = this.getPackageName();
+            this.packageJsonContent["version"] = this.getVersion();
+
+            this.saveConfig(
+                this.packageJsonContent, 
+                filePath
+            );
+            console.log(
+                `${GREEN_CHECK} updated package.json file in ${filePath}`
+            );
         }
 
         return filePath;

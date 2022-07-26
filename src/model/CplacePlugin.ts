@@ -62,6 +62,7 @@ export default class CplacePlugin {
      */
     public readonly assetsDir: string;
 
+    public readonly hasAssetsFolder: boolean;
     public readonly hasTypeScriptAssets: boolean;
     public readonly hasTypeScriptE2EAssets: boolean;
     public readonly hasLessAssets: boolean;
@@ -86,6 +87,9 @@ export default class CplacePlugin {
 
         this.repo = path.basename(path.dirname(path.resolve(pluginDir)));
         this.assetsDir = CplacePlugin.getAssetsDir(this.pluginDir);
+        this.hasAssetsFolder = fs.existsSync(
+            path.resolve(this.assetsDir)
+        ) && isFileTracked(this.pluginDir, "assets");
         this.hasTypeScriptAssets = fs.existsSync(
             path.resolve(this.assetsDir, 'ts', 'app.ts')
         );
@@ -194,10 +198,10 @@ export default class CplacePlugin {
      * Generate empty package.json file (only name and version) in assets folder for publishing purposes.
      */
     public generatePackageJson(repositoryDir: string): void {
-        if (!this.hasTypeScriptAssets) {
+        if (!this.hasAssetsFolder) {
             console.log(
                 cgreen`⇢`,
-                `[${this.pluginName}] plugin does not have TypeScript assets`
+                `[${this.pluginName}] plugin does not have assets`
             );
             return;
         }
