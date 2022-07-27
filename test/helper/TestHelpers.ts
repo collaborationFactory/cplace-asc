@@ -26,10 +26,11 @@ export function generateSimplePluginDescriptor(pluginPath: string, name: string,
     });
 }
 
-export function generateExtendedPluginDescriptor(pluginPath: string, name: string, group: string, pluginDependencies: any[]): void {
+export function generateExtendedPluginDescriptor(pluginPath: string, name: string, group: string, repoName: string, pluginDependencies: any[]): void {
     let content = {
         name: name,
         group: group,
+        repoName: repoName,
         dependencies: pluginDependencies
     }
 
@@ -54,6 +55,16 @@ export function generateParentRepos(location: string, names: string[]): void {
     names.forEach((name) => content[`${name}`] = {})
 
     fs.writeFileSync(path.resolve(location, 'parent-repos.json'), JSON.stringify(content, null, 4), {
+        encoding: 'utf8',
+    });
+}
+
+export function generateVersionGradle(location: string, version: string): void {
+    let content = `ext {
+        currentVersion= '${version}'
+    };`
+
+    fs.writeFileSync(path.resolve(location, 'version.gradle'), content, {
         encoding: 'utf8',
     });
 }

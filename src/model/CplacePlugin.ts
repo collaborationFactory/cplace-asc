@@ -89,7 +89,7 @@ export default class CplacePlugin {
         this.assetsDir = CplacePlugin.getAssetsDir(this.pluginDir);
         this.hasAssetsFolder = fs.existsSync(
             path.resolve(this.assetsDir)
-        ) && isFileTracked(this.pluginDir, "assets");
+        );
         this.hasTypeScriptAssets = fs.existsSync(
             path.resolve(this.assetsDir, 'ts', 'app.ts')
         );

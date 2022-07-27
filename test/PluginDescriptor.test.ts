@@ -86,8 +86,8 @@ describe('test the handling of plugin descriptor', () => {
     });
 
     test('test assets compiler with extended plugin descriptors', () => {
-        generateExtendedPluginDescriptor(platformPath, "cf.cplace.platform", "cf.cplace", []);
-        generateExtendedPluginDescriptor(pluginPath, "cf.cplace.plugin", "cf.cplace", [{name: "cf.cplace.platform", group: "cf.cplace"}]);
+        generateExtendedPluginDescriptor(platformPath, "cf.cplace.platform", "cf.cplace", "cplace", []);
+        generateExtendedPluginDescriptor(pluginPath, "cf.cplace.plugin", "cf.cplace", "cplace-paw", [{name: "cf.cplace.platform", group: "cf.cplace"}]);
 
         const config: IAssetsCompilerConfiguration = {
             rootPlugins: [],
