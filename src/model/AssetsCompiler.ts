@@ -342,7 +342,7 @@ export class AssetsCompiler {
     ): boolean {
         return (
             (ImlParser.doesImlExist(pluginPath, potentialPluginName) ||
-                PluginDescriptorParser.isCplacePluginWithGradleAndContainsPluginDescriptor(
+                CplacePlugin.isCplacePluginWithGradleAndContainsPluginDescriptor(
                     pluginPath
                 )) &&
             fs.existsSync(path.join(pluginPath, 'src'))
@@ -361,24 +361,24 @@ export class AssetsCompiler {
             return;
         }
 
-        const project = new CplacePlugin(pluginName, pluginPath);
-        project.parseDependencies(runConfig.production);
+        const project = new CplacePlugin(pluginName, pluginPath, runConfig.production);
+
         projects.set(pluginName, project);
 
-        project.dependencies.forEach((depName) => {
-            if (projects.has(depName)) {
+        project.pluginDescriptor.dependencies.forEach((pluginDescriptor) => {
+            if (projects.has(pluginDescriptor.name)) {
                 return;
             }
             const pluginPath = this.findPluginPath(
                 repositoryDir,
-                depName,
+                pluginDescriptor.name,
                 repoDependencies
             );
             this.addProjectDependenciesRecursively(
                 repositoryDir,
                 projects,
                 repoDependencies,
-                depName,
+                pluginDescriptor.name,
                 pluginPath,
                 runConfig
             );
@@ -387,11 +387,11 @@ export class AssetsCompiler {
 
     private static setDependents(projects: Map<string, CplacePlugin>) {
         for (const plugin of projects.values()) {
-            plugin.dependencies
-                .map((dep) => projects.get(dep))
+            plugin.pluginDescriptor.dependencies
+                .map((pluginDescriptor) => projects.get(pluginDescriptor.name))
                 .forEach((p) => {
                     if (!!p) {
-                        p.dependents.push(plugin.pluginName);
+                        p.dependents.push(plugin.pluginDescriptor);
                     }
                 });
         }

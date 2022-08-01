@@ -11,8 +11,9 @@ import * as rimraf from 'rimraf';
 import { CplaceTypescriptCompiler } from '../compiler/CplaceTypescriptCompiler';
 import { CompressCssCompiler } from '../compiler/CompressCssCompiler';
 import { E2ETSConfigGenerator } from './E2ETSConfigGenerator';
-import { getDependencyParser } from './DependencyParser';
 import { NPMResolver } from './NPMResolver';
+import { PluginDescriptor } from './PluginDescriptor';
+import { getDescriptorParser } from './DescriptorParser';
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined;
@@ -22,6 +23,9 @@ export interface ICplacePluginResolver {
  * Represents a cplace plugin that needs to be compiled
  */
 export default class CplacePlugin {
+    public static readonly DESCRIPTOR_FILE_NAME = 'pluginDescriptor.json';
+    public static readonly BUILD_GRADLE_FILE_NAME = 'build.gradle';
+
     /**
      * Name of the repository this plugin is contained in
      */
@@ -39,21 +43,20 @@ export default class CplacePlugin {
     public readonly hasCompressCssAssets: boolean;
     public readonly hasVendors: boolean;
 
-    /**
-     * Plugin dependencies this plugin depends on (parsed from IML), i.e. outgoing dependencies
-     */
-    public readonly dependencies: string[];
+    public pluginDescriptor: PluginDescriptor;
+
     /**
      * Plugins that depend on this plugin (set explicitly afterwards), i.e. incoming dependencies
      */
-    public readonly dependents: string[];
+    public readonly dependents: PluginDescriptor[];
 
     constructor(
         public readonly pluginName: string,
-        public readonly pluginDir: string
+        public readonly pluginDir: string,
+        public readonly production: boolean
     ) {
-        this.dependencies = [];
         this.dependents = [];
+        this.pluginDescriptor = this.parsePluginDescriptor(production);
 
         this.repo = path.basename(path.dirname(path.resolve(pluginDir)));
         this.assetsDir = CplacePlugin.getAssetsDir(this.pluginDir);
@@ -129,9 +132,9 @@ export default class CplacePlugin {
             );
         }
 
-        const dependenciesWithTypeScript = this.dependencies
-            .map((pluginName) => {
-                const plugin = pluginResolver(pluginName);
+        const dependenciesWithTypeScript = this.pluginDescriptor.dependencies
+            .map((pluginDescriptor) => {
+                const plugin = pluginResolver(pluginDescriptor.name);
                 if (!plugin) {
                     throw Error(
                         `[${this.pluginName}] could not resolve dependency ${this.pluginName}`
@@ -171,9 +174,9 @@ export default class CplacePlugin {
                 `[${this.pluginName}] plugin does not have TypeScript E2E assets`
             );
         }
-        const dependenciesWithE2ETypeScript = this.dependencies
-            .map((pluginName) => {
-                const plugin = pluginResolver(pluginName);
+        const dependenciesWithE2ETypeScript = this.pluginDescriptor.dependencies
+            .map((pluginDescriptor) => {
+                const plugin = pluginResolver(pluginDescriptor.name);
                 if (!plugin) {
                     throw Error(
                         `[${this.pluginName}] could not resolve dependency ${this.pluginName}`
@@ -231,14 +234,41 @@ export default class CplacePlugin {
         }
     }
 
-    public parseDependencies(excludeTestDependencies: boolean = false): void {
-        getDependencyParser()
-            .getPluginDependencies(
-                this.pluginDir,
-                this.pluginName,
-                excludeTestDependencies
-            )
-            .forEach((dependency) => this.dependencies.push(dependency));
+    public parsePluginDescriptor(
+        excludeTestDependencies: boolean = false
+    ): PluginDescriptor {
+        return getDescriptorParser(
+            this.pluginDir,
+            this.pluginName,
+            excludeTestDependencies
+        ).getPluginDescriptor();
+    }
+
+    public static isCplacePluginWithGradleAndContainsPluginDescriptor(
+        pluginDir: string
+    ): boolean {
+        return (
+            fs.existsSync(this.getPathToDescriptor(pluginDir)) &&
+            fs.existsSync(this.getPathToBuildGradle(pluginDir))
+        );
+    }
+
+    public static getPathToDescriptor(
+        pluginDir: string
+    ) {
+        return path.join(
+            pluginDir,
+            CplacePlugin.DESCRIPTOR_FILE_NAME
+        );
+    }
+
+    private static getPathToBuildGradle(
+        pluginDir: string
+    ) {
+        return path.join(
+            pluginDir,
+            CplacePlugin.BUILD_GRADLE_FILE_NAME
+        );
     }
 
     private async removeDir(path: string): Promise<void> {

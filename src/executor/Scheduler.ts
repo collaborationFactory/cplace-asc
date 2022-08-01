@@ -18,6 +18,7 @@ import {
 } from '../utils';
 import { CompilationResult, ICompileRequest } from '../compiler/interfaces';
 import Timeout = NodeJS.Timeout;
+import { PluginDescriptor } from '../model/PluginDescriptor';
 
 interface ISchedulingResult {
     scheduledPlugin?: string | null | undefined;
@@ -226,8 +227,8 @@ export class Scheduler {
             const plugin = this.getPlugin(nextPlugin);
             const compileRequest: ICompileRequest = {
                 pluginName: plugin.pluginName,
-                dependencyPaths: plugin.dependencies.map(
-                    (d) => this.plugins.get(d)!.pluginDir
+                dependencyPaths: plugin.pluginDescriptor.dependencies.map(
+                    (pluginDescriptor) => this.plugins.get(pluginDescriptor.name)!.pluginDir
                 ),
                 assetsPath: plugin.assetsDir,
                 mainRepoDir: this.mainRepoDir,
@@ -319,7 +320,7 @@ export class Scheduler {
             (plugin) =>
                 new JobDetails(
                     plugin.pluginName,
-                    this.filterTypeScriptPlugins(plugin.dependencies),
+                    this.filterTypeScriptPlugins(plugin.pluginDescriptor.dependencies),
                     this.filterTypeScriptPlugins(plugin.dependents)
                 )
         );
@@ -341,7 +342,7 @@ export class Scheduler {
             (plugin) =>
                 new JobDetails(
                     plugin.pluginName,
-                    this.filterTypeScriptE2EPlugins(plugin.dependencies),
+                    this.filterTypeScriptE2EPlugins(plugin.pluginDescriptor.dependencies),
                     this.filterTypeScriptE2EPlugins(plugin.dependents)
                 )
         );
@@ -360,7 +361,7 @@ export class Scheduler {
             (plugin) =>
                 new JobDetails(
                     plugin.pluginName,
-                    this.filterLessPlugins(plugin.dependencies),
+                    this.filterLessPlugins(plugin.pluginDescriptor.dependencies),
                     this.filterLessPlugins(plugin.dependents)
                 )
         );
@@ -378,16 +379,16 @@ export class Scheduler {
             (plugin) =>
                 new JobDetails(
                     plugin.pluginName,
-                    this.filterVendorPlugins(plugin.dependencies),
+                    this.filterVendorPlugins(plugin.pluginDescriptor.dependencies),
                     this.filterVendorPlugins(plugin.dependents)
                 )
         );
         return new JobTracker(jobs);
     }
 
-    private filterVendorPlugins(plugins: string[]): string[] {
+    private filterVendorPlugins(plugins: PluginDescriptor[]): string[] {
         return plugins
-            .map((p) => this.getPlugin(p))
+            .map((p) => this.getPlugin(p.name))
             .filter((p) => p.hasVendors && this.isInCompilationScope(p))
             .map((p) => p.pluginName);
     }
@@ -406,7 +407,7 @@ export class Scheduler {
             (plugin) =>
                 new JobDetails(
                     plugin.pluginName,
-                    this.filterOpenAPIYamlPlugins(plugin.dependencies),
+                    this.filterOpenAPIYamlPlugins(plugin.pluginDescriptor.dependencies),
                     this.filterOpenAPIYamlPlugins(plugin.dependents)
                 )
         );
@@ -434,34 +435,34 @@ export class Scheduler {
         return !this.noParents || plugin.repo === this.rootRepository;
     }
 
-    private filterTypeScriptPlugins(plugins: string[]): string[] {
+    private filterTypeScriptPlugins(plugins: PluginDescriptor[]): string[] {
         return plugins
-            .map((p) => this.getPlugin(p))
+            .map((p) => this.getPlugin(p.name))
             .filter(
                 (p) => p.hasTypeScriptAssets && this.isInCompilationScope(p)
             )
             .map((p) => p.pluginName);
     }
 
-    private filterTypeScriptE2EPlugins(plugins: string[]): string[] {
+    private filterTypeScriptE2EPlugins(plugins: PluginDescriptor[]): string[] {
         return plugins
-            .map((p) => this.getPlugin(p))
+            .map((p) => this.getPlugin(p.name))
             .filter(
                 (p) => p.hasTypeScriptE2EAssets && this.isInCompilationScope(p)
             )
             .map((p) => p.pluginName);
     }
 
-    private filterLessPlugins(plugins: string[]): string[] {
+    private filterLessPlugins(plugins: PluginDescriptor[]): string[] {
         return plugins
-            .map((p) => this.getPlugin(p))
+            .map((p) => this.getPlugin(p.name))
             .filter((p) => p.hasLessAssets && this.isInCompilationScope(p))
             .map((p) => p.pluginName);
     }
 
-    private filterOpenAPIYamlPlugins(plugins: string[]): string[] {
+    private filterOpenAPIYamlPlugins(plugins: PluginDescriptor[]): string[] {
         return plugins
-            .map((p) => this.getPlugin(p))
+            .map((p) => this.getPlugin(p.name))
             .filter(
                 (p) => p.hasOpenAPIYamlAssets && this.isInCompilationScope(p)
             )
