@@ -417,8 +417,11 @@ export class Scheduler {
     private createCompressCssJobTracker(): JobTracker {
         const compressPlugins: CplacePlugin[] = [];
         this.plugins.forEach((plugin) => {
+            // if the plugin has vendors, the compress css task will also be called from the VendorCompiler
+            // To prevent the task from running twice, skip compress css task if plugin has vendors.
             if (
                 plugin.hasCompressCssAssets &&
+                !plugin.hasVendors &&
                 this.isInCompilationScope(plugin)
             ) {
                 compressPlugins.push(plugin);
