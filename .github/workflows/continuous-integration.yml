@@ -111,7 +111,7 @@ jobs:
 
       - name: Build
         run: npm run prepare
-        
+
       - name: Compile main
         working-directory: ./main
         run: node ../dist/index.js
