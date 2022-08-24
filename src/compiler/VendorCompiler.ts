@@ -113,6 +113,7 @@ export class VendorCompiler implements ICompiler {
         }
         const res = spawn.sync(tsc, [
             path.join(this.assetsPath, 'index.ts'),
+            `--skipLibCheck`,
             `--outDir`,
             path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR),
         ]);

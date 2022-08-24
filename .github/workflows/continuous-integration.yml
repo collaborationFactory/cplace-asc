@@ -111,9 +111,6 @@ jobs:
 
       - name: Build
         run: npm run prepare
-
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
         
       - name: Compile main
         working-directory: ./main
