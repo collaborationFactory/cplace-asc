@@ -46,9 +46,6 @@ jobs:
           - 12.x
     name: Node ${{ matrix.node_version }} - ${{ matrix.architecture }} on ${{ matrix.os }}
     steps:
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-    
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.9.1
         with:
@@ -115,6 +112,9 @@ jobs:
       - name: Build
         run: npm run prepare
 
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
+        
       - name: Compile main
         working-directory: ./main
         run: node ../dist/index.js
