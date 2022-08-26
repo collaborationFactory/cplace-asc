@@ -3,14 +3,17 @@ import { debug } from '../utils';
 export class JobDetails {
     public readonly before: string[];
     public readonly after: string[];
+    public readonly preconditions: Function[];
 
     constructor(
         public readonly key: string,
         before: string[],
-        after: string[]
+        after: string[],
+        preconditions: Function[]
     ) {
         this.before = [...before];
         this.after = [...after];
+        this.preconditions = preconditions;
     }
 }
 
@@ -118,10 +121,19 @@ export class JobTracker {
                         this.isDirtyOrPending(beforeKey)
                     ).length === 0
             )
+            .filter((details) => {
+                let preconditionsDone: boolean = true;
+                details.preconditions.forEach((precondition) => preconditionsDone = preconditionsDone && precondition(details.key));
+                return preconditionsDone;
+            })
             // Check if the same plugin is already being compiled (can't run in parallel)
             .filter((details) => !this.pendingKeys.has(details.key))
             .map((details) => details.key);
         return ready.length > 0 ? ready[0] : undefined;
+    }
+
+    public isJobDone(key: string): boolean {
+        return !this.dirtyKeys.has(key) && !this.pendingKeys.has(key);
     }
 
     private getDetails(key: string): JobDetails {

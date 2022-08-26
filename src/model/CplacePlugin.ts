@@ -14,6 +14,7 @@ import { E2ETSConfigGenerator } from './E2ETSConfigGenerator';
 import { NPMResolver } from './NPMResolver';
 import { PluginDescriptor } from './PluginDescriptor';
 import { getDescriptorParser } from './DescriptorParser';
+import { CombineJavascriptsCompiler } from '../compiler/CombineJavascriptsCompiler';
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined;
@@ -42,6 +43,7 @@ export default class CplacePlugin {
     public readonly hasOpenAPIYamlAssets: boolean;
     public readonly hasCompressCssAssets: boolean;
     public readonly hasVendors: boolean;
+    public readonly hasCombineJs: boolean;
 
     public pluginDescriptor: PluginDescriptor;
 
@@ -89,6 +91,9 @@ export default class CplacePlugin {
                 'css',
                 CompressCssCompiler.ENTRY_FILE_NAME
             )
+        );
+        this.hasCombineJs = fs.existsSync(
+            path.resolve(this.assetsDir, CombineJavascriptsCompiler.ENTRY_FILE_NAME)
         );
     }
 
@@ -224,6 +229,12 @@ export default class CplacePlugin {
                 this.assetsDir
             );
             promises.push(this.removeDir(pluginNodeModules));
+        }
+        if (this.hasCombineJs) {
+            const generatedDir = CombineJavascriptsCompiler.getOutputDir(
+                this.assetsDir
+            );
+            promises.push(this.removeDir(generatedDir));
         }
         await Promise.all(promises);
 

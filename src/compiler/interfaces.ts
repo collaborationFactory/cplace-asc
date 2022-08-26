@@ -11,6 +11,7 @@ export interface ICompileRequest {
     vendor?: boolean;
     tsE2E?: boolean;
     compressCss?: boolean;
+    combineJs?: boolean;
 }
 
 export enum ProcessState {

@@ -41,6 +41,7 @@ export class Scheduler {
     private readonly openAPIYamlJobs: JobTracker;
     private readonly compressCssJobs: JobTracker;
     private readonly vendorJobs: JobTracker;
+    private readonly combineJsJobs: JobTracker;
 
     private watchers = {
         ts: new Map<string, FSWatcher>(),
@@ -83,6 +84,7 @@ export class Scheduler {
         this.openAPIYamlJobs = this.createOpenAPIYamlJobTracker();
         this.compressCssJobs = this.createCompressCssJobTracker();
         this.vendorJobs = this.createVendorJobTracker();
+        this.combineJsJobs = this.createCombineJsJobTracker();
     }
 
     start(): Promise<void> {
@@ -179,13 +181,27 @@ export class Scheduler {
 
         const nextTsPlugin = tsSchedulingResult.scheduledPlugin;
 
+        let nextCombineJsPlugin: string | null | undefined = null;
+        if (this.isProduction) {
+            const combineJsSchedulingResult = this.getAndScheduleNextJob(
+                this.combineJsJobs,
+                'combineJs',
+                'combineJs'
+            );
+            if (combineJsSchedulingResult.backoff) {
+                return;
+            }
+            nextCombineJsPlugin = combineJsSchedulingResult.scheduledPlugin;
+        }
+
         if (
             nextTsPlugin === null &&
             nextTsE2EPlugin == null &&
             nextLessPlugin === null &&
             nextCompressCssPlugin === null &&
             nextOpenAPIYamlPlugin === null &&
-            nextVendorPlugin === null
+            nextVendorPlugin === null &&
+            nextCombineJsPlugin === null
         ) {
             if (!this.watchFiles && !this.completed) {
                 printUpdateDetails(this.updateDetails);
@@ -203,7 +219,8 @@ export class Scheduler {
             nextLessPlugin ||
             nextCompressCssPlugin ||
             nextOpenAPIYamlPlugin ||
-            nextVendorPlugin
+            nextVendorPlugin ||
+            nextCombineJsPlugin
         ) {
             if (this.executor.hasCapacity()) {
                 this.scheduleNext();
@@ -219,8 +236,9 @@ export class Scheduler {
             | 'compressCss'
             | 'tsE2E'
             | 'openAPIYaml'
-            | 'vendor',
-        watchType: 'ts' | 'less' | 'css' | 'tsE2E' | 'openAPIYaml' | 'vendor'
+            | 'vendor'
+            | 'combineJs',
+        watchType: 'ts' | 'less' | 'css' | 'tsE2E' | 'openAPIYaml' | 'vendor' | 'combineJs'
     ): ISchedulingResult {
         const nextPlugin = jobTracker.getNextKey();
         if (nextPlugin) {
@@ -321,7 +339,8 @@ export class Scheduler {
                 new JobDetails(
                     plugin.pluginName,
                     this.filterTypeScriptPlugins(plugin.pluginDescriptor.dependencies),
-                    this.filterTypeScriptPlugins(plugin.dependents)
+                    this.filterTypeScriptPlugins(plugin.dependents),
+                    []
                 )
         );
         return new JobTracker(jobs);
@@ -343,7 +362,8 @@ export class Scheduler {
                 new JobDetails(
                     plugin.pluginName,
                     this.filterTypeScriptE2EPlugins(plugin.pluginDescriptor.dependencies),
-                    this.filterTypeScriptE2EPlugins(plugin.dependents)
+                    this.filterTypeScriptE2EPlugins(plugin.dependents),
+                    []
                 )
         );
         return new JobTracker(jobs);
@@ -362,7 +382,8 @@ export class Scheduler {
                 new JobDetails(
                     plugin.pluginName,
                     this.filterLessPlugins(plugin.pluginDescriptor.dependencies),
-                    this.filterLessPlugins(plugin.dependents)
+                    this.filterLessPlugins(plugin.dependents),
+                    []
                 )
         );
         return new JobTracker(jobs);
@@ -380,7 +401,8 @@ export class Scheduler {
                 new JobDetails(
                     plugin.pluginName,
                     this.filterVendorPlugins(plugin.pluginDescriptor.dependencies),
-                    this.filterVendorPlugins(plugin.dependents)
+                    this.filterVendorPlugins(plugin.dependents),
+                    []
                 )
         );
         return new JobTracker(jobs);
@@ -391,6 +413,25 @@ export class Scheduler {
             .map((p) => this.getPlugin(p.name))
             .filter((p) => p.hasVendors && this.isInCompilationScope(p))
             .map((p) => p.pluginName);
+    }
+
+    private createCombineJsJobTracker(): JobTracker {
+        const combineJsPlugins: CplacePlugin[] = [];
+        this.plugins.forEach((plugin) => {
+            if (plugin.hasCombineJs && this.isInCompilationScope(plugin)) {
+                combineJsPlugins.push(plugin);
+            }
+        });
+        const jobs: JobDetails[] = combineJsPlugins.map(
+            (plugin) =>
+                new JobDetails(
+                    plugin.pluginName,
+                    this.filterCombineJsPlugins(plugin.pluginDescriptor.dependencies),
+                    this.filterCombineJsPlugins(plugin.dependents),
+                    [this.vendorJobs.isJobDone.bind(this.vendorJobs), this.tsJobs.isJobDone.bind(this.tsJobs)]
+                )
+        );
+        return new JobTracker(jobs);
     }
 
     private createOpenAPIYamlJobTracker(): JobTracker {
@@ -408,7 +449,8 @@ export class Scheduler {
                 new JobDetails(
                     plugin.pluginName,
                     this.filterOpenAPIYamlPlugins(plugin.pluginDescriptor.dependencies),
-                    this.filterOpenAPIYamlPlugins(plugin.dependents)
+                    this.filterOpenAPIYamlPlugins(plugin.dependents),
+                    []
                 )
         );
         return new JobTracker(jobs);
@@ -429,7 +471,7 @@ export class Scheduler {
         });
 
         const jobs: JobDetails[] = compressPlugins.map(
-            (plugin) => new JobDetails(plugin.pluginName, [], [])
+            (plugin) => new JobDetails(plugin.pluginName, [], [], [])
         );
         return new JobTracker(jobs);
     }
@@ -472,9 +514,18 @@ export class Scheduler {
             .map((p) => p.pluginName);
     }
 
+    private filterCombineJsPlugins(plugins: PluginDescriptor[]): string[] {
+        return plugins
+            .map((p) => this.getPlugin(p.name))
+            .filter(
+                (p) => p.hasCombineJs && this.isInCompilationScope(p)
+            )
+            .map((p) => p.pluginName);
+    }
+
     private registerWatch(
         pluginName: string,
-        type: 'ts' | 'less' | 'css' | 'tsE2E' | 'openAPIYaml' | 'vendor'
+        type: 'ts' | 'less' | 'css' | 'tsE2E' | 'openAPIYaml' | 'vendor' | 'combineJs'
     ): void {
         if (!this.watchFiles) {
             return;
@@ -508,6 +559,9 @@ export class Scheduler {
                 watchDir = path.join(plugin.pluginDir, 'assets');
                 glob = Scheduler.convertToUnixPath(`${watchDir}/*(${pattern})`);
                 jobTracker = this.vendorJobs;
+                break;
+            case 'combineJs':
+                jobTracker = this.combineJsJobs;
                 break;
         }
 
