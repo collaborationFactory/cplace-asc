@@ -8,6 +8,7 @@ import * as webpack from 'webpack';
 import {merge} from 'webpack-merge';
 import spawn = require('cross-spawn');
 import * as crypto from 'crypto';
+import * as eol from 'eol';
 import { CompressCssCompiler } from './CompressCssCompiler';
 import { CplaceTypescriptCompiler } from './CplaceTypescriptCompiler';
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -112,6 +113,7 @@ export class VendorCompiler implements ICompiler {
         }
         const res = spawn.sync(tsc, [
             path.join(this.assetsPath, 'index.ts'),
+            `--skipLibCheck`,
             `--outDir`,
             path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR),
         ]);
@@ -473,9 +475,17 @@ export class VendorCompiler implements ICompiler {
             }
         }
 
-        const content = `${pathToInclude}\n` + buffer;
+        const content = this.convertLineEndings(`${pathToInclude}\n` + buffer);
         fs.writeFileSync(fileToWrite, content);
         debug(`(VendorCompiler) [${this.pluginName}] Vendor imports written`);
+    }
+
+     private convertLineEndings(content: string): string {
+        const isWindows = process.platform === 'win32';
+        if (isWindows) {
+            return eol.crlf(content);
+        }
+        return content;
     }
 
     /**
