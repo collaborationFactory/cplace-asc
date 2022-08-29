@@ -30,7 +30,7 @@ export class CombineJavascriptsCompiler implements ICompiler {
     }
 
     compile(): Promise<CompilationResult> {
-        return new Promise<CompilationResult>((resolve) => {
+        return new Promise<CompilationResult>((resolve, reject) => {
             const generatedDir = CombineJavascriptsCompiler.getOutputDir(this.assetsPath);
             const outputFile = path.join(
                 generatedDir,
@@ -61,10 +61,11 @@ export class CombineJavascriptsCompiler implements ICompiler {
             })
             .catch((err) => {
                 console.error(cerr`${err}`);
-                throw Error(
-                    `[${this.pluginName}] Failed to combine javascripts`
-                );
+                reject(`[${this.pluginName}] Failed to combine javascripts`);
             });
+        })
+        .catch((err) => {
+            throw Error(err);
         });
     }
 
@@ -79,7 +80,7 @@ export class CombineJavascriptsCompiler implements ICompiler {
                 if (err) {
                     reject(err);
                 } else if (stats.hasErrors()) {
-                    throw Error(stats.toString());
+                    reject(stats.toString());
                 } else {
                     resolve();
                 }
@@ -136,14 +137,14 @@ export class CombineJavascriptsCompiler implements ICompiler {
                             const absolutePath = path.join(resolvedFolder, file)
                             if (fs.lstatSync(absolutePath).isFile()) {
                                 const relativePath = path.relative(this.assetsPath, absolutePath);
-                                result.push('.\\' + relativePath);
+                                result.push(`.${path.sep}${relativePath}`);
                             }
                         });
                     }
                 } else {
                     const resolvedFile = path.resolve(this.assetsPath, '.' + includeLine);
                     const relativePath = path.relative(this.assetsPath, resolvedFile);
-                    result.push('.\\' + relativePath);
+                    result.push(`.${path.sep}${relativePath}`);
                 }
             }
         })
