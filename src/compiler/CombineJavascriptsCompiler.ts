@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import rimraf = require('rimraf');
 import * as webpack from 'webpack';
 import { Configuration } from 'webpack';
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 export class CombineJavascriptsCompiler implements ICompiler {
     public static readonly OUTPUT_DIR = '_generated_';
@@ -90,6 +91,7 @@ export class CombineJavascriptsCompiler implements ICompiler {
 
     private getCombineJavascriptWebpackConfig(): Configuration {
         const config: Configuration = {
+            mode: 'production',
             context: path.resolve(
                 this.assetsPath
             ),
@@ -105,9 +107,23 @@ export class CombineJavascriptsCompiler implements ICompiler {
             module: {
                 rules: [
                     {
+                        // Load everything with script-loader since all libraries are needed as gloabls in cplace.
+                        // Webpack minimization/uglifying does not work with script-loader as the whole script is wrapped as is.
+                        // For that reason, an uglify-loader first uglifies the input script (using UglifyJsPlugin with default options)
+                        // and then loads it with script-loader
                         test: /\.js$/,
-                        use: [ 'script-loader' ]
+                        use: [ 'script-loader', 'uglify-loader' ]
                     }
+                ]
+            },
+            optimization: {
+                minimize: true,
+                minimizer: [
+                    new UglifyJsPlugin({
+                        uglifyOptions: {
+                            comments: false
+                        }
+                    })
                 ]
             },
             output: {
