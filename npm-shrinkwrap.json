@@ -1,6 +1,6 @@
 {
     "name": "@cplace/asc",
-    "version": "1.2.7",
+    "version": "1.2.8",
     "lockfileVersion": 1,
     "requires": true,
     "dependencies": {
@@ -10860,6 +10860,23 @@
             "version": "3.13.1",
             "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-3.13.1.tgz",
             "integrity": "sha512-EWhx3fHy3M9JbaeTnO+rEqzCe1wtyQClv6q3YWq0voOj4E+bMZBErVS1GAHPDiRGONYq34M1/d8KuQMgvi6Gjw=="
+        },
+        "uglify-loader": {
+            "version": "3.0.0",
+            "resolved": "https://registry.npmjs.org/uglify-loader/-/uglify-loader-3.0.0.tgz",
+            "integrity": "sha512-eE+Gt+rR0Yv7hfE8qxkl/FnNp+fX+9yH8hS9jZSngzy6gmYL9/m9/mQRnKj863k/vVSL7B0OEyGOC2Li0aQfSg==",
+            "requires": {
+                "loader-utils": "^1.1.0",
+                "source-map": "^0.7.3",
+                "uglify-js": "^3.4.8"
+            },
+            "dependencies": {
+                "source-map": {
+                    "version": "0.7.4",
+                    "resolved": "https://registry.npmjs.org/source-map/-/source-map-0.7.4.tgz",
+                    "integrity": "sha512-l3BikUxvPOcn5E74dZiq5BGsTb5yEwhaTSzccU6t4sDOH8NWJCstKO5QT2CvtFoK6F0saL7p9xHAqHOlCPJygA=="
+                }
+            }
         },
         "uglifyjs-webpack-plugin": {
             "version": "2.2.0",
