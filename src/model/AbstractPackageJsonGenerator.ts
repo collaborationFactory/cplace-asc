@@ -5,6 +5,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import CplacePlugin from './CplacePlugin';
+import { PackageJson } from 'type-fest';
 import { debug, GREEN_CHECK } from '../utils';
 import { CplaceVersion } from './CplaceVersion';
 
@@ -32,19 +33,11 @@ export abstract class AbstractPackageJsonGenerator {
             const pluginDependencies: IPackageJsonDependency[] = this.getPluginDependencies();
             let devDependencies = this.createDevDependencies(pluginDependencies);
 
-            this.packageJsonContent = {
-                name: this.getPackageName(),
-                version: this.getVersion(),
-                devDependencies: devDependencies
-            };
-
-            this.saveConfig(
-                this.packageJsonContent, 
-                filePath
-            );
-            console.log(
-                `${GREEN_CHECK} created package.json file in ${filePath}`
-            );
+            let packageJson: PackageJson = {};
+            packageJson.name = this.getPackageName();
+            packageJson.version = this.getVersion();
+            packageJson.devDependencies = devDependencies;
+            this.packageJsonContent = packageJson;
         } else {
             // update package name and version
             console.log(
@@ -54,17 +47,17 @@ export abstract class AbstractPackageJsonGenerator {
                 encoding: 'utf8',
             });
             this.packageJsonContent = JSON.parse(content);
-            this.packageJsonContent["name"] = this.getPackageName();
-            this.packageJsonContent["version"] = this.getVersion();
-
-            this.saveConfig(
-                this.packageJsonContent, 
-                filePath
-            );
-            console.log(
-                `${GREEN_CHECK} updated package.json file in ${filePath}`
-            );
+            this.packageJsonContent.name = this.getPackageName();
+            this.packageJsonContent.version = this.getVersion();
         }
+
+        this.saveConfig(
+            this.packageJsonContent,
+            filePath
+        );
+        console.log(
+            `${GREEN_CHECK} updated package.json file in ${filePath}`
+        );
 
         return filePath;
     }
@@ -91,7 +84,7 @@ export abstract class AbstractPackageJsonGenerator {
     }
 
     private saveConfig(jsonObject, filePath: string): void {
-        const stringContent = JSON.stringify(jsonObject, null, 4);
+        const stringContent = JSON.stringify(jsonObject, null, 2);
         fs.writeFileSync(filePath, stringContent, { encoding: 'utf8' });
 
         debug(

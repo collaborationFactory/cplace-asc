@@ -43,7 +43,7 @@ function run(updateDetails?: IUpdateDetails) {
         --threads, -t           Maximum number of threads to run in parallel
         --localonly, -l         Enable to not scan other directories than CWD for plugins
         --noparents, -x         Enable to only run compilation on plugins in current repository (still scans for other sources to be present)
-        --parentArtifacts, -a   Use the NPM artifacts for the parent repos instead of directly using the checked out parent repos
+        --packagejson, -j       Generate package.json files (if missing) in the root and each plugin that has assets
         --verbose, -v           Enable verbose logging
         --production, -P        Enable production mode (ignores test dependencies and E2E)
 
@@ -85,9 +85,9 @@ function run(updateDetails?: IUpdateDetails) {
                     alias: 'x',
                     default: false,
                 },
-                withParentArtifacts: {
+                packagejson: {
                     type: 'boolean',
-                    alias: 'a',
+                    alias: 'j',
                     default: false,
                 },
                 verbose: {
@@ -174,7 +174,7 @@ function run(updateDetails?: IUpdateDetails) {
             localOnly: cli.flags.localonly,
             production: cli.flags.production,
             noParents: cli.flags.noparents || cli.flags.noParents,
-            withParentArtifacts: cli.flags.withParentArtifacts
+            packagejson: cli.flags.packagejson
         };
 
         console.log(getAvailableStats());

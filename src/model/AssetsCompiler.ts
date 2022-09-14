@@ -64,9 +64,9 @@ export interface IAssetsCompilerConfiguration {
     noParents: boolean;
 
     /**
-     * Indicates that npm artifacts should be used for the parent repos, instead of checkout out parent repos.
+     * Indicates that package.json files will be created in the root and each plugin taht has assets.
      */
-    withParentArtifacts: boolean;
+    packagejson: boolean;
 }
 
 /**
@@ -141,7 +141,7 @@ export class AssetsCompiler {
             }
         }
         
-        if (this.runConfig.withParentArtifacts) {
+        if (this.runConfig.packagejson) {
             debug(`(AssetsCompiler) generating package.json for all plugins...`);
             for (const plugin of this.projects.values()) {
                 if (this.isInCompilationScope(plugin)) {

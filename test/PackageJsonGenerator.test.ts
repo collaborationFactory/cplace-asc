@@ -89,7 +89,7 @@ describe('test generating a package.json file in repo root', () => {
             localOnly: false,
             production: false,
             noParents: false,
-            withParentArtifacts: true
+            packagejson: true
         };
 
         PackageVersion.initialize(mainRepoPath);

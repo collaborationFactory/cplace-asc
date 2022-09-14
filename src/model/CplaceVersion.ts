@@ -44,7 +44,7 @@ export class CplaceVersion {
             const versionSnapshotParts = version.split("-");
             
             const versionParts = versionSnapshotParts[0].split('.');
-            versionParts.push(versionSnapshotParts.length > 0 ? "true" : "false");
+            versionParts.push(versionSnapshotParts.length > 1 && versionSnapshotParts[1].toLowerCase().includes("snapshot") ? "true" : "false");
 
             if (versionParts.length < 3) {
             console.error(
@@ -66,7 +66,12 @@ export class CplaceVersion {
     }
 
     public static toString(): string {
-        return `${this._version?.major}.${this._version?.minor}.${this._version?.patch}`;
+        let version = `${this._version?.major}.${this._version?.minor}.${this._version?.patch}`;
+        if (this._version?.snapshot) {
+            version += '-SNAPSHOT';
+        }
+
+        return version;
     }
 
     public static get(): CplaceVersion {
