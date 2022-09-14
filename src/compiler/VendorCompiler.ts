@@ -211,11 +211,13 @@ export class VendorCompiler implements ICompiler {
     private getPluginWebpackConfig(): Configuration {
         return {
             mode: 'production',
-            entry: path.resolve(
-                this.assetsPath,
-                CplaceTypescriptCompiler.DEST_DIR,
-                VendorCompiler.VENDOR_ENTRY
-            ),
+            entry: {
+                vendor: path.resolve(
+                    this.assetsPath,
+                    CplaceTypescriptCompiler.DEST_DIR,
+                    VendorCompiler.VENDOR_ENTRY
+                )
+            },
             externals: {
                 jquery: 'jQuery'
             },
@@ -224,7 +226,7 @@ export class VendorCompiler implements ICompiler {
                     this.assetsPath,
                     CplaceTypescriptCompiler.DEST_DIR
                 ),
-                filename: VendorCompiler.VENDOR_JS_FILE,
+                filename: '[name].js',
             },
             resolveLoader: {
                 modules: [path.resolve(__dirname, '../../', 'node_modules')],
