@@ -38,7 +38,7 @@ export class PluginPackageJsonGenerator extends AbstractPackageJsonGenerator {
     }
 
     public getPackageName() {
-        return `@${this.plugin.pluginDescriptor.group.replace(/\./g, '-')}/${this.plugin.pluginDescriptor.name.replace(/\./g, '-')}`;
+        return `@${this.plugin.pluginDescriptor.group.replace(/\./g, '-')}/${this.plugin.pluginDescriptor.name.replace(/\./g, '-')}`.toLowerCase();
     }
 
     public getPluginDependencies(): IPackageJsonDependency[] {

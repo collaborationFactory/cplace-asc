@@ -69,7 +69,7 @@ export abstract class AbstractPackageJsonGenerator {
     public abstract getPluginDependencies(): IPackageJsonDependency[];
 
     private getVersion(): string {
-        return CplaceVersion.toString();
+        return CplaceVersion.toString().toLowerCase();
     }
 
     private createDevDependencies(pluginDependencies: IPackageJsonDependency[]) {
