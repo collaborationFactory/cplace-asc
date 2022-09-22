@@ -354,6 +354,9 @@ export default class CplacePlugin {
                     );
                     resolve();
                 } else {
+                    console.error(
+                        cerr`(CplacePlugin) [${this.pluginName}] cannot remove path ${path}. ${e}`
+                    );
                     reject(e);
                 }
             });
