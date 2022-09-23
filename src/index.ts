@@ -191,7 +191,11 @@ function run(updateDetails?: IUpdateDetails) {
             () => {
                 setTimeout(() => process.exit(0), 200);
             },
-            () => {
+            (error) => {
+                console.error(cerr`Failed to start assets compiler: ${error.message}`);
+                if (isDebugEnabled()) {
+                    console.error(error);
+                }
                 setTimeout(() => process.exit(1), 200);
             }
         );
