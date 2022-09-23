@@ -64,7 +64,7 @@ export interface IAssetsCompilerConfiguration {
     noParents: boolean;
 
     /**
-     * Indicates that package.json files will be created in the root and each plugin taht has assets.
+     * Indicates that package.json files will be created in the root and each plugin that has assets.
      */
     packagejson: boolean;
 }

@@ -295,9 +295,7 @@ export default class CplacePlugin {
         }
         if (!isFileTracked(this.pluginDir, path.resolve(this.pluginDir, 'assets', 'package.json'))) {
             promises.push(this.removeDir(path.resolve(this.pluginDir, 'assets', 'package.json')));
-            if (fs.existsSync(path.resolve(this.pluginDir, 'assets', 'package-lock.json'))) {
-                promises.push(this.removeDir(path.resolve(this.pluginDir, 'assets', 'package-lock.json')));
-            }
+            promises.push(this.removeDir(path.resolve(this.pluginDir, 'assets', 'package-lock.json')));
         }
         await Promise.all(promises);
 

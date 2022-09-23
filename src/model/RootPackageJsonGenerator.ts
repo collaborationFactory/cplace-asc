@@ -27,7 +27,7 @@ export class RootPackageJsonGenerator extends AbstractPackageJsonGenerator {
         const pluginDependencies: IPackageJsonDependency[] = [];
 
         this.projects.forEach((value: CplacePlugin, key: string) => {
-            // only gpo through plugins from current repo
+            // only go through plugins from current repo
             if (value.pluginDescriptor.repoName == this.repositoryName) {
                 value.pluginDescriptor.dependencies.forEach((dependency) => {
                     pluginDependencies.push(dependency);
