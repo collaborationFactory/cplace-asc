@@ -131,10 +131,6 @@ function run(updateDetails?: IUpdateDetails) {
         debug('Debugging enabled...');
     }
 
-    if (cli.flags.production) {
-        process.env.NODE_ENV = 'production';
-    }
-
     const mainRepoPath = AssetsCompiler.getMainRepoPath(
         process.cwd(),
         cli.flags.localonly
