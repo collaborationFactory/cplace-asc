@@ -69,10 +69,12 @@ describe('resolve npm credentials', () => {
                 '//cplace.jfrog.io/artifactory/api/npm/cplace-npm/:email=actor@circleci.com\n'
         );
 
-        expect(npmrcContent).toContain('@cplace-3rdparty-modified:registry=https://cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/\n' +
-            '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:_auth=YWN0b3JAY2lyY2xlY2kuY29tOnRva2Vu\n' +
-            '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:always-auth=true\n' +
-            '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:email=actor@circleci.com\n');
+        expect(npmrcContent).toContain(
+            '@cplace-3rdparty-modified:registry=https://cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/\n' +
+                '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:_auth=YWN0b3JAY2lyY2xlY2kuY29tOnRva2Vu\n' +
+                '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:always-auth=true\n' +
+                '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:email=actor@circleci.com\n'
+        );
         expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(8);
     });
 

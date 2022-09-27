@@ -2,10 +2,10 @@ import { CompilationResult, ICompiler } from './interfaces';
 import * as fs from 'fs';
 import * as path from 'path';
 import { NPMResolver } from '../model/NPMResolver';
-import { cerr, cgreen, debug, formatDuration} from '../utils';
+import { cerr, cgreen, debug, formatDuration } from '../utils';
 import { Configuration } from 'webpack';
 import * as webpack from 'webpack';
-import {merge} from 'webpack-merge';
+import { merge } from 'webpack-merge';
 import spawn = require('cross-spawn');
 import * as crypto from 'crypto';
 import * as eol from 'eol';
@@ -50,11 +50,10 @@ export class VendorCompiler implements ICompiler {
         console.log(`⟲ [${this.pluginName}] starting vendors compilation...`);
         const startTime = new Date().getTime();
 
-        const dependenciesWereUpdated =
-            NPMResolver.installPluginDependencies(
-                this.pluginName,
-                this.assetsPath
-            );
+        const dependenciesWereUpdated = NPMResolver.installPluginDependencies(
+            this.pluginName,
+            this.assetsPath
+        );
 
         const pluginIndexExists = this.tscPluginIndex();
 
@@ -189,17 +188,24 @@ export class VendorCompiler implements ICompiler {
      * @private
      */
     private getPluginSpecificWebpackConfig(): Configuration {
-        const pluginSpecificConfigFile = path.join(this.assetsPath, VendorCompiler.PLUGIN_SPECIFIC_VENDOR_CONFIG);
+        const pluginSpecificConfigFile = path.join(
+            this.assetsPath,
+            VendorCompiler.PLUGIN_SPECIFIC_VENDOR_CONFIG
+        );
         if (!fs.existsSync(pluginSpecificConfigFile)) {
             return {};
         }
 
-        console.log(`⟲ [${this.pluginName}] loading custom vendor webpack configuration...`);
+        console.log(
+            `⟲ [${this.pluginName}] loading custom vendor webpack configuration...`
+        );
         try {
             const pluginSpecificConfig = require(pluginSpecificConfigFile);
             return pluginSpecificConfig;
         } catch (e) {
-            console.error(cerr`Error while loading configuration ${pluginSpecificConfigFile}`);
+            console.error(
+                cerr`Error while loading configuration ${pluginSpecificConfigFile}`
+            );
             throw e;
         }
     }
@@ -216,10 +222,10 @@ export class VendorCompiler implements ICompiler {
                     this.assetsPath,
                     CplaceTypescriptCompiler.DEST_DIR,
                     VendorCompiler.VENDOR_ENTRY
-                )
+                ),
             },
             externals: {
-                jquery: 'jQuery'
+                jquery: 'jQuery',
             },
             output: {
                 path: path.resolve(
@@ -232,7 +238,11 @@ export class VendorCompiler implements ICompiler {
                 modules: [path.resolve(__dirname, '../../', 'node_modules')],
             },
             resolve: {
-                modules: [path.resolve(this.assetsPath, 'node_modules'), path.resolve(this.assetsPath, 'js'), path.resolve(this.assetsPath, '3rdParty')],
+                modules: [
+                    path.resolve(this.assetsPath, 'node_modules'),
+                    path.resolve(this.assetsPath, 'js'),
+                    path.resolve(this.assetsPath, '3rdParty'),
+                ],
             },
             optimization: {
                 minimize: true,
@@ -482,7 +492,7 @@ export class VendorCompiler implements ICompiler {
         debug(`(VendorCompiler) [${this.pluginName}] Vendor imports written`);
     }
 
-     private convertLineEndings(content: string): string {
+    private convertLineEndings(content: string): string {
         const isWindows = process.platform === 'win32';
         if (isWindows) {
             return eol.crlf(content);

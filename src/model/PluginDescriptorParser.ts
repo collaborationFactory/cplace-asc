@@ -10,8 +10,7 @@ export class PluginDescriptorParser implements DescriptorParser {
     private readonly descriptor: PluginDescriptor;
 
     constructor(private pluginDir: string) {
-        this.pathToDescriptor =
-            CplacePlugin.getPathToDescriptor(pluginDir);
+        this.pathToDescriptor = CplacePlugin.getPathToDescriptor(pluginDir);
         if (!fs.existsSync(this.pathToDescriptor)) {
             console.error(
                 cerr`(PluginDescriptor) Failed to find plugin descriptor for ${path.basename(
@@ -39,17 +38,19 @@ export class PluginDescriptorParser implements DescriptorParser {
             encoding: 'utf8',
         });
         const pluginDescriptor = JSON.parse(content) as PluginDescriptor;
-        if (pluginDescriptor?.dependencies?.length && 
-            (typeof pluginDescriptor.dependencies[0] === 'string' || pluginDescriptor.dependencies[0] instanceof String)) {
-                
-                const newDependencies: PluginDescriptor[] = [];
-                pluginDescriptor.dependencies.forEach(dependency => {
-                    newDependencies.push({
-                        name: dependency + ""
-                    } as PluginDescriptor);
-                });
-                pluginDescriptor.dependencies.splice(0);
-                pluginDescriptor.dependencies.push(...newDependencies);
+        if (
+            pluginDescriptor?.dependencies?.length &&
+            (typeof pluginDescriptor.dependencies[0] === 'string' ||
+                pluginDescriptor.dependencies[0] instanceof String)
+        ) {
+            const newDependencies: PluginDescriptor[] = [];
+            pluginDescriptor.dependencies.forEach((dependency) => {
+                newDependencies.push({
+                    name: dependency + '',
+                } as PluginDescriptor);
+            });
+            pluginDescriptor.dependencies.splice(0);
+            pluginDescriptor.dependencies.push(...newDependencies);
         }
 
         return pluginDescriptor;
