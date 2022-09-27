@@ -144,8 +144,8 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                 new CReplacePlugin(),
                 new webpack.IgnorePlugin({
                     resourceRegExp: /(index\.js|vendor\.js)$/,
-                    contextRegExp: new RegExp(`\.*(${this.pluginName}).*`)
-                })
+                    contextRegExp: new RegExp(`\.*(${this.pluginName}).*`),
+                }),
             ],
             resolve: {
                 extensions: ['.ts', '.js'],

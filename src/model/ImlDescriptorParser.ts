@@ -5,18 +5,18 @@ import { PluginDescriptor } from './PluginDescriptor';
 import { DescriptorParser } from './DescriptorParser';
 
 export class ImlDescriptorParser implements DescriptorParser {
-
     private readonly descriptor: PluginDescriptor;
 
     constructor(
-        pluginDir: string, 
-        pluginName: string, 
+        pluginDir: string,
+        pluginName: string,
         excludeTestDependencies: boolean
     ) {
         this.descriptor = this.parseFile(
-            pluginDir, 
+            pluginDir,
             pluginName,
-            excludeTestDependencies);
+            excludeTestDependencies
+        );
     }
 
     public getPluginDescriptor(): PluginDescriptor {
@@ -45,13 +45,13 @@ export class ImlDescriptorParser implements DescriptorParser {
             })
             .map((module) => {
                 return {
-                    name: module.moduleName
-                } as PluginDescriptor
+                    name: module.moduleName,
+                } as PluginDescriptor;
             });
 
         return {
             name: pluginName,
-            dependencies: dependencies
+            dependencies: dependencies,
         } as PluginDescriptor;
     }
 }

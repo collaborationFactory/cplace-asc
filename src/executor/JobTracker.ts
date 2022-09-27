@@ -123,7 +123,11 @@ export class JobTracker {
             )
             .filter((details) => {
                 let preconditionsDone: boolean = true;
-                details.preconditions.forEach((precondition) => preconditionsDone = preconditionsDone && precondition(details.key));
+                details.preconditions.forEach(
+                    (precondition) =>
+                        (preconditionsDone =
+                            preconditionsDone && precondition(details.key))
+                );
                 return preconditionsDone;
             })
             // Check if the same plugin is already being compiled (can't run in parallel)

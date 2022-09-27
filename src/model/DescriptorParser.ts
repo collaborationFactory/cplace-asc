@@ -8,15 +8,16 @@ export interface DescriptorParser {
 }
 
 export function getDescriptorParser(
-    pluginDir: string, 
-    pluginName: string, 
+    pluginDir: string,
+    pluginName: string,
     excludeTestDependencies: boolean
 ): DescriptorParser {
     if (PackageVersion.get().major < 3) {
         return new ImlDescriptorParser(
-            pluginDir, 
-            pluginName, 
-            excludeTestDependencies);
+            pluginDir,
+            pluginName,
+            excludeTestDependencies
+        );
     } else {
         return new PluginDescriptorParser(pluginDir);
     }

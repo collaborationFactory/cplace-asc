@@ -48,12 +48,14 @@ describe('configuring jfrog credentials', () => {
         '//cplace.jfrog.io/artifactory/api/npm/cplace-npm/:always-auth=true\n' +
         '//cplace.jfrog.io/artifactory/api/npm/cplace-npm/:email=max.mustermann@collaboration-factory.de';
 
-    const assets_outdated_token = '@cplace-3rdparty-modified:registry=https://cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/\n' +
+    const assets_outdated_token =
+        '@cplace-3rdparty-modified:registry=https://cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/\n' +
         '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:_auth=outdatedtoken\n' +
         '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:always-auth=true\n' +
         '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:email=max.mustermann@collaboration-factory.de\n';
 
-    const assets_registry ='@cplace-3rdparty-modified:registry=https://cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/\n' +
+    const assets_registry =
+        '@cplace-3rdparty-modified:registry=https://cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/\n' +
         '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:_auth=bWF4Lm11c3Rlcm1hbm5AY29sbGFib3JhdGlvbi1mYWN0b3J5LmRlOnRva2Vu\n' +
         '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:always-auth=true\n' +
         '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:email=max.mustermann@collaboration-factory.de\n';

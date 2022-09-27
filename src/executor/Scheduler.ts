@@ -238,7 +238,14 @@ export class Scheduler {
             | 'openAPIYaml'
             | 'vendor'
             | 'combineJs',
-        watchType: 'ts' | 'less' | 'css' | 'tsE2E' | 'openAPIYaml' | 'vendor' | 'combineJs'
+        watchType:
+            | 'ts'
+            | 'less'
+            | 'css'
+            | 'tsE2E'
+            | 'openAPIYaml'
+            | 'vendor'
+            | 'combineJs'
     ): ISchedulingResult {
         const nextPlugin = jobTracker.getNextKey();
         if (nextPlugin) {
@@ -246,7 +253,8 @@ export class Scheduler {
             const compileRequest: ICompileRequest = {
                 pluginName: plugin.pluginName,
                 dependencyPaths: plugin.pluginDescriptor.dependencies.map(
-                    (pluginDescriptor) => this.plugins.get(pluginDescriptor.name)!.pluginDir
+                    (pluginDescriptor) =>
+                        this.plugins.get(pluginDescriptor.name)!.pluginDir
                 ),
                 assetsPath: plugin.assetsDir,
                 mainRepoDir: this.mainRepoDir,
@@ -338,7 +346,9 @@ export class Scheduler {
             (plugin) =>
                 new JobDetails(
                     plugin.pluginName,
-                    this.filterTypeScriptPlugins(plugin.pluginDescriptor.dependencies),
+                    this.filterTypeScriptPlugins(
+                        plugin.pluginDescriptor.dependencies
+                    ),
                     this.filterTypeScriptPlugins(plugin.dependents),
                     []
                 )
@@ -361,7 +371,9 @@ export class Scheduler {
             (plugin) =>
                 new JobDetails(
                     plugin.pluginName,
-                    this.filterTypeScriptE2EPlugins(plugin.pluginDescriptor.dependencies),
+                    this.filterTypeScriptE2EPlugins(
+                        plugin.pluginDescriptor.dependencies
+                    ),
                     this.filterTypeScriptE2EPlugins(plugin.dependents),
                     []
                 )
@@ -381,7 +393,9 @@ export class Scheduler {
             (plugin) =>
                 new JobDetails(
                     plugin.pluginName,
-                    this.filterLessPlugins(plugin.pluginDescriptor.dependencies),
+                    this.filterLessPlugins(
+                        plugin.pluginDescriptor.dependencies
+                    ),
                     this.filterLessPlugins(plugin.dependents),
                     []
                 )
@@ -400,7 +414,9 @@ export class Scheduler {
             (plugin) =>
                 new JobDetails(
                     plugin.pluginName,
-                    this.filterVendorPlugins(plugin.pluginDescriptor.dependencies),
+                    this.filterVendorPlugins(
+                        plugin.pluginDescriptor.dependencies
+                    ),
                     this.filterVendorPlugins(plugin.dependents),
                     []
                 )
@@ -426,9 +442,14 @@ export class Scheduler {
             (plugin) =>
                 new JobDetails(
                     plugin.pluginName,
-                    this.filterCombineJsPlugins(plugin.pluginDescriptor.dependencies),
+                    this.filterCombineJsPlugins(
+                        plugin.pluginDescriptor.dependencies
+                    ),
                     this.filterCombineJsPlugins(plugin.dependents),
-                    [this.vendorJobs.isJobDone.bind(this.vendorJobs), this.tsJobs.isJobDone.bind(this.tsJobs)]
+                    [
+                        this.vendorJobs.isJobDone.bind(this.vendorJobs),
+                        this.tsJobs.isJobDone.bind(this.tsJobs),
+                    ]
                 )
         );
         return new JobTracker(jobs);
@@ -448,7 +469,9 @@ export class Scheduler {
             (plugin) =>
                 new JobDetails(
                     plugin.pluginName,
-                    this.filterOpenAPIYamlPlugins(plugin.pluginDescriptor.dependencies),
+                    this.filterOpenAPIYamlPlugins(
+                        plugin.pluginDescriptor.dependencies
+                    ),
                     this.filterOpenAPIYamlPlugins(plugin.dependents),
                     []
                 )
@@ -517,15 +540,20 @@ export class Scheduler {
     private filterCombineJsPlugins(plugins: PluginDescriptor[]): string[] {
         return plugins
             .map((p) => this.getPlugin(p.name))
-            .filter(
-                (p) => p.hasCombineJs && this.isInCompilationScope(p)
-            )
+            .filter((p) => p.hasCombineJs && this.isInCompilationScope(p))
             .map((p) => p.pluginName);
     }
 
     private registerWatch(
         pluginName: string,
-        type: 'ts' | 'less' | 'css' | 'tsE2E' | 'openAPIYaml' | 'vendor' | 'combineJs'
+        type:
+            | 'ts'
+            | 'less'
+            | 'css'
+            | 'tsE2E'
+            | 'openAPIYaml'
+            | 'vendor'
+            | 'combineJs'
     ): void {
         if (!this.watchFiles) {
             return;

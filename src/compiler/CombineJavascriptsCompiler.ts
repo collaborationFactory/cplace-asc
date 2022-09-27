@@ -10,10 +10,11 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 export class CombineJavascriptsCompiler implements ICompiler {
     public static readonly OUTPUT_DIR = '_generated_';
-    public static readonly ENTRY_FILE_NAME = 'javaScriptIncludesToBeCompressed.txt';
+    public static readonly ENTRY_FILE_NAME =
+        'javaScriptIncludesToBeCompressed.txt';
     public static readonly OUTPUT_FILE_NAME = 'compressed.js';
 
-    public static readonly INCLUDE_COMMENT = "#";
+    public static readonly INCLUDE_COMMENT = '#';
 
     private readonly pathToEntryFile: string = '';
 
@@ -32,7 +33,9 @@ export class CombineJavascriptsCompiler implements ICompiler {
 
     compile(): Promise<CompilationResult> {
         return new Promise<CompilationResult>((resolve, reject) => {
-            const generatedDir = CombineJavascriptsCompiler.getOutputDir(this.assetsPath);
+            const generatedDir = CombineJavascriptsCompiler.getOutputDir(
+                this.assetsPath
+            );
             const outputFile = path.join(
                 generatedDir,
                 CombineJavascriptsCompiler.OUTPUT_FILE_NAME
@@ -48,24 +51,30 @@ export class CombineJavascriptsCompiler implements ICompiler {
             }
 
             const start = new Date().getTime();
-            console.log(`⟲ [${this.pluginName}] starting to combine javascripts...`);
+            console.log(
+                `⟲ [${this.pluginName}] starting to combine javascripts...`
+            );
 
-            this.combineJavascripts().then(() => {
-                let end = new Date().getTime();
-                console.log(
-                    GREEN_CHECK,
-                    `[${
-                        this.pluginName
-                    }] Combining javascripts finished (${formatDuration(end - start)})`
-                );
-                return resolve(CompilationResult.CHANGED);
-            })
-            .catch((err) => {
-                console.error(cerr`${err}`);
-                reject(`[${this.pluginName}] Failed to combine javascripts`);
-            });
-        })
-        .catch((err) => {
+            this.combineJavascripts()
+                .then(() => {
+                    let end = new Date().getTime();
+                    console.log(
+                        GREEN_CHECK,
+                        `[${
+                            this.pluginName
+                        }] Combining javascripts finished (${formatDuration(
+                            end - start
+                        )})`
+                    );
+                    return resolve(CompilationResult.CHANGED);
+                })
+                .catch((err) => {
+                    console.error(cerr`${err}`);
+                    reject(
+                        `[${this.pluginName}] Failed to combine javascripts`
+                    );
+                });
+        }).catch((err) => {
             throw Error(err);
         });
     }
@@ -92,17 +101,15 @@ export class CombineJavascriptsCompiler implements ICompiler {
     private getCombineJavascriptWebpackConfig(): Configuration {
         const config: Configuration = {
             mode: 'production',
-            context: path.resolve(
-                this.assetsPath
-            ),
+            context: path.resolve(this.assetsPath),
             externals: {
-                jquery: 'jQuery'
+                jquery: 'jQuery',
             },
             resolveLoader: {
                 modules: [path.resolve(__dirname, '../../', 'node_modules')],
             },
             entry: {
-                compressed: this.getCombineJavascriptSources()
+                compressed: this.getCombineJavascriptSources(),
             },
             module: {
                 rules: [
@@ -112,23 +119,23 @@ export class CombineJavascriptsCompiler implements ICompiler {
                         // For that reason, an uglify-loader first uglifies the input script (using UglifyJsPlugin with default options)
                         // and then loads it with script-loader
                         test: /\.js$/,
-                        use: [ 'script-loader', 'uglify-loader' ]
-                    }
-                ]
+                        use: ['script-loader', 'uglify-loader'],
+                    },
+                ],
             },
             optimization: {
                 minimize: true,
                 minimizer: [
                     new UglifyJsPlugin({
                         uglifyOptions: {
-                            comments: false
-                        }
-                    })
-                ]
+                            comments: false,
+                        },
+                    }),
+                ],
             },
             output: {
                 filename: '[name].js',
-                path: CombineJavascriptsCompiler.getOutputDir(this.assetsPath)
+                path: CombineJavascriptsCompiler.getOutputDir(this.assetsPath),
             },
         };
 
@@ -142,30 +149,56 @@ export class CombineJavascriptsCompiler implements ICompiler {
         let includePaths = includesFile.replace(/\r/g, '').split('\n');
         includePaths.forEach((includeLine) => {
             // skip empty lines and lines beggining with '#'
-            if (includeLine.trim().length > 0 && !includeLine.trim().startsWith(CombineJavascriptsCompiler.INCLUDE_COMMENT)) {    
+            if (
+                includeLine.trim().length > 0 &&
+                !includeLine
+                    .trim()
+                    .startsWith(CombineJavascriptsCompiler.INCLUDE_COMMENT)
+            ) {
                 if (includeLine.endsWith('*')) {
                     // read all files from a potential folder and add them to combine
-                    const lineWithoutAsterix = includeLine.trim().substring(0, includeLine.length - 2);
-                    const resolvedFolder = path.resolve(this.assetsPath, '.' + lineWithoutAsterix);    
-                    if (fs.existsSync(resolvedFolder) && fs.lstatSync(resolvedFolder).isDirectory() ) {
+                    const lineWithoutAsterix = includeLine
+                        .trim()
+                        .substring(0, includeLine.length - 2);
+                    const resolvedFolder = path.resolve(
+                        this.assetsPath,
+                        '.' + lineWithoutAsterix
+                    );
+                    if (
+                        fs.existsSync(resolvedFolder) &&
+                        fs.lstatSync(resolvedFolder).isDirectory()
+                    ) {
                         fs.readdirSync(resolvedFolder).forEach((file) => {
-
-                            const absolutePath = path.join(resolvedFolder, file)
+                            const absolutePath = path.join(
+                                resolvedFolder,
+                                file
+                            );
                             if (fs.lstatSync(absolutePath).isFile()) {
-                                const relativePath = path.relative(this.assetsPath, absolutePath);
+                                const relativePath = path.relative(
+                                    this.assetsPath,
+                                    absolutePath
+                                );
                                 result.push(`.${path.sep}${relativePath}`);
                             }
                         });
                     }
                 } else {
-                    const resolvedFile = path.resolve(this.assetsPath, '.' + includeLine);
-                    const relativePath = path.relative(this.assetsPath, resolvedFile);
+                    const resolvedFile = path.resolve(
+                        this.assetsPath,
+                        '.' + includeLine
+                    );
+                    const relativePath = path.relative(
+                        this.assetsPath,
+                        resolvedFile
+                    );
                     result.push(`.${path.sep}${relativePath}`);
                 }
             }
-        })
+        });
 
-        debug(`(CombineJavascriptsCompiler) [${this.pluginName}] will combine following files: \n ${result}`);
+        debug(
+            `(CombineJavascriptsCompiler) [${this.pluginName}] will combine following files: \n ${result}`
+        );
         return result;
     }
 
