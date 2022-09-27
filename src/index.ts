@@ -132,7 +132,7 @@ function run(updateDetails?: IUpdateDetails) {
     }
 
     if (cli.flags.production) {
-        process.env.NODE_ENV = 'production';
+        process.env.CPLACE_ENV = 'production';
     }
 
     const mainRepoPath = AssetsCompiler.getMainRepoPath(
