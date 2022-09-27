@@ -120,15 +120,15 @@ jobs:
 
             - name: combineJavascript main
               working-directory: ./main
-              timeout-minutes: 10
+              timeout-minutes: 20
               run: ./gradlew combineJavascript
 
             - name: combineJavascript cplace-paw
               working-directory: ./cplace-paw
-              timeout-minutes: 10
+              timeout-minutes: 20
               run: ./gradlew combineJavascript
 
             - name: combineJavascript cplace-project-planning
               working-directory: ./cplace-project-planning
-              timeout-minutes: 10
+              timeout-minutes: 20
               run: ./gradlew combineJavascript
