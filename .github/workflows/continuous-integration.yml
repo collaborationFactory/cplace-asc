@@ -28,6 +28,9 @@ jobs:
             - name: Install modules
               run: npm ci
 
+            - name: Formatter
+              run: npm run prettier-check
+
             - name: Run Jest
               run: node_modules/.bin/jest --verbose
 
