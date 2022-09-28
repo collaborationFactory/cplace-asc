@@ -391,7 +391,11 @@ export class AssetsCompiler {
             return;
         }
 
-        const project = new CplacePlugin(pluginName, pluginPath, runConfig.production);
+        const project = new CplacePlugin(
+            pluginName,
+            pluginPath,
+            runConfig.production
+        );
 
         projects.set(pluginName, project);
 

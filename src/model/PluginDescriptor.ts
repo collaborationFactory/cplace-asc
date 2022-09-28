@@ -6,8 +6,8 @@ export interface PluginDescriptor {
     /**
      * Group id of the plugin
      */
-     readonly group: string;
-     /**
+    readonly group: string;
+    /**
      * Name of the plugin's repository
      */
     readonly repoName: string;

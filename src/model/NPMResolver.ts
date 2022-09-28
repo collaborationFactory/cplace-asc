@@ -180,7 +180,10 @@ export class NPMResolver {
                         rimraf.sync(dirPath);
                     }
                 });
-                console.log(cgreen`✓`, `[${pluginName}] (NPM) symlinks removed`);
+                console.log(
+                    cgreen`✓`,
+                    `[${pluginName}] (NPM) symlinks removed`
+                );
             }
         }
     }

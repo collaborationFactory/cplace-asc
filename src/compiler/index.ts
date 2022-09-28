@@ -74,7 +74,7 @@ if (require.main === module) {
         } else if (request.compressCss) {
             CompilerConstructor = CompressCssCompiler;
         } else if (request.combineJs) {
-            CompilerConstructor = CombineJavascriptsCompiler
+            CompilerConstructor = CombineJavascriptsCompiler;
         } else {
             console.error(cerr`unknown compile type - neither ts nor less`);
             throw Error(`unknown compile type - neither ts nor less`);

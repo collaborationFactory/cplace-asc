@@ -123,7 +123,10 @@ export default class CplacePlugin {
             )
         );
         this.hasCombineJs = fs.existsSync(
-            path.resolve(this.assetsDir, CombineJavascriptsCompiler.ENTRY_FILE_NAME)
+            path.resolve(
+                this.assetsDir,
+                CombineJavascriptsCompiler.ENTRY_FILE_NAME
+            )
         );
     }
 
@@ -325,22 +328,12 @@ export default class CplacePlugin {
         );
     }
 
-    public static getPathToDescriptor(
-        pluginDir: string
-    ) {
-        return path.join(
-            pluginDir,
-            CplacePlugin.DESCRIPTOR_FILE_NAME
-        );
+    public static getPathToDescriptor(pluginDir: string) {
+        return path.join(pluginDir, CplacePlugin.DESCRIPTOR_FILE_NAME);
     }
 
-    private static getPathToBuildGradle(
-        pluginDir: string
-    ) {
-        return path.join(
-            pluginDir,
-            CplacePlugin.BUILD_GRADLE_FILE_NAME
-        );
+    private static getPathToBuildGradle(pluginDir: string) {
+        return path.join(pluginDir, CplacePlugin.BUILD_GRADLE_FILE_NAME);
     }
 
     private async removeDir(path: string): Promise<void> {

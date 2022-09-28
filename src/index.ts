@@ -138,6 +138,10 @@ function run(updateDetails?: IUpdateDetails) {
         debug('Debugging enabled...');
     }
 
+    if (cli.flags.production) {
+        process.env.CPLACE_ENV = 'production';
+    }
+
     const mainRepoPath = AssetsCompiler.getMainRepoPath(
         process.cwd(),
         cli.flags.localonly
@@ -196,7 +200,15 @@ function run(updateDetails?: IUpdateDetails) {
             () => {
                 setTimeout(() => process.exit(0), 200);
             },
-            () => {
+            (reason: any) => {
+                const message =
+                    reason instanceof Error ? reason.message : reason;
+                console.error(
+                    cerr`Failed to start assets compiler: ${message}`
+                );
+                if (isDebugEnabled()) {
+                    console.error(reason);
+                }
                 setTimeout(() => process.exit(1), 200);
             }
         );

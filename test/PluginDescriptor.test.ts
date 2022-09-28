@@ -1,9 +1,18 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as tmp from 'tmp';
-import { AssetsCompiler, IAssetsCompilerConfiguration } from '../src/model/AssetsCompiler';
+import {
+    AssetsCompiler,
+    IAssetsCompilerConfiguration,
+} from '../src/model/AssetsCompiler';
 import { PackageVersion } from '../src/model/PackageVersion';
-import { generateBuildGradleFile, generateExtendedPluginDescriptor, generatePackageJson, generateParentRepos, generateSimplePluginDescriptor } from './helper/TestHelpers';
+import {
+    generateBuildGradleFile,
+    generateExtendedPluginDescriptor,
+    generatePackageJson,
+    generateParentRepos,
+    generateSimplePluginDescriptor,
+} from './helper/TestHelpers';
 
 describe('test the handling of plugin descriptor', () => {
     const mainRepoName = 'main';
@@ -26,27 +35,29 @@ describe('test the handling of plugin descriptor', () => {
         otherRepoPath = path.join(basePath, otherRepoName);
 
         // generate main repo and platform
-        fs.mkdirSync((mainRepoPath), {
+        fs.mkdirSync(mainRepoPath, {
             recursive: true,
         });
         platformPath = path.resolve(mainRepoPath, 'cf.cplace.platform');
         fs.mkdirSync(platformPath);
         fs.mkdirSync(path.resolve(mainRepoPath, 'cf.cplace.platform', 'src'));
-        fs.mkdirSync(path.resolve(mainRepoPath, 'cf.cplace.platform', 'assets'));
+        fs.mkdirSync(
+            path.resolve(mainRepoPath, 'cf.cplace.platform', 'assets')
+        );
 
         generateBuildGradleFile(platformPath, []);
-        generatePackageJson(mainRepoPath, "cplace", "3.0.0");
+        generatePackageJson(mainRepoPath, 'cplace', '3.0.0');
 
         // generate other repo and plugin
-        fs.mkdirSync((otherRepoPath), {
+        fs.mkdirSync(otherRepoPath, {
             recursive: true,
         });
         pluginPath = path.resolve(otherRepoPath, 'cf.cplace.plugin');
         fs.mkdirSync(pluginPath);
         fs.mkdirSync(path.resolve(otherRepoPath, 'cf.cplace.plugin', 'src'));
         fs.mkdirSync(path.resolve(otherRepoPath, 'cf.cplace.plugin', 'assets'));
-        generateBuildGradleFile(pluginPath, ["cf.cplace.platform"]);
-        generateParentRepos(otherRepoPath, ["main"]);
+        generateBuildGradleFile(pluginPath, ['cf.cplace.platform']);
+        generateParentRepos(otherRepoPath, ['main']);
 
         currentCwd = process.cwd();
         process.chdir(otherRepoPath);
@@ -58,8 +69,10 @@ describe('test the handling of plugin descriptor', () => {
     });
 
     test('test assets compiler with simple plugin descriptors', () => {
-        generateSimplePluginDescriptor(platformPath, "cf.cplace.platform", []);
-        generateSimplePluginDescriptor(pluginPath, "cf.cplace.plugin", ["cf.cplace.platform"]);
+        generateSimplePluginDescriptor(platformPath, 'cf.cplace.platform', []);
+        generateSimplePluginDescriptor(pluginPath, 'cf.cplace.plugin', [
+            'cf.cplace.platform',
+        ]);
 
         const config: IAssetsCompilerConfiguration = {
             rootPlugins: [],
@@ -76,18 +89,29 @@ describe('test the handling of plugin descriptor', () => {
         const assetsCompiler = new AssetsCompiler(config, otherRepoPath);
         assetsCompiler.start().then(
             () => {
-                console.log("Test sucessful");
+                console.log('Test sucessful');
             },
             () => {
-                fail("Cannot execute assets compiler");
+                fail('Cannot execute assets compiler');
             }
         );
-
     });
 
     test('test assets compiler with extended plugin descriptors', () => {
-        generateExtendedPluginDescriptor(platformPath, "cf.cplace.platform", "cf.cplace", "cplace", []);
-        generateExtendedPluginDescriptor(pluginPath, "cf.cplace.plugin", "cf.cplace", "cplace-paw", [{name: "cf.cplace.platform", group: "cf.cplace"}]);
+        generateExtendedPluginDescriptor(
+            platformPath,
+            'cf.cplace.platform',
+            'cf.cplace',
+            'cplace',
+            []
+        );
+        generateExtendedPluginDescriptor(
+            pluginPath,
+            'cf.cplace.plugin',
+            'cf.cplace',
+            'cplace-paw',
+            [{ name: 'cf.cplace.platform', group: 'cf.cplace' }]
+        );
 
         const config: IAssetsCompilerConfiguration = {
             rootPlugins: [],
@@ -103,13 +127,11 @@ describe('test the handling of plugin descriptor', () => {
         const assetsCompiler = new AssetsCompiler(config, otherRepoPath);
         assetsCompiler.start().then(
             () => {
-                console.log("Test sucessful");
+                console.log('Test sucessful');
             },
             () => {
-                fail("Cannot execute assets compiler");
+                fail('Cannot execute assets compiler');
             }
         );
-
     });
-
 });
