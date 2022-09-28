@@ -163,15 +163,20 @@ export class NPMResolver {
     ): void {
         const isWindows = process.platform === 'win32';
         if (isWindows) {
-            console.log(`⟲ [${pluginName}] (NPM) removing symlinks...`);
             const nodeModulesPath = path.resolve(assetsPath, 'node_modules');
-            fs.readdirSync(nodeModulesPath).forEach((dir) => {
-                const dirPath = path.resolve(nodeModulesPath, dir);
-                if (fs.lstatSync(dirPath).isSymbolicLink()) {
-                    rimraf.sync(dirPath);
-                }
-            });
-            console.log(cgreen`✓`, `[${pluginName}] (NPM) symlinks removed`);
+            if (fs.existsSync(nodeModulesPath)) {
+                console.log(`⟲ [${pluginName}] (NPM) removing symlinks...`);
+                fs.readdirSync(nodeModulesPath).forEach((dir) => {
+                    const dirPath = path.resolve(nodeModulesPath, dir);
+                    if (fs.lstatSync(dirPath).isSymbolicLink()) {
+                        rimraf.sync(dirPath);
+                    }
+                });
+                console.log(
+                    cgreen`✓`,
+                    `[${pluginName}] (NPM) symlinks removed`
+                );
+            }
         }
     }
 
