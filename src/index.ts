@@ -178,7 +178,7 @@ function run(updateDetails?: IUpdateDetails) {
             localOnly: cli.flags.localonly,
             production: cli.flags.production,
             noParents: cli.flags.noparents || cli.flags.noParents,
-            packagejson: cli.flags.packagejson
+            packagejson: cli.flags.packagejson,
         };
 
         console.log(getAvailableStats());

@@ -19,9 +19,7 @@ export abstract class AbstractPackageJsonGenerator {
     protected packageJsonContent: any;
     protected readonly packageJsonFile = 'package.json';
 
-    constructor(
-        readonly repositoryDir: string
-    ) {}
+    constructor(readonly repositoryDir: string) {}
 
     /**
      * Generate package.json file.
@@ -29,9 +27,11 @@ export abstract class AbstractPackageJsonGenerator {
     public generatePackageJson(): string {
         const filePath = this.getFilePath();
 
-        if (!fs.existsSync(filePath)) { 
-            const pluginDependencies: IPackageJsonDependency[] = this.getPluginDependencies();
-            let devDependencies = this.createDevDependencies(pluginDependencies);
+        if (!fs.existsSync(filePath)) {
+            const pluginDependencies: IPackageJsonDependency[] =
+                this.getPluginDependencies();
+            let devDependencies =
+                this.createDevDependencies(pluginDependencies);
 
             let packageJson: PackageJson = {};
             packageJson.name = this.getPackageName();
@@ -51,13 +51,8 @@ export abstract class AbstractPackageJsonGenerator {
             this.packageJsonContent.version = this.getVersion();
         }
 
-        this.saveConfig(
-            this.packageJsonContent,
-            filePath
-        );
-        console.log(
-            `${GREEN_CHECK} updated package.json file in ${filePath}`
-        );
+        this.saveConfig(this.packageJsonContent, filePath);
+        console.log(`${GREEN_CHECK} updated package.json file in ${filePath}`);
 
         return filePath;
     }
@@ -72,13 +67,27 @@ export abstract class AbstractPackageJsonGenerator {
         return CplaceVersion.toString().toLowerCase();
     }
 
-    private createDevDependencies(pluginDependencies: IPackageJsonDependency[]) {
+    private createDevDependencies(
+        pluginDependencies: IPackageJsonDependency[]
+    ) {
         let devDependencies = {};
         // only add plugins from other repositories as npm dependencies,
         // plugins from the current repo should be used directly
         pluginDependencies
-            .filter((dependency) => !fs.existsSync(path.resolve(this.repositoryDir, dependency.name)))
-            .forEach((dependency) => devDependencies[`@${dependency.group.replace(/\./g, '-')}/${dependency.name.replace(/\./g, '-')}`] = this.getVersion()
+            .filter(
+                (dependency) =>
+                    !fs.existsSync(
+                        path.resolve(this.repositoryDir, dependency.name)
+                    )
+            )
+            .forEach(
+                (dependency) =>
+                    (devDependencies[
+                        `@${dependency.group.replace(
+                            /\./g,
+                            '-'
+                        )}/${dependency.name.replace(/\./g, '-')}`
+                    ] = this.getVersion())
             );
         return devDependencies;
     }

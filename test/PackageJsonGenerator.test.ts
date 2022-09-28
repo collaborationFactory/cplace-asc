@@ -1,10 +1,20 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as tmp from 'tmp';
-import { AssetsCompiler, IAssetsCompilerConfiguration } from '../src/model/AssetsCompiler';
+import {
+    AssetsCompiler,
+    IAssetsCompilerConfiguration,
+} from '../src/model/AssetsCompiler';
 import { CplaceVersion } from '../src/model/CplaceVersion';
 import { PackageVersion } from '../src/model/PackageVersion';
-import { generateBuildGradleFile, generateExtendedPluginDescriptor, generatePackageJson, generateParentRepos, generateSimplePluginDescriptor, generateVersionGradle } from './helper/TestHelpers';
+import {
+    generateBuildGradleFile,
+    generateExtendedPluginDescriptor,
+    generatePackageJson,
+    generateParentRepos,
+    generateSimplePluginDescriptor,
+    generateVersionGradle,
+} from './helper/TestHelpers';
 
 describe('test generating a package.json file in repo root', () => {
     const mainRepoName = 'main';
@@ -26,48 +36,87 @@ describe('test generating a package.json file in repo root', () => {
         otherRepoPath = path.join(basePath, otherRepoName);
 
         // generate main repo and platform
-        fs.mkdirSync((mainRepoPath), {
+        fs.mkdirSync(mainRepoPath, {
             recursive: true,
         });
-        generateVersionGradle(mainRepoPath, "22.4.0");
+        generateVersionGradle(mainRepoPath, '22.4.0');
         platformPath = path.resolve(mainRepoPath, 'cf.cplace.platform');
         fs.mkdirSync(platformPath);
         fs.mkdirSync(path.resolve(platformPath, 'src'));
         fs.mkdirSync(path.resolve(platformPath, 'assets'));
         generateBuildGradleFile(platformPath, []);
-        generatePackageJson(mainRepoPath, "cplace", "3.0.0");
-        generateExtendedPluginDescriptor(platformPath, "cf.cplace.platform", "cf.cplace", "cplace", []);
+        generatePackageJson(mainRepoPath, 'cplace', '3.0.0');
+        generateExtendedPluginDescriptor(
+            platformPath,
+            'cf.cplace.platform',
+            'cf.cplace',
+            'cplace',
+            []
+        );
 
         // generate another plugin in main repo
-        const mainRepoCommonPluginPath = path.resolve(mainRepoPath, 'cf.cplace.common');
+        const mainRepoCommonPluginPath = path.resolve(
+            mainRepoPath,
+            'cf.cplace.common'
+        );
         fs.mkdirSync(mainRepoCommonPluginPath);
         fs.mkdirSync(path.resolve(mainRepoCommonPluginPath, 'src'));
         fs.mkdirSync(path.resolve(mainRepoCommonPluginPath, 'assets'));
         generateBuildGradleFile(mainRepoCommonPluginPath, []);
-        generateExtendedPluginDescriptor(mainRepoCommonPluginPath, "cf.cplace.common", "cf.cplace", "cplace", []);
-
+        generateExtendedPluginDescriptor(
+            mainRepoCommonPluginPath,
+            'cf.cplace.common',
+            'cf.cplace',
+            'cplace',
+            []
+        );
 
         // generate other repo and plugin
-        fs.mkdirSync((otherRepoPath), {
+        fs.mkdirSync(otherRepoPath, {
             recursive: true,
         });
-        generateParentRepos(otherRepoPath, ["main"]);
-        generateVersionGradle(otherRepoPath, "22.4.0");
+        generateParentRepos(otherRepoPath, ['main']);
+        generateVersionGradle(otherRepoPath, '22.4.0');
 
-        const repo2Plugin1Path = path.resolve(otherRepoPath, 'cf.cplace.plugin');
+        const repo2Plugin1Path = path.resolve(
+            otherRepoPath,
+            'cf.cplace.plugin'
+        );
         fs.mkdirSync(repo2Plugin1Path);
         fs.mkdirSync(path.resolve(repo2Plugin1Path, 'src'));
         fs.mkdirSync(path.resolve(repo2Plugin1Path, 'assets'));
-        generateBuildGradleFile(repo2Plugin1Path, ["cf.cplace.platform"]);
-        generateExtendedPluginDescriptor(repo2Plugin1Path, "cf.cplace.plugin", "cf.cplace", "cplace-paw", [{name: "cf.cplace.platform", group: "cf.cplace"}]);
+        generateBuildGradleFile(repo2Plugin1Path, ['cf.cplace.platform']);
+        generateExtendedPluginDescriptor(
+            repo2Plugin1Path,
+            'cf.cplace.plugin',
+            'cf.cplace',
+            'cplace-paw',
+            [{ name: 'cf.cplace.platform', group: 'cf.cplace' }]
+        );
 
-        const repo2Plugin2Path = path.resolve(otherRepoPath, 'cf.cplace.plugin2');
+        const repo2Plugin2Path = path.resolve(
+            otherRepoPath,
+            'cf.cplace.plugin2'
+        );
         fs.mkdirSync(repo2Plugin2Path);
         fs.mkdirSync(path.resolve(repo2Plugin2Path, 'src'));
         fs.mkdirSync(path.resolve(repo2Plugin2Path, 'assets'));
-        generateBuildGradleFile(repo2Plugin2Path, ["cf.cplace.platform", "cf.cplace.common", "cf.cplace.plugin"]);
-        generateExtendedPluginDescriptor(repo2Plugin2Path, "cf.cplace.plugin2", "cf.cplace", "cplace-paw",
-            [{name: "cf.cplace.platform", group: "cf.cplace"}, {name: "cf.cplace.common", group: "cf.cplace"}, {name: "cf.cplace.plugin", group: "cf.cplace"}]);
+        generateBuildGradleFile(repo2Plugin2Path, [
+            'cf.cplace.platform',
+            'cf.cplace.common',
+            'cf.cplace.plugin',
+        ]);
+        generateExtendedPluginDescriptor(
+            repo2Plugin2Path,
+            'cf.cplace.plugin2',
+            'cf.cplace',
+            'cplace-paw',
+            [
+                { name: 'cf.cplace.platform', group: 'cf.cplace' },
+                { name: 'cf.cplace.common', group: 'cf.cplace' },
+                { name: 'cf.cplace.plugin', group: 'cf.cplace' },
+            ]
+        );
 
         currentCwd = process.cwd();
         process.chdir(otherRepoPath);
@@ -79,7 +128,6 @@ describe('test generating a package.json file in repo root', () => {
     });
 
     test('test generate package.json files', async () => {
-        
         const config: IAssetsCompilerConfiguration = {
             rootPlugins: [],
             watchFiles: false,
@@ -89,7 +137,7 @@ describe('test generating a package.json file in repo root', () => {
             localOnly: false,
             production: false,
             noParents: false,
-            packagejson: true
+            packagejson: true,
         };
 
         PackageVersion.initialize(mainRepoPath);
@@ -97,19 +145,22 @@ describe('test generating a package.json file in repo root', () => {
         const assetsCompiler = new AssetsCompiler(config, otherRepoPath);
         await assetsCompiler.start();
 
-        const rootPackageJson = path.resolve(otherRepoPath, "package.json");
+        const rootPackageJson = path.resolve(otherRepoPath, 'package.json');
         expect(fs.existsSync(rootPackageJson)).toBeTruthy();
 
         let packageJsonContent = fs.readFileSync(rootPackageJson).toString();
         let packageJson = JSON.parse(packageJsonContent);
         expect(Object.keys(packageJson.devDependencies).length).toEqual(2);
 
-        const pluginPackageJson = path.resolve(otherRepoPath, 'cf.cplace.plugin2', 'assets', 'package.json');
+        const pluginPackageJson = path.resolve(
+            otherRepoPath,
+            'cf.cplace.plugin2',
+            'assets',
+            'package.json'
+        );
         expect(fs.existsSync(pluginPackageJson)).toBeTruthy();
         packageJsonContent = fs.readFileSync(pluginPackageJson).toString();
         packageJson = JSON.parse(packageJsonContent);
-        expect(packageJson['name']).toEqual("@cf-cplace/cf-cplace-plugin2");
-
+        expect(packageJson['name']).toEqual('@cf-cplace/cf-cplace-plugin2');
     });
-
 });

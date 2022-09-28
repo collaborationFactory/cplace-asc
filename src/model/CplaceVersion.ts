@@ -21,7 +21,10 @@ export class CplaceVersion {
             );
         }
 
-        const versionFilePath = path.resolve(currentRepo, CplaceVersion.VERSION_GRADLE);
+        const versionFilePath = path.resolve(
+            currentRepo,
+            CplaceVersion.VERSION_GRADLE
+        );
         if (!fs.existsSync(versionFilePath)) {
             console.warn(
                 cwarn`[NPM] Could not find version.gradle in repo ${currentRepo}...`
@@ -30,7 +33,9 @@ export class CplaceVersion {
             CplaceVersion._version = new CplaceVersion(1, 0, 0, false);
         } else {
             const versionFileContent = fs.readFileSync(versionFilePath, 'utf8');
-            const versionString = versionFileContent.split("\n").find((line) => line.includes("currentVersion"));
+            const versionString = versionFileContent
+                .split('\n')
+                .find((line) => line.includes('currentVersion'));
             if (!versionString) {
                 console.error(
                     cerr`[CplaceVersion] Version string not found in version.gradle file`
@@ -40,14 +45,22 @@ export class CplaceVersion {
                 );
             }
 
-            const version = versionString.split('=')[1].replace(/'/g, '').trim();
-            const versionSnapshotParts = version.split("-");
-            
+            const version = versionString
+                .split('=')[1]
+                .replace(/'/g, '')
+                .trim();
+            const versionSnapshotParts = version.split('-');
+
             const versionParts = versionSnapshotParts[0].split('.');
-            versionParts.push(versionSnapshotParts.length > 1 && versionSnapshotParts[1].toLowerCase().includes("snapshot") ? "true" : "false");
+            versionParts.push(
+                versionSnapshotParts.length > 1 &&
+                    versionSnapshotParts[1].toLowerCase().includes('snapshot')
+                    ? 'true'
+                    : 'false'
+            );
 
             if (versionParts.length < 3) {
-            console.error(
+                console.error(
                     cerr`[CplaceVersion] Expected version to consist of 3 parts`
                 );
                 throw new Error(
@@ -59,7 +72,7 @@ export class CplaceVersion {
                 parseInt(versionParts[0]),
                 parseInt(versionParts[1]),
                 parseInt(versionParts[2]),
-                versionParts[3] == "true",
+                versionParts[3] == 'true'
             );
         }
         return CplaceVersion._version;

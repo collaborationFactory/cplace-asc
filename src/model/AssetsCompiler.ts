@@ -135,25 +135,32 @@ export class AssetsCompiler {
             }
 
             debug(`(AssetsCompiler) cleaning generated package.json file...`);
-            if (!isFileTracked(this.repositoryDir, path.resolve('package.json'))) {
+            if (
+                !isFileTracked(this.repositoryDir, path.resolve('package.json'))
+            ) {
                 rimraf.sync(path.resolve(this.repositoryDir, 'package.json'));
-                rimraf.sync(path.resolve(this.repositoryDir, 'package-lock.json'));
+                rimraf.sync(
+                    path.resolve(this.repositoryDir, 'package-lock.json')
+                );
             }
         }
-        
+
         if (this.runConfig.packagejson) {
-            debug(`(AssetsCompiler) generating package.json for all plugins...`);
+            debug(
+                `(AssetsCompiler) generating package.json for all plugins...`
+            );
             for (const plugin of this.projects.values()) {
                 if (this.isInCompilationScope(plugin)) {
                     plugin.generatePackageJson(this.repositoryDir);
                 }
             }
 
-            const rootPackageJsonGenerator: RootPackageJsonGenerator = new RootPackageJsonGenerator(
-                this.repositoryDir,
-                this.repositoryName,
-                this.projects
-            );
+            const rootPackageJsonGenerator: RootPackageJsonGenerator =
+                new RootPackageJsonGenerator(
+                    this.repositoryDir,
+                    this.repositoryName,
+                    this.projects
+                );
             rootPackageJsonGenerator.generatePackageJson();
         }
 

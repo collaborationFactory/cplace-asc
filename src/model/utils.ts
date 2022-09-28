@@ -42,17 +42,19 @@ export function isFromLibrary(file: string) {
 /**
  * Check if a file is tracked
  */
-export function isFileTracked(workingDir: string, relativePathToFile: string): boolean {
+export function isFileTracked(
+    workingDir: string,
+    relativePathToFile: string
+): boolean {
     const res = spawn.sync(
-        'git', ['ls-files', '--error-unmatch', relativePathToFile],
+        'git',
+        ['ls-files', '--error-unmatch', relativePathToFile],
         {
             cwd: workingDir,
         }
     );
     if (res.status !== 0) {
-        debug(
-            `File ${relativePathToFile} is not tracked`
-        );
+        debug(`File ${relativePathToFile} is not tracked`);
         return false;
     }
     return true;

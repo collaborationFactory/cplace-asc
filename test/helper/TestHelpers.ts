@@ -95,13 +95,9 @@ export function generateParentRepos(location: string, names: string[]): void {
 export function generateVersionGradle(location: string, version: string): void {
     let content = `ext {
         currentVersion= '${version}'
-    };`
+    };`;
 
-    fs.writeFileSync(
-        path.resolve(location, 'version.gradle'), 
-        content, 
-        {
-            encoding: 'utf8',
-        }
-    );
+    fs.writeFileSync(path.resolve(location, 'version.gradle'), content, {
+        encoding: 'utf8',
+    });
 }

@@ -14,7 +14,10 @@ import { E2ETSConfigGenerator } from './E2ETSConfigGenerator';
 import { NPMResolver } from './NPMResolver';
 import { PluginDescriptor } from './PluginDescriptor';
 import { getDescriptorParser } from './DescriptorParser';
-import { AbstractPackageJsonGenerator, IPackageJsonDependency } from './AbstractPackageJsonGenerator';
+import {
+    AbstractPackageJsonGenerator,
+    IPackageJsonDependency,
+} from './AbstractPackageJsonGenerator';
 import { isFileTracked } from './utils';
 import { CombineJavascriptsCompiler } from '../compiler/CombineJavascriptsCompiler';
 
@@ -23,22 +26,22 @@ export interface ICplacePluginResolver {
 }
 
 export class PluginPackageJsonGenerator extends AbstractPackageJsonGenerator {
-    constructor(
-        private plugin: CplacePlugin, 
-        repositoryDir: string
-    ) {
+    constructor(private plugin: CplacePlugin, repositoryDir: string) {
         super(repositoryDir);
     }
 
     public getFilePath() {
-        return path.join(
-            this.plugin.assetsDir,
-            this.packageJsonFile
-        );
+        return path.join(this.plugin.assetsDir, this.packageJsonFile);
     }
 
     public getPackageName() {
-        return `@${this.plugin.pluginDescriptor.group.replace(/\./g, '-')}/${this.plugin.pluginDescriptor.name.replace(/\./g, '-')}`.toLowerCase();
+        return `@${this.plugin.pluginDescriptor.group.replace(
+            /\./g,
+            '-'
+        )}/${this.plugin.pluginDescriptor.name.replace(
+            /\./g,
+            '-'
+        )}`.toLowerCase();
     }
 
     public getPluginDependencies(): IPackageJsonDependency[] {
@@ -89,9 +92,7 @@ export default class CplacePlugin {
 
         this.repo = path.basename(path.dirname(path.resolve(pluginDir)));
         this.assetsDir = CplacePlugin.getAssetsDir(this.pluginDir);
-        this.hasAssetsFolder = fs.existsSync(
-            path.resolve(this.assetsDir)
-        );
+        this.hasAssetsFolder = fs.existsSync(path.resolve(this.assetsDir));
         this.hasTypeScriptAssets = fs.existsSync(
             path.resolve(this.assetsDir, 'ts', 'app.ts')
         );
@@ -214,7 +215,10 @@ export default class CplacePlugin {
             return;
         }
 
-        const packageJsonGenerator = new PluginPackageJsonGenerator(this, repositoryDir);
+        const packageJsonGenerator = new PluginPackageJsonGenerator(
+            this,
+            repositoryDir
+        );
         const packageJsonPath = packageJsonGenerator.generatePackageJson();
 
         if (!fs.existsSync(packageJsonPath)) {
@@ -296,9 +300,22 @@ export default class CplacePlugin {
             );
             promises.push(this.removeDir(generatedDir));
         }
-        if (!isFileTracked(this.pluginDir, path.resolve(this.pluginDir, 'assets', 'package.json'))) {
-            promises.push(this.removeDir(path.resolve(this.pluginDir, 'assets', 'package.json')));
-            promises.push(this.removeDir(path.resolve(this.pluginDir, 'assets', 'package-lock.json')));
+        if (
+            !isFileTracked(
+                this.pluginDir,
+                path.resolve(this.pluginDir, 'assets', 'package.json')
+            )
+        ) {
+            promises.push(
+                this.removeDir(
+                    path.resolve(this.pluginDir, 'assets', 'package.json')
+                )
+            );
+            promises.push(
+                this.removeDir(
+                    path.resolve(this.pluginDir, 'assets', 'package-lock.json')
+                )
+            );
         }
         await Promise.all(promises);
 
