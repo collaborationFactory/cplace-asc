@@ -45,7 +45,7 @@ export class NPMResolver {
     ): boolean {
         if (!fs.existsSync(NPMResolver.getPluginPackageJsonPath(assetsPath))) {
             console.log(
-                cwarn`✓`,
+                cwarn
                 `[${pluginName}] (NPM) package.json does not exists.`
             );
             return false;
