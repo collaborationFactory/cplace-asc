@@ -48,7 +48,7 @@ export class PluginPackageJsonGenerator extends AbstractPackageJsonGenerator {
      * Plugins don't list their rependencies in the assets/package.json
      * since that would create duplications of the same dependency in many plugins
      * (cf.cplace.platform would appear in all plugins).
-     * 
+     *
      * The dependencies are listed in the root package.json
      */
     public getPluginDependencies(): IPackageJsonDependency[] {
