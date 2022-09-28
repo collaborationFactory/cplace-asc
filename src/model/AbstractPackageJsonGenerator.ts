@@ -30,7 +30,7 @@ export abstract class AbstractPackageJsonGenerator {
         if (!fs.existsSync(filePath)) {
             const pluginDependencies: IPackageJsonDependency[] =
                 this.getPluginDependencies();
-            let devDependencies =
+            const devDependencies =
                 this.createDevDependencies(pluginDependencies);
 
             let packageJson: PackageJson = {};

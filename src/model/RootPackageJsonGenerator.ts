@@ -22,6 +22,13 @@ export class RootPackageJsonGenerator extends AbstractPackageJsonGenerator {
         return this.repositoryName;
     }
 
+    /**
+     * Go through all plugins from this repository and
+     * collect all plugins that are dependencies to them.
+     *
+     * The dependency plugins are added to the root package.json instead the package.json of each plugin.
+     * That way there won't be duplications of the same dependency in several plugins.
+     */
     public getPluginDependencies(): IPackageJsonDependency[] {
         const pluginDependencies: IPackageJsonDependency[] = [];
 
