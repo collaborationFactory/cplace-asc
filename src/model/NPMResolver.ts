@@ -52,13 +52,20 @@ export class NPMResolver {
 
         const nodeModulesFolder = NPMResolver.getNodeModulesPath(assetsPath);
         if (fs.existsSync(nodeModulesFolder)) {
-            console.log(`⟲ [${pluginName}] (NPM) removing node_modules folder...`);
-            console.log(fs.rmSync(nodeModulesFolder, {
-                recursive: true,
-                force: true
-            }));
+            console.log(
+                `⟲ [${pluginName}] (NPM) removing node_modules folder...`
+            );
+            console.log(
+                fs.rmSync(nodeModulesFolder, {
+                    recursive: true,
+                    force: true,
+                })
+            );
         } else {
-            console.log(`⟲ [${pluginName}] (NPM) node_modules folder does not exist...`, nodeModulesFolder);
+            console.log(
+                `⟲ [${pluginName}] (NPM) node_modules folder does not exist...`,
+                nodeModulesFolder
+            );
         }
         console.log(`⟲ [${pluginName}] (NPM) installing dependencies...`);
         debug(
@@ -233,7 +240,7 @@ export class NPMResolver {
         packageLockPath: string,
         pluginName?: string
     ): boolean {
-        const oldHash = fs.readFileSync(hashFilePath, {encoding: 'utf8'});
+        const oldHash = fs.readFileSync(hashFilePath, { encoding: 'utf8' });
         if (oldHash === NPMResolver.getHash4PackageLock(packageLockPath)) {
             const pluginLog = pluginName ? `[${pluginName}] ` : '';
             console.log(
@@ -414,7 +421,7 @@ export class NPMResolver {
         fs.writeFileSync(
             this.hashFilePath,
             NPMResolver.getHash4PackageLock(this.getPackageLockPath()),
-            {encoding: 'utf8'}
+            { encoding: 'utf8' }
         );
     }
 
