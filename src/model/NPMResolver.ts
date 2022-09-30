@@ -49,6 +49,17 @@ export class NPMResolver {
         );
         const oldCwd = process.cwd();
         process.chdir(assetsPath);
+
+        const nodeModulesFolder = NPMResolver.getNodeModulesPath(assetsPath);
+        if (fs.existsSync(nodeModulesFolder)) {
+            console.log(`⟲ [${pluginName}] (NPM) removing node_modules folder...`);
+            console.log(fs.rmSync(nodeModulesFolder, {
+                recursive: true,
+                force: true
+            }));
+        } else {
+            console.log(`⟲ [${pluginName}] (NPM) node_modules folder does not exist...`, nodeModulesFolder);
+        }
         console.log(`⟲ [${pluginName}] (NPM) installing dependencies...`);
         debug(
             `[${pluginName}] (NPM) running: npm install --force --package-lock false`
@@ -202,6 +213,15 @@ export class NPMResolver {
     }
 
     /**
+     * Gets plugin node_modules path
+     * @param assetsPath Assets path
+     * @private
+     */
+    private static getNodeModulesPath(assetsPath: string): string {
+        return path.resolve(assetsPath, NPMResolver.NODE_MODULES);
+    }
+
+    /**
      * Checks if package-lock.json was updated
      * @param hashFilePath Hash file path
      * @param packageLockPath package-lock.json path
@@ -213,7 +233,7 @@ export class NPMResolver {
         packageLockPath: string,
         pluginName?: string
     ): boolean {
-        const oldHash = fs.readFileSync(hashFilePath, { encoding: 'utf8' });
+        const oldHash = fs.readFileSync(hashFilePath, {encoding: 'utf8'});
         if (oldHash === NPMResolver.getHash4PackageLock(packageLockPath)) {
             const pluginLog = pluginName ? `[${pluginName}] ` : '';
             console.log(
@@ -394,7 +414,7 @@ export class NPMResolver {
         fs.writeFileSync(
             this.hashFilePath,
             NPMResolver.getHash4PackageLock(this.getPackageLockPath()),
-            { encoding: 'utf8' }
+            {encoding: 'utf8'}
         );
     }
 
