@@ -49,6 +49,24 @@ export class NPMResolver {
         );
         const oldCwd = process.cwd();
         process.chdir(assetsPath);
+
+        const nodeModulesFolder = NPMResolver.getNodeModulesPath(assetsPath);
+        if (fs.existsSync(nodeModulesFolder)) {
+            console.log(
+                `⟲ [${pluginName}] (NPM) removing node_modules folder...`
+            );
+            console.log(
+                fs.rmSync(nodeModulesFolder, {
+                    recursive: true,
+                    force: true,
+                })
+            );
+        } else {
+            console.log(
+                `⟲ [${pluginName}] (NPM) node_modules folder does not exist...`,
+                nodeModulesFolder
+            );
+        }
         console.log(`⟲ [${pluginName}] (NPM) installing dependencies...`);
         debug(
             `[${pluginName}] (NPM) running: npm install --force --package-lock false`
@@ -199,6 +217,15 @@ export class NPMResolver {
      */
     private static getPluginPackageJsonPath(assetsPath: string): string {
         return path.resolve(assetsPath, NPMResolver.PACKAGE_JSON);
+    }
+
+    /**
+     * Gets plugin node_modules path
+     * @param assetsPath Assets path
+     * @private
+     */
+    private static getNodeModulesPath(assetsPath: string): string {
+        return path.resolve(assetsPath, NPMResolver.NODE_MODULES);
     }
 
     /**
