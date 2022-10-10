@@ -14,46 +14,12 @@ import { E2ETSConfigGenerator } from './E2ETSConfigGenerator';
 import { NPMResolver } from './NPMResolver';
 import { PluginDescriptor } from './PluginDescriptor';
 import { getDescriptorParser } from './DescriptorParser';
-import {
-    AbstractPackageJsonGenerator,
-    IPackageJsonDependency,
-} from './AbstractPackageJsonGenerator';
 import { isFileTracked } from './utils';
 import { CombineJavascriptsCompiler } from '../compiler/CombineJavascriptsCompiler';
+import { PluginPackageJsonGenerator } from './PluginPackageJsonGenerator';
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined;
-}
-
-export class PluginPackageJsonGenerator extends AbstractPackageJsonGenerator {
-    constructor(private plugin: CplacePlugin, repositoryDir: string) {
-        super(repositoryDir);
-    }
-
-    public getFilePath() {
-        return path.join(this.plugin.assetsDir, this.packageJsonFile);
-    }
-
-    public getPackageName() {
-        return `@${this.plugin.pluginDescriptor.group.replace(
-            /\./g,
-            '-'
-        )}/${this.plugin.pluginDescriptor.name.replace(
-            /\./g,
-            '-'
-        )}`.toLowerCase();
-    }
-
-    /**
-     * Plugins don't list their rependencies in the assets/package.json
-     * since that would create duplications of the same dependency in many plugins
-     * (cf.cplace.platform would appear in all plugins).
-     *
-     * The dependencies are listed in the root package.json
-     */
-    public getPluginDependencies(): IPackageJsonDependency[] {
-        return [];
-    }
 }
 
 /**
