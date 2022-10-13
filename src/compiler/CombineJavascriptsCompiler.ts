@@ -1,7 +1,7 @@
 import * as path from 'path';
 
 import { CompilationResult, ICompiler } from './interfaces';
-import { cerr, debug, formatDuration, GREEN_CHECK } from '../utils';
+import { cerr, cgreen, debug, formatDuration, GREEN_CHECK } from '../utils';
 import * as fs from 'fs';
 import rimraf = require('rimraf');
 import * as webpack from 'webpack';
@@ -55,7 +55,17 @@ export class CombineJavascriptsCompiler implements ICompiler {
                 `⟲ [${this.pluginName}] starting to combine javascripts...`
             );
 
-            this.combineJavascripts()
+            const sourcesToCombine: string[] =
+                this.getCombineJavascriptSources();
+            if (sourcesToCombine.length == 0) {
+                console.log(
+                    cgreen`⇢`,
+                    `[${this.pluginName}] No javascripts specified to combine.`
+                );
+                return resolve(CompilationResult.UNCHANGED);
+            }
+
+            this.combineJavascripts(sourcesToCombine)
                 .then(() => {
                     let end = new Date().getTime();
                     console.log(
@@ -83,22 +93,27 @@ export class CombineJavascriptsCompiler implements ICompiler {
         return path.resolve(assetsPath, CombineJavascriptsCompiler.OUTPUT_DIR);
     }
 
-    private combineJavascripts() {
+    private combineJavascripts(sourcesToCombine: string[]) {
         return new Promise((resolve, reject) => {
             // @ts-ignore
-            webpack(this.getCombineJavascriptWebpackConfig(), (err, stats) => {
-                if (err) {
-                    reject(err);
-                } else if (stats.hasErrors()) {
-                    reject(stats.toString());
-                } else {
-                    resolve();
+            webpack(
+                this.getCombineJavascriptWebpackConfig(sourcesToCombine),
+                (err, stats) => {
+                    if (err) {
+                        reject(err);
+                    } else if (stats.hasErrors()) {
+                        reject(stats.toString());
+                    } else {
+                        resolve();
+                    }
                 }
-            });
+            );
         });
     }
 
-    private getCombineJavascriptWebpackConfig(): Configuration {
+    private getCombineJavascriptWebpackConfig(
+        sourcesToCombine: string[]
+    ): Configuration {
         const config: Configuration = {
             mode: 'production',
             context: path.resolve(this.assetsPath),
@@ -109,7 +124,7 @@ export class CombineJavascriptsCompiler implements ICompiler {
                 modules: [path.resolve(__dirname, '../../', 'node_modules')],
             },
             entry: {
-                compressed: this.getCombineJavascriptSources(),
+                compressed: sourcesToCombine,
             },
             module: {
                 rules: [
