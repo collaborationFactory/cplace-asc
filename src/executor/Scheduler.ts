@@ -78,12 +78,12 @@ export class Scheduler {
         private readonly watchFiles: boolean,
         private readonly updateDetails?: IUpdateDetails
     ) {
+        this.vendorJobs = this.createVendorJobTracker();
         this.tsJobs = this.createTsJobTracker();
         this.tsE2EJobs = this.createTsE2EJobTracker();
         this.lessJobs = this.createLessJobTracker();
         this.openAPIYamlJobs = this.createOpenAPIYamlJobTracker();
         this.compressCssJobs = this.createCompressCssJobTracker();
-        this.vendorJobs = this.createVendorJobTracker();
         this.combineJsJobs = this.createCombineJsJobTracker();
     }
 
@@ -350,7 +350,7 @@ export class Scheduler {
                         plugin.pluginDescriptor.dependencies
                     ),
                     this.filterTypeScriptPlugins(plugin.dependents),
-                    []
+                    [this.vendorJobs.isJobDone.bind(this.vendorJobs)]
                 )
         );
         return new JobTracker(jobs);
