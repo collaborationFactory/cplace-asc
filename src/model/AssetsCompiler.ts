@@ -17,7 +17,6 @@ import {
 import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
 import { isFileTracked } from './utils';
-import rimraf = require('rimraf');
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -159,11 +158,8 @@ export class AssetsCompiler {
             }
         }
 
-        this.npmResolver = new NPMResolver(
-            mainRepoPath,
-            this.runConfig.watchFiles
-        );
-        await this.npmResolver.resolve();
+        this.npmResolver = new NPMResolver(mainRepoPath);
+        this.npmResolver.init();
 
         if (this.runConfig.onlyPreprocessing) {
             console.log();
@@ -226,9 +222,6 @@ export class AssetsCompiler {
     public async shutdown(): Promise<void> {
         if (!!this.scheduler) {
             this.scheduler.stop();
-        }
-        if (!!this.npmResolver) {
-            this.npmResolver.stop();
         }
 
         if (!!this.executor) {
