@@ -9,7 +9,8 @@
         "declaration": false,
         "declarationMap": false,
         "sourceMap": true,
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "resolveJsonModule": true
     },
     "include": ["src/**/*"],
     "exclude": ["**/*.spec.ts"],

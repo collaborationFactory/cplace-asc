@@ -4,18 +4,14 @@
     "description": "cplace assets compiler",
     "repository": "https://github.com/collaborationFactory/cplace-asc",
     "homepage": "https://github.com/collaborationFactory/cplace-asc",
-    "main": "dist/index.js",
+    "main": "./index.js",
     "scripts": {
         "test": "jest",
-        "dev:tsc": "tsc",
-        "clean": "rimraf dist/ *.tgz",
-        "prepare": "npm run clean && npm run dev:tsc",
-        "release": "npm shrinkwrap && np",
         "prettier-check": "prettier --check .",
         "prettier-write": "prettier --write ."
     },
     "bin": {
-        "cplace-asc": "dist/index.js"
+        "cplace-asc": "./index.js"
     },
     "jest": {
         "globals": {
