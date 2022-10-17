@@ -7,6 +7,7 @@
     "main": "./index.js",
     "scripts": {
         "test": "jest",
+        "build": "npx ts-node build.ts",
         "prettier-check": "prettier --check .",
         "prettier-write": "prettier --write ."
     },

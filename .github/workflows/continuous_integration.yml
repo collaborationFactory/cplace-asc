@@ -16,7 +16,7 @@ jobs:
 
             - uses: actions/setup-node@v1
               with:
-                  node-version: 12.x
+                  node-version: 18.11.0
 
             - name: Cache Node Modules
               id: npm-cache
@@ -26,6 +26,7 @@ jobs:
                   key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
 
             - name: Install modules
+              if: steps.npm-cache.outputs.cache-hit != 'true'
               run: npm ci
 
             - name: Formatter
@@ -46,7 +47,7 @@ jobs:
                     - macos-latest
                     - windows-latest
                 node_version:
-                    - 12.x
+                    - 18.11.0
         name: Node ${{ matrix.node_version }} - ${{ matrix.architecture }} on ${{ matrix.os }}
         steps:
             - name: Cancel Previous Runs
@@ -92,6 +93,7 @@ jobs:
                   key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
 
             - name: Install modules
+              if: steps.npm-cache.outputs.cache-hit != 'true'
               run: npm ci
 
             - name: Setup JDK
@@ -113,7 +115,7 @@ jobs:
               run: ./gradlew generatePluginDescriptor
 
             - name: Build
-              run: npm run prepare
+              run: npm run build
 
             - name: Link
               run: npm link

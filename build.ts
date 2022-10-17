@@ -22,9 +22,9 @@ console.log('Cleaning DONE!');
 
 console.log('Compiling...');
 if (env === 'production') {
-    execSync(`${tsc} --project ./tsconfig.prod.json`);
+    console.log(execSync(`${tsc} --project ./tsconfig.prod.json`).toString());
 } else {
-    execSync(tsc);
+    console.log(execSync(tsc).toString());
 }
 console.log('Compiling DONE!');
 
