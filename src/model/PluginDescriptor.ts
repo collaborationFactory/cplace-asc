@@ -19,7 +19,7 @@ export interface PluginDescriptor {
     /**
      * List of extended info for the plugins that this plugin depends on for production
      */
-     readonly dependenciesExtendedInfo: PluginDescriptor[];
+    readonly dependenciesExtendedInfo: PluginDescriptor[];
 
     /**
      * List of descriptors of plugin that this plugin depends on for production
@@ -29,5 +29,5 @@ export interface PluginDescriptor {
     /**
      * List of extended info for plugin that this plugin depends on for production
      */
-     readonly testDependenciesExtendedInfo?: PluginDescriptor[];
+    readonly testDependenciesExtendedInfo?: PluginDescriptor[];
 }
