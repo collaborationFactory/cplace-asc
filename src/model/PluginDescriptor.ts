@@ -15,8 +15,19 @@ export interface PluginDescriptor {
      * List of descriptors of plugins that this plugin depends on for production
      */
     readonly dependencies: PluginDescriptor[];
+
+    /**
+     * List of extended info for the plugins that this plugin depends on for production
+     */
+     readonly dependenciesExtendedInfo: PluginDescriptor[];
+
     /**
      * List of descriptors of plugin that this plugin depends on for production
      */
     readonly testDependencies?: PluginDescriptor[];
+
+    /**
+     * List of extended info for plugin that this plugin depends on for production
+     */
+     readonly testDependenciesExtendedInfo?: PluginDescriptor[];
 }

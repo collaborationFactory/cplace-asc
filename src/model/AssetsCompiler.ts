@@ -16,8 +16,6 @@ import {
 } from '../utils';
 import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
-import { PluginDescriptorParser } from './PluginDescriptorParser';
-import { RootPackageJsonGenerator } from './RootPackageJsonGenerator';
 import { isFileTracked } from './utils';
 import rimraf = require('rimraf');
 
@@ -154,14 +152,6 @@ export class AssetsCompiler {
                     plugin.generatePackageJson(this.repositoryDir);
                 }
             }
-
-            const rootPackageJsonGenerator: RootPackageJsonGenerator =
-                new RootPackageJsonGenerator(
-                    this.repositoryDir,
-                    this.repositoryName,
-                    this.projects
-                );
-            rootPackageJsonGenerator.generatePackageJson();
         }
 
         this.npmResolver = new NPMResolver(
