@@ -145,13 +145,6 @@ describe('test generating a package.json file in repo root', () => {
         const assetsCompiler = new AssetsCompiler(config, otherRepoPath);
         await assetsCompiler.start();
 
-        const rootPackageJson = path.resolve(otherRepoPath, 'package.json');
-        expect(fs.existsSync(rootPackageJson)).toBeTruthy();
-
-        let packageJsonContent = fs.readFileSync(rootPackageJson).toString();
-        let packageJson = JSON.parse(packageJsonContent);
-        expect(Object.keys(packageJson.devDependencies).length).toEqual(2);
-
         const pluginPackageJson = path.resolve(
             otherRepoPath,
             'cf.cplace.plugin2',
@@ -159,8 +152,8 @@ describe('test generating a package.json file in repo root', () => {
             'package.json'
         );
         expect(fs.existsSync(pluginPackageJson)).toBeTruthy();
-        packageJsonContent = fs.readFileSync(pluginPackageJson).toString();
-        packageJson = JSON.parse(packageJsonContent);
+        let packageJsonContent = fs.readFileSync(pluginPackageJson).toString();
+        let packageJson = JSON.parse(packageJsonContent);
         expect(packageJson['name']).toEqual('@cf-cplace/cf-cplace-plugin2');
     });
 });
