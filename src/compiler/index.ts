@@ -17,7 +17,7 @@ import { CompressCssCompiler } from './CompressCssCompiler';
 import { E2ETypescriptCompiler } from './E2ETypescriptCompiler';
 import { OpenAPIYamlCompiler } from './OpenAPIYamlCompiler';
 import { VendorCompiler } from './VendorCompiler';
-import { CombineJavascriptsCompiler } from './CombineJavascriptsCompiler';
+import { CombineJavascriptCompiler } from './CombineJavascriptCompiler';
 
 /* ==================
  *      This file will be called as main process by `ExecutorService` as specified by
@@ -74,7 +74,7 @@ if (require.main === module) {
         } else if (request.compressCss) {
             CompilerConstructor = CompressCssCompiler;
         } else if (request.combineJs) {
-            CompilerConstructor = CombineJavascriptsCompiler;
+            CompilerConstructor = CombineJavascriptCompiler;
         } else {
             console.error(cerr`unknown compile type - neither ts nor less`);
             throw Error(`unknown compile type - neither ts nor less`);
@@ -89,7 +89,7 @@ if (require.main === module) {
                 request.mainRepoDir,
                 request.isProduction
             );
-        } catch (e) {
+        } catch (e: any) {
             console.error(cerr`${e.message}`);
             throw Error(e);
         }

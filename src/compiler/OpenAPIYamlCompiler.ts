@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as rimraf from 'rimraf';
 import { cerr, formatDuration, GREEN_CHECK } from '../utils';
 import { CompilationResult, ICompiler } from './interfaces';
-import spawn = require('cross-spawn');
+import * as spawn from 'cross-spawn';
 import * as fs from 'fs';
 
 export class OpenAPIYamlCompiler implements ICompiler {
@@ -74,7 +74,7 @@ export class OpenAPIYamlCompiler implements ICompiler {
     }
 
     /**
-     *  Builds types for a provided plugin. First it generates types, than it
+     *  Builds types for a provided plugin. First it generates types, then it
      *  copies types in plugin/assets/ts/api folder, and at the end it cleans
      *  the distribution folder.
      * @param plugin Provided plugin

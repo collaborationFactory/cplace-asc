@@ -3,15 +3,33 @@
  */
 
 import * as path from 'path';
-import { CReplacePlugin } from './CReplacePlugin';
 import * as webpack from 'webpack';
-import { Configuration, ExternalsElement } from 'webpack';
+import { Configuration } from 'webpack';
 import { isFromLibrary } from '../model/utils';
 import { debug, isDebugEnabled } from '../utils';
 import * as fs from 'fs';
 import * as copyFiles from 'copyfiles';
 import { AbstractTypescriptCompiler } from './AbstractTypescriptCompiler';
 import { CplaceTSConfigGenerator } from '../model/CplaceTSConfigGenerator';
+import * as TerserPlugin from 'terser-webpack-plugin';
+
+interface ExternalItemFunctionData {
+    context?: string;
+    request?: ExternalItemRequest;
+}
+
+type ExternalItemRequest =
+    | string
+    | boolean
+    | string[]
+    | { [index: string]: any };
+
+type ExternalItemCallback = (err?: Error, result?: ExternalItemRequest) => void;
+
+type ExternalItemFunction = (
+    data: ExternalItemFunctionData,
+    callback: ExternalItemCallback
+) => void;
 
 export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
     public static readonly DEST_DIR = 'generated_js';
@@ -47,6 +65,32 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
         return path.resolve(assetsPath, this.DEST_DIR);
     }
 
+    private static resolveWebpackExternal(
+        data: ExternalItemFunctionData,
+        callback: ExternalItemCallback
+    ): void {
+        if (typeof data.request === 'string' && isFromLibrary(data.request)) {
+            return callback(
+                undefined,
+                CplaceTypescriptCompiler.replaceCplacePluginIdentifier(
+                    data.request
+                )
+            );
+        }
+        return callback();
+    }
+
+    private static replaceCplacePluginIdentifier(request: string): string {
+        return request.replace(
+            /(^@)([a-zA-Z0-9.]+)(\/.+)/gi,
+            (match, at, folder, path) => {
+                const resolver = folder.replace(/\./g, '_');
+                const module = `.${path}.js`;
+                return `window['$${resolver}']('${module}')`;
+            }
+        );
+    }
+
     protected getJobName(): string {
         return 'cplace TypeScript (UI)';
     }
@@ -70,12 +114,14 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
 
             // @ts-ignore
             webpack(this.getWebpackConfig(), (err, stats) => {
-                if (err) {
+                if (stats && stats.hasErrors()) {
+                    reject(stats.toString());
+                } else if (err) {
                     reject(err);
-                } else if (stats.hasErrors()) {
-                    throw Error(stats.toString());
                 } else {
-                    resolve();
+                    resolve(
+                        `(CplaceTypeScriptCompiler) [${this.pluginName}] TypeScript successfully bundled!`
+                    );
                 }
             });
         });
@@ -141,7 +187,6 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                 libraryExport: 'default',
             },
             plugins: [
-                new CReplacePlugin(),
                 new webpack.IgnorePlugin({
                     resourceRegExp: /(index\.js|vendor\.js)$/,
                     contextRegExp: new RegExp(`\.*(${this.pluginName}).*`),
@@ -173,7 +218,10 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
         return config;
     }
 
-    private populateWebpackExternals(): ExternalsElement[] {
+    private populateWebpackExternals(): (
+        | { [key: string]: string }
+        | ExternalItemFunction
+    )[] {
         const pluginDir = path.dirname(this.assetsPath);
         const extraTypes = CplaceTSConfigGenerator.getExtraTypes(
             pluginDir,
@@ -185,20 +233,8 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                 ...CplaceTypescriptCompiler.DEFAULT_EXTERNALS,
                 ...(extraTypes ? extraTypes.externals : {}),
             },
-            this.resolveWebpackExternal.bind(this),
+            CplaceTypescriptCompiler.resolveWebpackExternal.bind(this),
         ];
-    }
-
-    private resolveWebpackExternal(
-        context: string,
-        request: string,
-        callback: Function
-    ) {
-        if (isFromLibrary(request)) {
-            const newRequest = request.substr(1);
-            return callback(null, newRequest);
-        }
-        callback();
     }
 
     private async copyStaticFiles(): Promise<void> {

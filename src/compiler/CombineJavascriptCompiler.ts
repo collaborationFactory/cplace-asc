@@ -3,12 +3,12 @@ import * as path from 'path';
 import { CompilationResult, ICompiler } from './interfaces';
 import { cerr, cgreen, debug, formatDuration, GREEN_CHECK } from '../utils';
 import * as fs from 'fs';
-import rimraf = require('rimraf');
 import * as webpack from 'webpack';
 import { Configuration } from 'webpack';
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+import * as TerserPlugin from 'terser-webpack-plugin';
+import * as rimraf from 'rimraf';
 
-export class CombineJavascriptsCompiler implements ICompiler {
+export class CombineJavascriptCompiler implements ICompiler {
     public static readonly OUTPUT_DIR = '_generated_';
     public static readonly ENTRY_FILE_NAME =
         'javaScriptIncludesToBeCompressed.txt';
@@ -27,18 +27,18 @@ export class CombineJavascriptsCompiler implements ICompiler {
     ) {
         this.pathToEntryFile = path.join(
             this.assetsPath,
-            CombineJavascriptsCompiler.ENTRY_FILE_NAME
+            CombineJavascriptCompiler.ENTRY_FILE_NAME
         );
     }
 
     compile(): Promise<CompilationResult> {
         return new Promise<CompilationResult>((resolve, reject) => {
-            const generatedDir = CombineJavascriptsCompiler.getOutputDir(
+            const generatedDir = CombineJavascriptCompiler.getOutputDir(
                 this.assetsPath
             );
             const outputFile = path.join(
                 generatedDir,
-                CombineJavascriptsCompiler.OUTPUT_FILE_NAME
+                CombineJavascriptCompiler.OUTPUT_FILE_NAME
             );
 
             if (!fs.existsSync(this.pathToEntryFile)) {
@@ -52,7 +52,7 @@ export class CombineJavascriptsCompiler implements ICompiler {
 
             const start = new Date().getTime();
             console.log(
-                `⟲ [${this.pluginName}] starting to combine javascripts...`
+                `⟲ [${this.pluginName}] starting to combine javascript...`
             );
 
             const sourcesToCombine: string[] =
@@ -60,19 +60,19 @@ export class CombineJavascriptsCompiler implements ICompiler {
             if (sourcesToCombine.length == 0) {
                 console.log(
                     cgreen`⇢`,
-                    `[${this.pluginName}] No javascripts specified to combine.`
+                    `[${this.pluginName}] No javascript specified to combine.`
                 );
                 return resolve(CompilationResult.UNCHANGED);
             }
 
-            this.combineJavascripts(sourcesToCombine)
+            this.combineJavascript(sourcesToCombine)
                 .then(() => {
                     let end = new Date().getTime();
                     console.log(
                         GREEN_CHECK,
                         `[${
                             this.pluginName
-                        }] Combining javascripts finished (${formatDuration(
+                        }] Combining javascript finished (${formatDuration(
                             end - start
                         )})`
                     );
@@ -80,9 +80,7 @@ export class CombineJavascriptsCompiler implements ICompiler {
                 })
                 .catch((err) => {
                     console.error(cerr`${err}`);
-                    reject(
-                        `[${this.pluginName}] Failed to combine javascripts`
-                    );
+                    reject(`[${this.pluginName}] Failed to combine javascript`);
                 });
         }).catch((err) => {
             throw Error(err);
@@ -90,21 +88,23 @@ export class CombineJavascriptsCompiler implements ICompiler {
     }
 
     public static getOutputDir(assetsPath: string): string {
-        return path.resolve(assetsPath, CombineJavascriptsCompiler.OUTPUT_DIR);
+        return path.resolve(assetsPath, CombineJavascriptCompiler.OUTPUT_DIR);
     }
 
-    private combineJavascripts(sourcesToCombine: string[]) {
+    private combineJavascript(sourcesToCombine: string[]) {
         return new Promise((resolve, reject) => {
             // @ts-ignore
             webpack(
                 this.getCombineJavascriptWebpackConfig(sourcesToCombine),
                 (err, stats) => {
-                    if (err) {
-                        reject(err);
-                    } else if (stats.hasErrors()) {
+                    if (stats && stats.hasErrors()) {
                         reject(stats.toString());
+                    } else if (err) {
+                        reject(err);
                     } else {
-                        resolve();
+                        resolve(
+                            `(CombineJavascriptCompiler) [${this.pluginName}] JavaScript successfully bundled!`
+                        );
                     }
                 }
             );
@@ -114,7 +114,7 @@ export class CombineJavascriptsCompiler implements ICompiler {
     private getCombineJavascriptWebpackConfig(
         sourcesToCombine: string[]
     ): Configuration {
-        const config: Configuration = {
+        return {
             mode: 'production',
             context: path.resolve(this.assetsPath),
             externals: {
@@ -141,20 +141,23 @@ export class CombineJavascriptsCompiler implements ICompiler {
             optimization: {
                 minimize: true,
                 minimizer: [
-                    new UglifyJsPlugin({
-                        uglifyOptions: {
-                            comments: false,
+                    new TerserPlugin({
+                        minify: TerserPlugin.terserMinify,
+                        parallel: true,
+                        extractComments: true,
+                        terserOptions: {
+                            format: {
+                                comments: false,
+                            },
                         },
                     }),
                 ],
             },
             output: {
                 filename: '[name].js',
-                path: CombineJavascriptsCompiler.getOutputDir(this.assetsPath),
+                path: CombineJavascriptCompiler.getOutputDir(this.assetsPath),
             },
         };
-
-        return config;
     }
 
     private getCombineJavascriptSources(): string[] {
@@ -168,7 +171,7 @@ export class CombineJavascriptsCompiler implements ICompiler {
                 includeLine.trim().length > 0 &&
                 !includeLine
                     .trim()
-                    .startsWith(CombineJavascriptsCompiler.INCLUDE_COMMENT)
+                    .startsWith(CombineJavascriptCompiler.INCLUDE_COMMENT)
             ) {
                 if (includeLine.endsWith('*')) {
                     // read all files from a potential folder and add them to combine
@@ -212,7 +215,7 @@ export class CombineJavascriptsCompiler implements ICompiler {
         });
 
         debug(
-            `(CombineJavascriptsCompiler) [${this.pluginName}] will combine following files: \n ${result}`
+            `(CombineJavascriptCompiler) [${this.pluginName}] will combine following files: \n ${result}`
         );
         return result;
     }

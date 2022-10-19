@@ -42,7 +42,7 @@ export class RegistryInitializer {
                 RegistryInitializer.JROG_CPLACE_ASSETS_NPM_REGISTRY,
                 RegistryInitializer.JROG_CPLACE_ASSETS_NPM_REGISTRY
             );
-        } catch (e) {
+        } catch (e: any) {
             console.error(
                 cred`✗`,
                 e.message,

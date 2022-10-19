@@ -15,8 +15,8 @@ import { NPMResolver } from './NPMResolver';
 import { PluginDescriptor } from './PluginDescriptor';
 import { getDescriptorParser } from './DescriptorParser';
 import { isFileTracked } from './utils';
-import { CombineJavascriptsCompiler } from '../compiler/CombineJavascriptsCompiler';
 import { PluginPackageJsonGenerator } from './PluginPackageJsonGenerator';
+import { CombineJavascriptCompiler } from '../compiler/CombineJavascriptCompiler';
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined;
@@ -99,7 +99,7 @@ export default class CplacePlugin {
         this.hasCombineJs = fs.existsSync(
             path.resolve(
                 this.assetsDir,
-                CombineJavascriptsCompiler.ENTRY_FILE_NAME
+                CombineJavascriptCompiler.ENTRY_FILE_NAME
             )
         );
     }
@@ -268,7 +268,7 @@ export default class CplacePlugin {
             promises.push(this.removeDir(pluginNodeModules));
         }
         if (this.hasCombineJs) {
-            const generatedDir = CombineJavascriptsCompiler.getOutputDir(
+            const generatedDir = CombineJavascriptCompiler.getOutputDir(
                 this.assetsDir
             );
             promises.push(this.removeDir(generatedDir));

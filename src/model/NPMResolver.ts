@@ -13,7 +13,7 @@ import { FSWatcher } from 'chokidar';
 import { Scheduler } from '../executor';
 import { cerr, cgreen, cred, cwarn, debug, sleepBusy } from '../utils';
 import { PackageVersion } from './PackageVersion';
-import rimraf = require('rimraf');
+import * as rimraf from 'rimraf';
 import Timeout = NodeJS.Timeout;
 import { RegistryInitializer } from './RegistryInitializer';
 

@@ -10,11 +10,10 @@ import * as crypto from 'crypto';
 import * as eol from 'eol';
 import { CompressCssCompiler } from './CompressCssCompiler';
 import { CplaceTypescriptCompiler } from './CplaceTypescriptCompiler';
-import spawn = require('cross-spawn');
-
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
-const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+import * as spawn from 'cross-spawn';
+import * as MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import * as CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
+import * as TerserPlugin from 'terser-webpack-plugin';
 
 export class VendorCompiler implements ICompiler {
     public static readonly DEST_CSS_DIR = 'generated_css';
@@ -260,11 +259,12 @@ export class VendorCompiler implements ICompiler {
                             ],
                         },
                     }),
-                    new UglifyJsPlugin({
-                        extractComments: true,
+                    new TerserPlugin({
+                        minify: TerserPlugin.terserMinify,
                         parallel: true,
-                        uglifyOptions: {
-                            output: {
+                        extractComments: true,
+                        terserOptions: {
+                            format: {
                                 comments: false,
                             },
                         },
@@ -330,16 +330,18 @@ export class VendorCompiler implements ICompiler {
 
             if (!buffer.length) {
                 // if entry file is empty, there is no need to bundle
-                resolve();
+                resolve(
+                    `(VendorCompiler) [${this.pluginName}] No entry file! Bundling skipped!`
+                );
                 return;
             }
 
             const mergedConfig = merge(config, pluginSpecificConfig);
             webpack(mergedConfig, (err, stats) => {
-                if (err) {
-                    reject(`${err.message}`);
-                } else if (stats.hasErrors()) {
-                    reject(`${stats.toString()}`);
+                if (stats && stats.hasErrors()) {
+                    reject(stats.toString());
+                } else if (err) {
+                    reject(err);
                 } else {
                     const endTime = new Date().getTime();
                     console.log(
@@ -348,7 +350,9 @@ export class VendorCompiler implements ICompiler {
                             endTime - startTime
                         )})`
                     );
-                    resolve();
+                    resolve(
+                        `(VendorCompiler) [${this.pluginName}] Vendors successfully bundled!`
+                    );
                 }
             });
         });
