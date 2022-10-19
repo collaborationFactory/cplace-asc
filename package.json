@@ -29,6 +29,7 @@
     "dependencies": {
         "@openapitools/openapi-generator-cli": "^2.5.2",
         "chokidar": "^3.5.3",
+        "clean-css": "^5.3.1",
         "copyfiles": "^2.4.1",
         "cross-spawn": "^7.0.3",
         "css-loader": "^6.6.0",

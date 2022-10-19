@@ -2,9 +2,10 @@ import * as path from 'path';
 
 import { CompilationResult, ICompiler } from './interfaces';
 import { debug, formatDuration, GREEN_CHECK } from '../utils';
-import * as spawn from 'cross-spawn';
 import * as fs from 'fs';
 import * as rimraf from 'rimraf';
+import * as CleanCSS from 'clean-css';
+import { writeFileSync } from 'fs';
 
 export class CompressCssCompiler implements ICompiler {
     public static readonly CSS_SOURCES_DIR = 'css';
@@ -59,55 +60,65 @@ export class CompressCssCompiler implements ICompiler {
             const start = new Date().getTime();
             console.log(`⟲ [${this.pluginName}] starting CSS compression...`);
 
-            const cleanCssExecutable = this.getCleanCssExecutable();
-            const args = [
-                '-o',
-                outputFile,
-                this.pathToEntryFile,
-                '--source-map',
-            ];
-            debug(
-                `(CompressCssCompiler) [${
-                    this.pluginName
-                }] executing command '${cleanCssExecutable} ${args.join(' ')}'`
-            );
+            new CleanCSS({
+                inline: 'all',
+                level: {
+                    2: {
+                        all: true,
+                    },
+                },
+                rebaseTo: generatedCssDir,
+                output: outputFile,
+                sourceMap: true,
+            }).minify([this.pathToEntryFile], (error, output) => {
+                if (error) {
+                    this.cleanOutput(outputFile);
+                    debug(
+                        `[${this.pluginName}] (CompressCssCompiler) minifying with clean-css failed with error: ${error}`
+                    );
+                    throw Error(
+                        `[${this.pluginName}] (CompressCssCompiler) CSS compression failed...`
+                    );
+                }
 
-            const result = spawn.sync(cleanCssExecutable, args, {
-                stdio: [process.stdin, process.stdout, process.stderr],
+                const sourceMapFileName =
+                    CompressCssCompiler.OUTPUT_FILE_NAME.concat('.map');
+                const sourceMapFilePath = outputFile.concat('.map');
+                const sourceMappingURL = `\n/*# sourceMappingURL=${sourceMapFileName} */`;
+                let cssContent = output.styles;
+
+                if (!this.isProduction) {
+                    cssContent = cssContent.concat(sourceMappingURL);
+                    const assetsRelativePath =
+                        this.pluginName.concat(`/assets`);
+                    const normalizedSourceMap = output.sourceMap
+                        .toString()
+                        .replace(new RegExp(assetsRelativePath, 'g'), '..');
+                    writeFileSync(
+                        sourceMapFilePath,
+                        normalizedSourceMap,
+                        'utf-8'
+                    );
+                }
+                writeFileSync(outputFile, cssContent, 'utf-8');
+
+                const end = new Date().getTime();
+                console.log(
+                    GREEN_CHECK,
+                    `[${
+                        this.pluginName
+                    }] CSS compression finished (${formatDuration(
+                        end - start
+                    )})`
+                );
+
+                return resolve(CompilationResult.CHANGED);
             });
-
-            debug(
-                `(CompressCssCompiler) [${this.pluginName}] clean-css return code: ${result.status}`
-            );
-            if (result.status !== 0) {
-                this.cleanOutput(outputFile);
-                throw Error(`[${this.pluginName}] CSS compression failed...`);
-            }
-
-            const end = new Date().getTime();
-            console.log(
-                GREEN_CHECK,
-                `[${
-                    this.pluginName
-                }] CSS compression finished (${formatDuration(end - start)})`
-            );
-
-            return resolve(CompilationResult.CHANGED);
         });
     }
 
     private cleanOutput(outputFile: string): void {
         rimraf.sync(outputFile);
         rimraf.sync(outputFile.concat('.map'));
-    }
-
-    private getCleanCssExecutable(): string {
-        return path.resolve(
-            this.mainRepoDir,
-            'node_modules',
-            'clean-css',
-            'bin',
-            'cleancss'
-        );
     }
 }
