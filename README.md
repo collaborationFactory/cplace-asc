@@ -2,7 +2,7 @@
 
 | Item         | Value                                                      |
 | ------------ | ---------------------------------------------------------- |
-| Owner        | Christian Kaltenbach, Philip Stöhrer, Stefan Stadler       |
+| Owner        | Stefan Stadler, Slaven Kopic, Jan Dittmar                  |
 | Team         | none yet                                                   |
 | Project      | none                                                       |
 | Parent       | none                                                       |

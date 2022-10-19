@@ -23,6 +23,7 @@ const Processfactory: Factory<ChildProcess> = {
     create: async () => {
         return fork(COMPILER_ENTRY_POINT);
     },
+    // @ts-ignore
     destroy: async (_process: ChildProcess) => {
         return _process.kill();
     },

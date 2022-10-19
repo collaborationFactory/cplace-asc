@@ -1,6 +1,6 @@
 {
     "name": "@cplace/asc",
-    "version": "1.2.11",
+    "version": "1.2.13",
     "description": "cplace assets compiler",
     "repository": "https://github.com/collaborationFactory/cplace-asc",
     "homepage": "https://github.com/collaborationFactory/cplace-asc",
@@ -65,7 +65,7 @@
         "@types/less": "^3.0.0",
         "@types/meow": "^5.0.0",
         "@types/minimist": "^1.2.0",
-        "@types/node": "^10.12.10",
+        "@types/node": "^14.18.31",
         "@types/rimraf": "^2.0.2",
         "@types/vinyl": "^2.0.2",
         "@types/webpack": "^4.4.19",
