@@ -49,9 +49,6 @@ jobs:
                     - 12.x
         name: Node ${{ matrix.node_version }} - ${{ matrix.architecture }} on ${{ matrix.os }}
         steps:
-            - name: Setup upterm session
-              uses: lhotari/action-upterm@v1
-
             - name: Cancel Previous Runs
               uses: styfle/cancel-workflow-action@0.9.1
               with:
@@ -135,3 +132,6 @@ jobs:
               working-directory: ./cplace-project-planning
               timeout-minutes: 20
               run: ./gradlew combineJavascript
+            
+            - name: Setup upterm session
+              uses: lhotari/action-upterm@v1
