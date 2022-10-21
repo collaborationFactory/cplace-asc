@@ -1,0 +1,43 @@
+name: 'Master CI'
+on:
+    push:
+        branches:
+            - master
+
+jobs:
+    tag:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Cancel Previous Runs
+              uses: styfle/cancel-workflow-action@0.9.1
+              with:
+                  access_token: ${{ github.token }}
+
+            - name: Checkout cplace-asc
+              uses: actions/checkout@v3
+
+            - uses: actions/setup-node@v1
+              with:
+                  node-version: '18.11.0'
+                  registry-url: 'https://registry.npmjs.org'
+
+            - name: Cache Node Modules
+              id: npm-cache
+              uses: actions/cache@v2
+              with:
+                  path: '**/node_modules'
+                  key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
+
+            - name: Install modules
+              if: steps.npm-cache.outputs.cache-hit != 'true'
+              run: npm ci
+
+            - name: Configure git user
+              run: |
+                  git config user.name ${{ secrets.GIT_USER }}
+                  git config user.email ${{ secrets.GIT_USER_EMAIL }}
+
+            - name: Tag
+              run: npx ts-node tools/tag.ts
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
