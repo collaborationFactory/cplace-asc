@@ -186,6 +186,25 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                 library: '$' + this.pluginName.replace(/\./g, '_'),
                 libraryExport: 'default',
             },
+            optimization: {
+                minimize: true,
+                minimizer: [
+                    new TerserPlugin({
+                        minify: TerserPlugin.terserMinify,
+                        parallel: true,
+                        extractComments: false,
+                        terserOptions: {
+                            keep_classnames: true,
+                            keep_fnames: true,
+                            compress: true,
+                            mangle: false,
+                            format: {
+                                comments: false,
+                            },
+                        },
+                    }),
+                ],
+            },
             plugins: [
                 new webpack.IgnorePlugin({
                     resourceRegExp: /(index\.js|vendor\.js)$/,
