@@ -4,7 +4,12 @@ import { writeFileSync, rmSync } from 'fs';
 import * as rootPackageJSON from '../package.json';
 import { CPLACE_ASC_DIST } from './shared';
 
-const version = rootPackageJSON.version;
+const version = process.argv[2];
+
+if (!version) {
+    throw Error('Version has to be specified!');
+}
+
 const packageJSONDist = resolve(CPLACE_ASC_DIST, 'package.json');
 const tsc = resolve('node_modules/.bin/tsc');
 const packageJSONPropsToRemove = ['devDependencies', 'jest', 'scripts'];

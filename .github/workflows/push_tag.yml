@@ -2,7 +2,8 @@ name: 'Publish CI'
 on:
     push:
         tags:
-            - 'v*.*.*'
+            - '*.*.*'
+            - '0.0.0-SNAPSHOT-*'
 
 env:
     NODE_ENV: 'production'
@@ -21,10 +22,9 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: Checkout latest tag
-              run: |
-                  LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
-                  git checkout $LATEST_TAG
+            - name: Get tag
+              id: tag
+              uses: dawidd6/action-get-tag@v1
 
             - uses: actions/setup-node@v1
               with:
@@ -46,3 +46,4 @@ jobs:
               run: npx ts-node tools/publish.ts
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+                  TAG: ${{ steps.tag.outputs.tag }}
