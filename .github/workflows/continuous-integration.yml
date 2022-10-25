@@ -16,7 +16,7 @@ jobs:
 
             - uses: actions/setup-node@v1
               with:
-                  node-version: 14.x
+                  node-version: 12.x
 
             - name: Cache Node Modules
               id: npm-cache
@@ -46,7 +46,7 @@ jobs:
                     - macos-latest
                     - windows-latest
                 node_version:
-                    - 14.x
+                    - 12.x
         name: Node ${{ matrix.node_version }} - ${{ matrix.architecture }} on ${{ matrix.os }}
         steps:
             - name: Cancel Previous Runs
@@ -132,6 +132,3 @@ jobs:
               working-directory: ./cplace-project-planning
               timeout-minutes: 20
               run: ./gradlew combineJavascript
-            
-            - name: Setup upterm session
-              uses: lhotari/action-upterm@v1
