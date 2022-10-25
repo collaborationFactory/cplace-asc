@@ -14,7 +14,6 @@ import {
 } from './interfaces';
 import { cerr, enableDebug } from '../utils';
 import { CompressCssCompiler } from './CompressCssCompiler';
-import { E2ETypescriptCompiler } from './E2ETypescriptCompiler';
 import { OpenAPIYamlCompiler } from './OpenAPIYamlCompiler';
 import { VendorCompiler } from './VendorCompiler';
 import { CombineJavascriptCompiler } from './CombineJavascriptCompiler';
@@ -65,8 +64,6 @@ if (require.main === module) {
             CompilerConstructor = VendorCompiler;
         } else if (request.ts) {
             CompilerConstructor = CplaceTypescriptCompiler;
-        } else if (request.tsE2E) {
-            CompilerConstructor = E2ETypescriptCompiler;
         } else if (request.less) {
             CompilerConstructor = LessCompiler;
         } else if (request.openAPIYaml) {

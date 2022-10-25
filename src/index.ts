@@ -46,7 +46,7 @@ function run(updateDetails?: IUpdateDetails) {
         --packagejson, -j       Generate package.json files (if missing) in the root and each plugin that has assets
         --withYaml, -y          Generates TypeScript files from the OpenAPI YAML specification
         --verbose, -v           Enable verbose logging
-        --production, -P        Enable production mode (ignores test dependencies and E2E)
+        --production, -P        Enable production mode (ignores test dependencies)
 
 `,
         {

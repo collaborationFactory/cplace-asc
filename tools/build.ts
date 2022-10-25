@@ -11,7 +11,7 @@ if (!version) {
 }
 
 const packageJSONDist = resolve(CPLACE_ASC_DIST, 'package.json');
-const tsc = resolve('node_modules/.bin/tsc');
+let tscBin = resolve('node_modules/.bin/tsc');
 const packageJSONPropsToRemove = ['devDependencies', 'jest', 'scripts'];
 
 if (!process.env.NODE_ENV) {
@@ -27,11 +27,11 @@ rmSync(CPLACE_ASC_DIST, { recursive: true, force: true });
 console.log('Cleaning DONE!');
 
 console.log('Compiling...');
+let tsc = tscBin;
 if (env === 'production') {
-    console.log(execSync(`${tsc} --project ./tsconfig.prod.json`).toString());
-} else {
-    console.log(execSync(tsc).toString());
+    tsc = `${tscBin} --project ./tsconfig.prod.json`;
 }
+console.log(`Compiling with: ${tsc} `, execSync(tscBin).toString());
 console.log('Compiling DONE!');
 
 const newPackageJSON = Object.keys(rootPackageJSON).reduce((acc, key) => {

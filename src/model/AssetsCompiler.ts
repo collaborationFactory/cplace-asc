@@ -10,6 +10,7 @@ import {
     cerr,
     cgreen,
     csucc,
+    cwarn,
     debug,
     formatDuration,
     IUpdateDetails,
@@ -293,13 +294,9 @@ export class AssetsCompiler {
                 );
             }
             if (project.hasTypeScriptE2EAssets) {
-                if (!this.runConfig.production) {
-                    project.generateTsE2EConfig(
-                        (p) => projects.get(p),
-                        false,
-                        this.runConfig.localOnly
-                    );
-                }
+                console.log(
+                    cwarn`[${project.pluginName}] E2E assets are no longer compiled! Starting from the cplace release 23.2 all the E2E tests should be moved into a dedicated E2E repository. In addition, E2E tests must be written using Cypress!`
+                );
             }
         });
 
