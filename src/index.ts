@@ -54,7 +54,7 @@ function run(updateDetails?: IUpdateDetails) {
                 plugin: {
                     type: 'string',
                     alias: 'p',
-                    isRequired: false,
+                    default: '',
                 },
                 watch: {
                     type: 'boolean',
@@ -110,7 +110,7 @@ function run(updateDetails?: IUpdateDetails) {
         }
     );
 
-    if (cli.flags.plugin !== undefined) {
+    if (cli.flags.plugin && cli.flags.plugin === '') {
         console.error(cerr`Missing value for --plugin|-p argument`);
         process.exit(1);
     }
