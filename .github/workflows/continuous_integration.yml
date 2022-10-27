@@ -61,23 +61,23 @@ jobs:
             - name: Checkout cplace
               uses: actions/checkout@v3
               with:
-                  repository: collaborationFactory/cplace
+                  repository: collaborationFactory/cplace@feature/PFM-TASK-3041-Adjust-main-to-Node-version-18-11-0
                   path: main
                   token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
-            - name: Checkout cplace-project-planning
-              uses: actions/checkout@v3
-              with:
-                  repository: collaborationFactory/cplace-project-planning
-                  path: cplace-project-planning
-                  token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
-
-            - name: Checkout cplace-paw
-              uses: actions/checkout@v3
-              with:
-                  repository: collaborationFactory/cplace-paw
-                  path: cplace-paw
-                  token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
+            #            - name: Checkout cplace-project-planning
+            #              uses: actions/checkout@v3
+            #              with:
+            #                  repository: collaborationFactory/cplace-project-planning
+            #                  path: cplace-project-planning
+            #                  token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
+            #
+            #            - name: Checkout cplace-paw
+            #              uses: actions/checkout@v3
+            #              with:
+            #                  repository: collaborationFactory/cplace-paw
+            #                  path: cplace-paw
+            #                  token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
             - name: Setup node
               uses: actions/setup-node@v2
@@ -106,13 +106,13 @@ jobs:
               working-directory: ./main
               run: ./gradlew generatePluginDescriptor
 
-            - name: Create plugin descriptors cplace-project-planning
-              working-directory: ./cplace-project-planning
-              run: ./gradlew generatePluginDescriptor
-
-            - name: Create plugin descriptors cplace-paw
-              working-directory: ./cplace-paw
-              run: ./gradlew generatePluginDescriptor
+            #            - name: Create plugin descriptors cplace-project-planning
+            #              working-directory: ./cplace-project-planning
+            #              run: ./gradlew generatePluginDescriptor
+            #
+            #            - name: Create plugin descriptors cplace-paw
+            #              working-directory: ./cplace-paw
+            #              run: ./gradlew generatePluginDescriptor
 
             - name: Build
               run: npx ts-node tools/build.ts 10.0.0
@@ -124,19 +124,19 @@ jobs:
                   npm i ../dist -D
                   node_modules/.bin/cplace-asc
 
-            - name: cplace-asc cplace-paw
-              working-directory: ./cplace-paw
-              timeout-minutes: 20
-              run: |
-                  npm i ../dist -D
-                  node_modules/.bin/cplace-asc
-
-            - name: cplace-asc cplace-project-planning
-              working-directory: ./cplace-project-planning
-              timeout-minutes: 20
-              run: |
-                  npm i ../dist -D
-                  node_modules/.bin/cplace-asc
+#            - name: cplace-asc cplace-paw
+#              working-directory: ./cplace-paw
+#              timeout-minutes: 20
+#              run: |
+#                  npm i ../dist -D
+#                  node_modules/.bin/cplace-asc
+#
+#            - name: cplace-asc cplace-project-planning
+#              working-directory: ./cplace-project-planning
+#              timeout-minutes: 20
+#              run: |
+#                  npm i ../dist -D
+#                  node_modules/.bin/cplace-asc
 
 #            - name: combineJavascript main
 #              working-directory: ./main
