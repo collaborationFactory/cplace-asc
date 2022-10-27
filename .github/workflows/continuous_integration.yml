@@ -115,22 +115,25 @@ jobs:
               run: ./gradlew generatePluginDescriptor
 
             - name: Build
-              run: npm run build
-
-            - name: Link
-              run: npm link
+              run: npx ts-node tools/build.ts 10.0.0
 
             - name: combineJavascript main
               working-directory: ./main
               timeout-minutes: 20
-              run: ./gradlew combineJavascript
+              run: |
+                  npm i ../dist -D
+                  ./gradlew combineJavascript
 
             - name: combineJavascript cplace-paw
               working-directory: ./cplace-paw
               timeout-minutes: 20
-              run: ./gradlew combineJavascript
+              run: |
+                npm i ../dist -D
+                ./gradlew combineJavascript
 
             - name: combineJavascript cplace-project-planning
               working-directory: ./cplace-project-planning
               timeout-minutes: 20
-              run: ./gradlew combineJavascript
+              run: |
+                npm i ../dist -D
+                ./gradlew combineJavascript
