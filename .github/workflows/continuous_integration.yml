@@ -124,7 +124,7 @@ jobs:
               run: |
                   npm i ../dist -D
                   chmod 777 node_modules/.bin/cplace-asc
-                  sh assets-compiler.sh
+                  node_modules/.bin/cplace-asc
 
 #            - name: cplace-asc cplace-paw
 #              working-directory: ./cplace-paw
