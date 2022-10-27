@@ -61,7 +61,8 @@ jobs:
             - name: Checkout cplace
               uses: actions/checkout@v3
               with:
-                  repository: collaborationFactory/cplace@feature/PFM-TASK-3041-Adjust-main-to-Node-version-18-11-0
+                  repository: collaborationFactory/cplace
+                  ref: feature/PFM-TASK-3041-Adjust-main-to-Node-version-18-11-0
                   path: main
                   token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
