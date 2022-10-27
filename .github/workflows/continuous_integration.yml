@@ -117,23 +117,44 @@ jobs:
             - name: Build
               run: npx ts-node tools/build.ts 10.0.0
 
-            - name: combineJavascript main
+            - name: cplace-asc main
               working-directory: ./main
               timeout-minutes: 20
               run: |
                   npm i ../dist -D
-                  ./gradlew combineJavascript
+                  node_modules/.bin/cplace-asc
 
-            - name: combineJavascript cplace-paw
+            - name: cplace-asc cplace-paw
               working-directory: ./cplace-paw
               timeout-minutes: 20
               run: |
-                npm i ../dist -D
-                ./gradlew combineJavascript
+                  npm i ../dist -D
+                  node_modules/.bin/cplace-asc
 
-            - name: combineJavascript cplace-project-planning
+            - name: cplace-asc cplace-project-planning
               working-directory: ./cplace-project-planning
               timeout-minutes: 20
               run: |
-                npm i ../dist -D
-                ./gradlew combineJavascript
+                  npm i ../dist -D
+                  node_modules/.bin/cplace-asc
+
+#            - name: combineJavascript main
+#              working-directory: ./main
+#              timeout-minutes: 20
+#              run: |
+#                  npm i ../dist -D
+#                  ./gradlew combineJavascript
+#
+#            - name: combineJavascript cplace-paw
+#              working-directory: ./cplace-paw
+#              timeout-minutes: 20
+#              run: |
+#                npm i ../dist -D
+#                ./gradlew combineJavascript
+#
+#            - name: combineJavascript cplace-project-planning
+#              working-directory: ./cplace-project-planning
+#              timeout-minutes: 20
+#              run: |
+#                npm i ../dist -D
+#                ./gradlew combineJavascript
