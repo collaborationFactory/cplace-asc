@@ -8,14 +8,14 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
 const PACKAGE_JSON_PATH = resolve(__dirname, '../package.json');
+const packageJson_String = readFileSync(PACKAGE_JSON_PATH, 'utf8');
+const packageJson = JSON.parse(packageJson_String);
 
 /**
  * Returns a human-readable info line with the number of cpus/cores
  * and the current memory details
  */
 export function getAvailableStats() {
-    const packageJson_String = readFileSync(PACKAGE_JSON_PATH, 'utf8');
-    const packageJson = JSON.parse(packageJson_String);
     const versionString = packageJson.version;
     let op: string[] = [];
     op.push(`Currently running version: ${versionString}`);
@@ -37,6 +37,18 @@ const LIB_TEST_RE = /@([a-zA-Z0-9.]+)\/.+/;
 
 export function isFromLibrary(file: string) {
     return LIB_TEST_RE.test(file);
+}
+
+export function getProjectNodeModulesPath(): string {
+    return resolve(process.cwd(), 'node_modules');
+}
+
+export function getCplaceAscNodeModulesPath(): string {
+    return resolve(process.cwd(), 'node_modules', packageJson.name, 'node_modules');
+}
+
+export function getProjectNodeModulesBinPath(): string {
+    return resolve(getProjectNodeModulesPath(), '.bin');
 }
 
 /**

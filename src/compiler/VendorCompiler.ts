@@ -14,6 +14,11 @@ import * as spawn from 'cross-spawn';
 import * as MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import * as CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import * as TerserPlugin from 'terser-webpack-plugin';
+import {
+    getCplaceAscNodeModulesPath,
+    getProjectNodeModulesBinPath,
+    getProjectNodeModulesPath,
+} from '../model/utils';
 
 export class VendorCompiler implements ICompiler {
     public static readonly DEST_CSS_DIR = 'generated_css';
@@ -106,7 +111,7 @@ export class VendorCompiler implements ICompiler {
      */
     private tscPluginIndex(): boolean {
         debug(`(VendorCompiler) [${this.pluginName}] compiling index.ts...`);
-        const tsc = path.resolve(__dirname, '../../', 'node_modules/.bin/tsc');
+        const tsc = path.resolve(getProjectNodeModulesBinPath(), 'tsc');
         const index = path.join(this.assetsPath, 'index.ts');
         if (!fs.existsSync(index)) {
             return false;
@@ -117,9 +122,6 @@ export class VendorCompiler implements ICompiler {
             `--outDir`,
             path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR),
         ]);
-        debug(
-            `(VendorCompiler) [${this.pluginName}] index.ts tsc return code: ${res.status}`
-        );
         if (res.status !== 0) {
             debug(
                 `(VendorCompiler) [${
@@ -237,7 +239,7 @@ export class VendorCompiler implements ICompiler {
                 filename: '[name].js',
             },
             resolveLoader: {
-                modules: [path.resolve(__dirname, '../../', 'node_modules')],
+                modules: [getProjectNodeModulesPath(), getCplaceAscNodeModulesPath()],
             },
             resolve: {
                 modules: [

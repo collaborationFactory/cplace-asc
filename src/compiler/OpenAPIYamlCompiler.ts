@@ -4,6 +4,7 @@ import { cerr, formatDuration, GREEN_CHECK } from '../utils';
 import { CompilationResult, ICompiler } from './interfaces';
 import * as spawn from 'cross-spawn';
 import * as fs from 'fs';
+import { getProjectNodeModulesBinPath } from '../model/utils';
 
 export class OpenAPIYamlCompiler implements ICompiler {
     constructor(
@@ -12,13 +13,6 @@ export class OpenAPIYamlCompiler implements ICompiler {
         private readonly assetsPath: string,
         private readonly mainRepoDir: string
     ) {}
-
-    /**
-     * Gets path of node_modules executables
-     */
-    private static getNodeModulesBinPath(): string {
-        return path.resolve(__dirname, '../../', 'node_modules/.bin/');
-    }
 
     /**
      * Executes provided array of promises sequentially.
@@ -97,7 +91,7 @@ export class OpenAPIYamlCompiler implements ICompiler {
         return new Promise((resolve) => {
             const pluginPath = this.getPluginPath(plugin);
             const cli = path.resolve(
-                OpenAPIYamlCompiler.getNodeModulesBinPath(),
+                getProjectNodeModulesBinPath(),
                 'openapi-generator-cli'
             );
             const yaml = path.resolve(`${pluginPath}/api/API.yaml`);
@@ -118,7 +112,7 @@ export class OpenAPIYamlCompiler implements ICompiler {
                 console.error(
                     cerr`(OpenAPIYamlCompiler) [${
                         this.pluginName
-                    }] OpenAPI YAML compilation failed with error ${genRes.output.toString()}`
+                    }] OpenAPI YAML compilation failed with error ${genRes.output}`
                 );
                 throw Error(
                     `[${this.pluginName}] OpenAPI YAML compilation failed...`
@@ -143,7 +137,7 @@ export class OpenAPIYamlCompiler implements ICompiler {
                     '/assets/ts/api/*.ts'
                 );
                 const eolConverter = path.resolve(
-                    OpenAPIYamlCompiler.getNodeModulesBinPath(),
+                    getProjectNodeModulesBinPath(),
                     'eolConverter'
                 );
                 const res = spawn.sync(eolConverter, ['crlf', files], {
