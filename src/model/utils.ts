@@ -7,7 +7,7 @@ import * as os from 'os';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
-const PACKAGE_JSON_PATH = resolve(__dirname, '../../package.json');
+const PACKAGE_JSON_PATH = resolve(__dirname, '../package.json');
 
 /**
  * Returns a human-readable info line with the number of cpus/cores
