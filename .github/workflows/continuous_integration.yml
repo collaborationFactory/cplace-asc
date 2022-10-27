@@ -101,7 +101,7 @@ jobs:
               uses: actions/setup-java@v2
               with:
                   distribution: 'adopt'
-                  java-version: '11'
+                  java-version: '17'
 
             - name: Create plugin descriptors in main
               working-directory: ./main
@@ -123,6 +123,7 @@ jobs:
               timeout-minutes: 20
               run: |
                   npm i ../dist -D
+                  chmod 777 node_modules/.bin/cplace-asc
                   sh assets-compiler.sh
 
 #            - name: cplace-asc cplace-paw
