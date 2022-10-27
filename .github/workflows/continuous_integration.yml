@@ -123,7 +123,7 @@ jobs:
               timeout-minutes: 20
               run: |
                   npm i ../dist -D
-                  node_modules/.bin/cplace-asc
+                  sh assets-compiler.sh
 
 #            - name: cplace-asc cplace-paw
 #              working-directory: ./cplace-paw
