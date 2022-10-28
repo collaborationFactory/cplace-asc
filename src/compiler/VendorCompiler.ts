@@ -3,14 +3,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { NPMResolver } from '../model/NPMResolver';
 import { cerr, cgreen, debug, formatDuration } from '../utils';
-import { Configuration } from 'webpack';
 import * as webpack from 'webpack';
+import { Configuration } from 'webpack';
 import { merge } from 'webpack-merge';
-import spawn = require('cross-spawn');
 import * as crypto from 'crypto';
 import * as eol from 'eol';
 import { CompressCssCompiler } from './CompressCssCompiler';
 import { CplaceTypescriptCompiler } from './CplaceTypescriptCompiler';
+import spawn = require('cross-spawn');
+
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
@@ -121,7 +122,9 @@ export class VendorCompiler implements ICompiler {
         );
         if (res.status !== 0) {
             debug(
-                `(VendorCompiler) [${this.pluginName}] index.ts compilation failed with error ${res.stdout}`
+                `(VendorCompiler) [${
+                    this.pluginName
+                }] index.ts compilation failed with error ${res.output.toString()}`
             );
             throw Error(`[${this.pluginName}] index.ts compilation failed!`);
         }
@@ -200,8 +203,7 @@ export class VendorCompiler implements ICompiler {
             `⟲ [${this.pluginName}] loading custom vendor webpack configuration...`
         );
         try {
-            const pluginSpecificConfig = require(pluginSpecificConfigFile);
-            return pluginSpecificConfig;
+            return require(pluginSpecificConfigFile);
         } catch (e) {
             console.error(
                 cerr`Error while loading configuration ${pluginSpecificConfigFile}`
@@ -446,8 +448,8 @@ export class VendorCompiler implements ICompiler {
         const cssEntryAfterWriteExists = fs.existsSync(cssImportsPath);
         if (!cssEntryBeforeWriteExists && cssEntryAfterWriteExists) {
             /*
-                If css entry file doesn't exists at the time cplace-asc started, css watch will not be automatically fired.
-                Instead css compiler has to be triggered manually.
+                If css entry file doesn't exist at the time cplace-asc started, css watch will not be automatically fired.
+                Instead, css compiler has to be triggered manually.
              */
             return this.compressCssCompiler.compile();
         }
@@ -530,7 +532,7 @@ export class VendorCompiler implements ICompiler {
                 // removes included path if already exists
                 const includedPaths = buffer.split('\n');
                 const index = includedPaths.indexOf(pathToInclude);
-                // if file to write import to includes vendor import and there is no vendor, remove the import line
+                // if file to write imports to, includes vendor import and there is no vendor, remove the import line
                 includedPaths.splice(index, 1);
                 buffer = includedPaths.join('\n');
                 if (!buffer.length) {

@@ -70,6 +70,11 @@ function run(updateDetails?: IUpdateDetails) {
                     alias: 'c',
                     default: false,
                 },
+                withYaml: {
+                    type: 'boolean',
+                    alias: 'y',
+                    default: false,
+                },
                 threads: {
                     type: 'string',
                     alias: 't',
@@ -117,6 +122,12 @@ function run(updateDetails?: IUpdateDetails) {
     if (cli.flags.production && cli.flags.onlypre) {
         console.error(
             cerr`--production and --onlypre cannot be enabled simultaneously`
+        );
+        process.exit(1);
+    }
+    if (cli.flags.production && cli.flags.withYaml) {
+        console.error(
+            cerr`--production and --withYaml cannot be enabled simultaneously`
         );
         process.exit(1);
     }
@@ -177,6 +188,7 @@ function run(updateDetails?: IUpdateDetails) {
                 : os.cpus().length - 1,
             localOnly: cli.flags.localonly,
             production: cli.flags.production,
+            withYaml: cli.flags.withYaml,
             noParents: cli.flags.noparents || cli.flags.noParents,
             packagejson: cli.flags.packagejson,
         };
