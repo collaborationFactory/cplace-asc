@@ -16,7 +16,8 @@ import {
 } from '../utils';
 import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
-import { PluginDescriptorParser } from './PluginDescriptorParser';
+import { isFileTracked } from './utils';
+import rimraf = require('rimraf');
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -59,6 +60,11 @@ export interface IAssetsCompilerConfiguration {
      * Indicates whether parent repositories should be excluded from compilation
      */
     noParents: boolean;
+
+    /**
+     * Indicates that package.json files will be created in the root and each plugin that has assets.
+     */
+    packagejson: boolean;
 }
 
 /**
@@ -123,6 +129,27 @@ export class AssetsCompiler {
             for (const plugin of this.projects.values()) {
                 if (this.isInCompilationScope(plugin)) {
                     await plugin.cleanGeneratedOutput();
+                }
+            }
+
+            debug(`(AssetsCompiler) cleaning generated package.json file...`);
+            if (
+                !isFileTracked(this.repositoryDir, path.resolve('package.json'))
+            ) {
+                rimraf.sync(path.resolve(this.repositoryDir, 'package.json'));
+                rimraf.sync(
+                    path.resolve(this.repositoryDir, 'package-lock.json')
+                );
+            }
+        }
+
+        if (this.runConfig.packagejson) {
+            debug(
+                `(AssetsCompiler) generating package.json for all plugins...`
+            );
+            for (const plugin of this.projects.values()) {
+                if (this.isInCompilationScope(plugin)) {
+                    plugin.generatePackageJson(this.repositoryDir);
                 }
             }
         }

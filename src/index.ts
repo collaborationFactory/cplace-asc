@@ -20,6 +20,7 @@ import {
 import * as os from 'os';
 import * as path from 'path';
 import { PackageVersion } from './model/PackageVersion';
+import { CplaceVersion } from './model/CplaceVersion';
 import meow = require('meow');
 
 checkNodeVersion();
@@ -42,6 +43,7 @@ function run(updateDetails?: IUpdateDetails) {
         --threads, -t           Maximum number of threads to run in parallel
         --localonly, -l         Enable to not scan other directories than CWD for plugins
         --noparents, -x         Enable to only run compilation on plugins in current repository (still scans for other sources to be present)
+        --packagejson, -j       Generate package.json files (if missing) in the root and each plugin that has assets
         --verbose, -v           Enable verbose logging
         --production, -P        Enable production mode (ignores test dependencies and E2E)
 
@@ -81,6 +83,11 @@ function run(updateDetails?: IUpdateDetails) {
                 noparents: {
                     type: 'boolean',
                     alias: 'x',
+                    default: false,
+                },
+                packagejson: {
+                    type: 'boolean',
+                    alias: 'j',
                     default: false,
                 },
                 verbose: {
@@ -157,6 +164,7 @@ function run(updateDetails?: IUpdateDetails) {
 
     try {
         PackageVersion.initialize(mainRepoPath);
+        CplaceVersion.initialize(process.cwd());
 
         const plugins = cli.flags.plugin ? cli.flags.plugin.split(',') : [];
         const config: IAssetsCompilerConfiguration = {
@@ -170,6 +178,7 @@ function run(updateDetails?: IUpdateDetails) {
             localOnly: cli.flags.localonly,
             production: cli.flags.production,
             noParents: cli.flags.noparents || cli.flags.noParents,
+            packagejson: cli.flags.packagejson,
         };
 
         console.log(getAvailableStats());

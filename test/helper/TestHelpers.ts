@@ -41,11 +41,13 @@ export function generateExtendedPluginDescriptor(
     pluginPath: string,
     name: string,
     group: string,
+    repoName: string,
     pluginDependencies: any[]
 ): void {
     let content = {
         name: name,
         group: group,
+        repoName: repoName,
         dependencies: pluginDependencies,
     };
 
@@ -88,4 +90,14 @@ export function generateParentRepos(location: string, names: string[]): void {
             encoding: 'utf8',
         }
     );
+}
+
+export function generateVersionGradle(location: string, version: string): void {
+    let content = `ext {
+        currentVersion= '${version}'
+    };`;
+
+    fs.writeFileSync(path.resolve(location, 'version.gradle'), content, {
+        encoding: 'utf8',
+    });
 }

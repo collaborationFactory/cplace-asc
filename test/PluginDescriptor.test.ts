@@ -102,12 +102,14 @@ describe('test the handling of plugin descriptor', () => {
             platformPath,
             'cf.cplace.platform',
             'cf.cplace',
+            'cplace',
             []
         );
         generateExtendedPluginDescriptor(
             pluginPath,
             'cf.cplace.plugin',
             'cf.cplace',
+            'cplace-paw',
             [{ name: 'cf.cplace.platform', group: 'cf.cplace' }]
         );
 

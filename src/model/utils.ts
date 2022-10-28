@@ -1,6 +1,8 @@
 /*
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
+import { debug } from 'console';
+import * as spawn from 'cross-spawn';
 import * as os from 'os';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
@@ -35,4 +37,25 @@ const LIB_TEST_RE = /@([a-zA-Z0-9.]+)\/.+/;
 
 export function isFromLibrary(file: string) {
     return LIB_TEST_RE.test(file);
+}
+
+/**
+ * Check if a file is tracked
+ */
+export function isFileTracked(
+    workingDir: string,
+    relativePathToFile: string
+): boolean {
+    const res = spawn.sync(
+        'git',
+        ['ls-files', '--error-unmatch', relativePathToFile],
+        {
+            cwd: workingDir,
+        }
+    );
+    if (res.status !== 0) {
+        debug(`File ${relativePathToFile} is not tracked`);
+        return false;
+    }
+    return true;
 }
