@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { resolve } from 'path';
-import { writeFileSync, rmSync } from 'fs';
-import * as rootPackageJSON from '../package.json';
+import {writeFileSync, rmSync, copyFileSync, readdirSync, lstatSync, mkdirSync, existsSync} from 'fs';
+import * as rootPackageJSON from '../../package.json';
 import { CPLACE_ASC_DIST } from './shared';
 
 const version = process.argv[2];
@@ -10,9 +10,13 @@ if (!version) {
     throw Error('Version has to be specified!');
 }
 
-const packageJSONDist = resolve(CPLACE_ASC_DIST, 'package.json');
+const PACKAGE_JSON_DIST = resolve(CPLACE_ASC_DIST, 'package.json');
+const OPENAPI_TOOLS_JSON = 'openapitools.json';
+const OPENAPI_JAR = '5.0.0.jar';
+const OPENAPI_TOOLS = resolve(__dirname, '../openapi');
+const OPENAPI_VERSIONS_DIST = resolve(CPLACE_ASC_DIST, 'versions');
+const PACKAGE_JSON_PROPS_TO_REMOVE = ['devDependencies', 'jest', 'scripts'];
 let tscBin = resolve('node_modules/.bin/tsc');
-const packageJSONPropsToRemove = ['devDependencies', 'jest', 'scripts'];
 
 if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'development';
@@ -36,7 +40,7 @@ console.log('Compiling DONE!');
 
 const newPackageJSON = Object.keys(rootPackageJSON).reduce((acc, key) => {
     const value = rootPackageJSON[key];
-    if (!packageJSONPropsToRemove.includes(key)) {
+    if (!PACKAGE_JSON_PROPS_TO_REMOVE.includes(key)) {
         acc[key] = value;
     }
     return acc;
@@ -44,7 +48,12 @@ const newPackageJSON = Object.keys(rootPackageJSON).reduce((acc, key) => {
 
 console.log(`Creating package.json for version ${version}...`);
 writeFileSync(
-    packageJSONDist,
+    PACKAGE_JSON_DIST,
     JSON.stringify({ ...newPackageJSON, version: version })
 );
 console.log('package.json CREATED!');
+copyFileSync(`${OPENAPI_TOOLS}/${OPENAPI_TOOLS_JSON}`, resolve(CPLACE_ASC_DIST, OPENAPI_TOOLS_JSON))
+mkdirSync(OPENAPI_VERSIONS_DIST)
+copyFileSync(`${OPENAPI_TOOLS}/${OPENAPI_JAR}`, resolve(OPENAPI_VERSIONS_DIST, OPENAPI_JAR))
+console.log(`Copying openapitools.json ...`);
+

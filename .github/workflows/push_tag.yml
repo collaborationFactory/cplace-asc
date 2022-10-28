@@ -43,7 +43,7 @@ jobs:
               run: npm ci
 
             - name: Publish
-              run: npx ts-node tools/publish.ts
+              run: npx ts-node tools/scripts/publish.ts
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
                   TAG: ${{ steps.tag.outputs.tag }}

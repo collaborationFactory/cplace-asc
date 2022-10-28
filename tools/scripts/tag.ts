@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 
-import * as rootPackageJSON from '../package.json';
+import * as rootPackageJSON from '../../package.json';
 
 const branch = execSync('git branch --show-current').toString();
 let version = rootPackageJSON.version;

@@ -43,8 +43,12 @@ export function getProjectNodeModulesPath(): string {
     return resolve(process.cwd(), 'node_modules');
 }
 
+export function getCplaceAscPath(): string {
+    return resolve(process.cwd(), 'node_modules', packageJson.name);
+}
+
 export function getCplaceAscNodeModulesPath(): string {
-    return resolve(process.cwd(), 'node_modules', packageJson.name, 'node_modules');
+    return resolve(getCplaceAscPath(), 'node_modules');
 }
 
 export function getProjectNodeModulesBinPath(): string {

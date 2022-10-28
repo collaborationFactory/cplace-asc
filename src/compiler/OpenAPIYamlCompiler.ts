@@ -1,10 +1,11 @@
 import * as path from 'path';
 import * as rimraf from 'rimraf';
-import { cerr, formatDuration, GREEN_CHECK } from '../utils';
+import {cerr, debug, formatDuration, GREEN_CHECK} from '../utils';
 import { CompilationResult, ICompiler } from './interfaces';
 import * as spawn from 'cross-spawn';
 import * as fs from 'fs';
-import { getProjectNodeModulesBinPath } from '../model/utils';
+import {getCplaceAscNodeModulesPath, getCplaceAscPath, getProjectNodeModulesBinPath} from '../model/utils';
+import {rmSync} from "fs";
 
 export class OpenAPIYamlCompiler implements ICompiler {
     constructor(
@@ -62,7 +63,7 @@ export class OpenAPIYamlCompiler implements ICompiler {
      */
     private cleanup(plugin: string): Promise<any> {
         return Promise.all([
-            //   this.removeGeneratedOpenAPIFiles(plugin),
+            this.removeGeneratedOpenAPIFiles(plugin),
             this.removePluginDist(plugin),
         ]);
     }
@@ -97,22 +98,38 @@ export class OpenAPIYamlCompiler implements ICompiler {
             const yaml = path.resolve(`${pluginPath}/api/API.yaml`);
             const dist = path.resolve(`${pluginPath}/api/dist/openapi`);
 
+            const vmArgs = 'version-manager set 5.0.0'.split(' ');
+
+            debug(
+                `[${this.pluginName}](OpenAPIYamlCompiler) running ${cli} ${vmArgs.join(' ')}`
+            );
+
+            const vmRes = spawn.sync(cli, vmArgs, {
+                stdio: ['pipe', 'pipe', 'pipe'],
+                cwd: getCplaceAscPath()
+            });
+
             const genArgs =
                 `generate -i ${yaml} -g typescript-angular -o ${dist} --additional-properties=ngVersion=6.1.7,npmName=restClient,supportsES6=true,npmVersion=6.9.0,withInterfaces=true`.split(
                     ' '
                 );
+
+            debug(
+                `[${this.pluginName}](OpenAPIYamlCompiler) running ${cli} ${genArgs.join(' ')}`
+            );
+
             const genRes = spawn.sync(cli, genArgs, {
                 stdio: ['pipe', 'pipe', 'pipe'],
-                env: {
-                    ...process.env,
-                    PWD: path.resolve(__dirname, '..', '..'),
-                },
+                cwd: getCplaceAscPath()
             });
-            if (genRes.status !== 0) {
+
+            if (vmRes.status !== 0 || genRes.status !== 0) {
+                const output = genRes.status !== 0 ? genRes.output : vmRes.output;
+                const error = genRes.status !== 0 ? genRes.error : vmRes.error;
                 console.error(
                     cerr`(OpenAPIYamlCompiler) [${
                         this.pluginName
-                    }] OpenAPI YAML compilation failed with error ${genRes.output}`
+                    }] OpenAPI YAML compilation failed with error ${output} ${error}`
                 );
                 throw Error(
                     `[${this.pluginName}] OpenAPI YAML compilation failed...`
@@ -155,6 +172,27 @@ export class OpenAPIYamlCompiler implements ICompiler {
                 }
             }
             resolve(true);
+        });
+    }
+
+    /**
+     * Removes auto generated OpenAPI files. For deletion, it uses rimraf node module.
+     * @param plugin Provided plugin for which auto generated OpenAPI files should be removed.
+     */
+    private removeGeneratedOpenAPIFiles(plugin: string): Promise<any> {
+        return new Promise((resolve) => {
+            const dist = path.resolve(`${process.cwd()}/openapitools.json`);
+            rimraf(dist, (err) => {
+                if (err) {
+                    console.error(
+                        cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${err.message}`
+                    );
+                    throw Error(
+                        `[${this.pluginName}] OpenAPI YAML compilation failed...`
+                    );
+                }
+                resolve(true);
+            });
         });
     }
 

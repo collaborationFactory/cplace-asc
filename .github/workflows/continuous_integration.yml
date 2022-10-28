@@ -116,13 +116,13 @@ jobs:
             #              run: ./gradlew generatePluginDescriptor
 
             - name: Build
-              run: npx ts-node tools/build.ts 10.0.0
+              run: npm run test-build
 
             - name: cplace-asc main
               working-directory: ./main
               timeout-minutes: 20
               run: |
-                  npm i ../dist -D
+                  npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT -D
                   chmod 777 node_modules/.bin/cplace-asc
                   node_modules/.bin/cplace-asc
 
@@ -130,33 +130,33 @@ jobs:
 #              working-directory: ./cplace-paw
 #              timeout-minutes: 20
 #              run: |
-#                  npm i ../dist -D
+#                  npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT -D
 #                  node_modules/.bin/cplace-asc
 #
 #            - name: cplace-asc cplace-project-planning
 #              working-directory: ./cplace-project-planning
 #              timeout-minutes: 20
 #              run: |
-#                  npm i ../dist -D
+#                  npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT -D
 #                  node_modules/.bin/cplace-asc
 
 #            - name: combineJavascript main
 #              working-directory: ./main
 #              timeout-minutes: 20
 #              run: |
-#                  npm i ../dist -D
+#                  npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT -D
 #                  ./gradlew combineJavascript
 #
 #            - name: combineJavascript cplace-paw
 #              working-directory: ./cplace-paw
 #              timeout-minutes: 20
 #              run: |
-#                npm i ../dist -D
+#                npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT -D
 #                ./gradlew combineJavascript
 #
 #            - name: combineJavascript cplace-project-planning
 #              working-directory: ./cplace-project-planning
 #              timeout-minutes: 20
 #              run: |
-#                npm i ../dist -D
+#                npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT -D
 #                ./gradlew combineJavascript

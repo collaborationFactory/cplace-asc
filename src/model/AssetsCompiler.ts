@@ -295,7 +295,7 @@ export class AssetsCompiler {
             }
             if (project.hasTypeScriptE2EAssets) {
                 console.log(
-                    cwarn`[${project.pluginName}] E2E assets are no longer compiled! Starting from the cplace release 23.2 all the E2E tests should be moved into a dedicated E2E repository. In addition, E2E tests must be written using Cypress!`
+                    cwarn`[${project.pluginName}] E2E assets are no longer compiled! Starting from the cplace release 23.1 all the E2E tests should be moved into a dedicated E2E repository. In addition, E2E tests must be written using Cypress!`
                 );
             }
         });
