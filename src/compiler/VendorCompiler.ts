@@ -205,7 +205,8 @@ export class VendorCompiler implements ICompiler {
             `⟲ [${this.pluginName}] loading custom vendor webpack configuration...`
         );
         try {
-            return require(pluginSpecificConfigFile);
+            const pluginSpecificConfig = require(pluginSpecificConfigFile);
+            return pluginSpecificConfig;
         } catch (e) {
             console.error(
                 cerr`Error while loading configuration ${pluginSpecificConfigFile}`
