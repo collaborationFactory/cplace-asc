@@ -54,7 +54,7 @@
         "webpack": "^5.68.0",
         "webpack-merge": "^5.8.0",
         "xml2js": "^0.4.23",
-        "typescript": "^4.8.4"
+        "typescript": "^4.0.2"
     },
     "devDependencies": {
         "@types/copyfiles": "^2.4.1",
