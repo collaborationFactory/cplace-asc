@@ -171,7 +171,7 @@ For each plugin there must be one main entry file `assets/css/imports.css` which
 
 ### YAML
 
-For each plugin there must be one main entry file `assets/api/API.yaml` which will be used as entry point TypeScript generation.
+For each plugin there must be one main entry file `assets/api/API.yaml` which will be used as an entry point for TypeScript generation.
 
 ## Details
 
