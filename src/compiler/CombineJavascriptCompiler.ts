@@ -6,7 +6,6 @@ import * as fs from 'fs';
 import * as webpack from 'webpack';
 import { Configuration } from 'webpack';
 import * as TerserPlugin from 'terser-webpack-plugin';
-import * as rimraf from 'rimraf';
 
 export class CombineJavascriptCompiler implements ICompiler {
     public static readonly OUTPUT_DIR = '_generated_';
@@ -130,7 +129,7 @@ export class CombineJavascriptCompiler implements ICompiler {
                 rules: [
                     {
                         // Load everything with script-loader since all libraries are needed as gloabls in cplace.
-                        // Webpack minimization/uglifying does not work with script-loader as the whole script is wrapped as is.
+                        // Webpack's minimization/uglifying does not work with script-loader as the whole script is wrapped as is.
                         // For that reason, an uglify-loader first uglifies the input script (using UglifyJsPlugin with default options)
                         // and then loads it with script-loader
                         test: /\.js$/,
@@ -221,7 +220,7 @@ export class CombineJavascriptCompiler implements ICompiler {
     }
 
     private cleanOutput(outputFile: string): void {
-        rimraf.sync(outputFile);
-        rimraf.sync(outputFile.concat('.map'));
+        fs.rmSync(outputFile);
+        fs.rmSync(outputFile.concat('.map'));
     }
 }

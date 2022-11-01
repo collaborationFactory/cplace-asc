@@ -44,17 +44,16 @@
         "meow": "^9.0.0",
         "mini-css-extract-plugin": "^1.6.2",
         "raw-loader": "^4.0.2",
-        "rimraf": "^3.0.2",
         "sass": "^1.49.7",
         "sass-loader": "^12.4.0",
         "script-loader": "^0.7.2",
         "source-map-loader": "^3.0.1",
         "terser-webpack-plugin": "^5.3.6",
+        "typescript": "^4.0.2",
         "uglify-loader": "^3.0.0",
         "webpack": "^5.68.0",
         "webpack-merge": "^5.8.0",
-        "xml2js": "^0.4.23",
-        "typescript": "^4.0.2"
+        "xml2js": "^0.4.23"
     },
     "devDependencies": {
         "@types/copyfiles": "^2.4.1",
@@ -64,7 +63,6 @@
         "@types/less": "^3.0.3",
         "@types/minimist": "^1.2.2",
         "@types/node": "^18.11.0",
-        "@types/rimraf": "^3.0.2",
         "@types/vinyl": "^2.0.6",
         "jest": "^27.5.1",
         "prettier": "2.5.1",

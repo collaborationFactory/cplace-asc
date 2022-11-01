@@ -6,13 +6,7 @@ import * as path from 'path';
 import * as process from 'process';
 import * as fs from 'fs';
 import * as spawn from 'cross-spawn';
-import * as chokidar from 'chokidar';
-import { FSWatcher } from 'chokidar';
-import { Scheduler } from '../executor';
-import { cerr, cgreen, cred, cwarn, debug, sleepBusy } from '../utils';
-import { PackageVersion } from './PackageVersion';
-import * as rimraf from 'rimraf';
-import Timeout = NodeJS.Timeout;
+import { cgreen, cwarn, debug } from '../utils';
 import { RegistryInitializer } from './RegistryInitializer';
 
 export class NPMResolver {
@@ -184,7 +178,7 @@ export class NPMResolver {
                 fs.readdirSync(nodeModulesPath).forEach((dir) => {
                     const dirPath = path.resolve(nodeModulesPath, dir);
                     if (fs.lstatSync(dirPath).isSymbolicLink()) {
-                        rimraf.sync(dirPath);
+                        fs.rmSync(dirPath);
                     }
                 });
                 console.log(

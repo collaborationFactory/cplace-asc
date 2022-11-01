@@ -1,6 +1,11 @@
 import { execSync } from 'child_process';
 import { resolve } from 'path';
-import {writeFileSync, rmSync, copyFileSync, readdirSync, lstatSync, mkdirSync, existsSync} from 'fs';
+import {
+    writeFileSync,
+    rmSync,
+    copyFileSync,
+    mkdirSync,
+} from 'fs';
 import * as rootPackageJSON from '../../package.json';
 import { CPLACE_ASC_DIST } from './shared';
 
@@ -52,8 +57,13 @@ writeFileSync(
     JSON.stringify({ ...newPackageJSON, version: version })
 );
 console.log('package.json CREATED!');
-copyFileSync(`${OPENAPI_TOOLS}/${OPENAPI_TOOLS_JSON}`, resolve(CPLACE_ASC_DIST, OPENAPI_TOOLS_JSON))
-mkdirSync(OPENAPI_VERSIONS_DIST)
-copyFileSync(`${OPENAPI_TOOLS}/${OPENAPI_JAR}`, resolve(OPENAPI_VERSIONS_DIST, OPENAPI_JAR))
+copyFileSync(
+    `${OPENAPI_TOOLS}/${OPENAPI_TOOLS_JSON}`,
+    resolve(CPLACE_ASC_DIST, OPENAPI_TOOLS_JSON)
+);
+mkdirSync(OPENAPI_VERSIONS_DIST);
+copyFileSync(
+    `${OPENAPI_TOOLS}/${OPENAPI_JAR}`,
+    resolve(OPENAPI_VERSIONS_DIST, OPENAPI_JAR)
+);
 console.log(`Copying openapitools.json ...`);
-

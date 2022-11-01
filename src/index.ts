@@ -189,9 +189,9 @@ function run(updateDetails?: IUpdateDetails) {
                 : os.cpus().length - 1,
             localOnly: cli.flags.localonly,
             production: cli.flags.production,
-            withYaml: cli.flags.withYaml,
             packagejson: cli.flags.packagejson,
             noParents: cli.flags.noparents,
+            withYaml: cli.flags.withYaml
         };
 
         console.log(getAvailableStats());

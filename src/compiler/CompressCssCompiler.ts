@@ -3,7 +3,6 @@ import * as path from 'path';
 import { CompilationResult, ICompiler } from './interfaces';
 import { debug, formatDuration, GREEN_CHECK } from '../utils';
 import * as fs from 'fs';
-import * as rimraf from 'rimraf';
 import * as CleanCSS from 'clean-css';
 import { writeFileSync } from 'fs';
 
@@ -118,7 +117,7 @@ export class CompressCssCompiler implements ICompiler {
     }
 
     private cleanOutput(outputFile: string): void {
-        rimraf.sync(outputFile);
-        rimraf.sync(outputFile.concat('.map'));
+        fs.rmSync(outputFile);
+        fs.rmSync(outputFile.concat('.map'));
     }
 }

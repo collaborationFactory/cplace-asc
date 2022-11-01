@@ -1,11 +1,9 @@
 import * as path from 'path';
-import * as rimraf from 'rimraf';
-import {cerr, debug, formatDuration, GREEN_CHECK} from '../utils';
+import { cerr, debug, formatDuration, GREEN_CHECK } from '../utils';
 import { CompilationResult, ICompiler } from './interfaces';
 import * as spawn from 'cross-spawn';
 import * as fs from 'fs';
-import {getCplaceAscNodeModulesPath, getCplaceAscPath, getProjectNodeModulesBinPath} from '../model/utils';
-import {rmSync} from "fs";
+import { getCplaceAscPath, getProjectNodeModulesBinPath } from '../model/utils';
 
 export class OpenAPIYamlCompiler implements ICompiler {
     constructor(
@@ -101,12 +99,14 @@ export class OpenAPIYamlCompiler implements ICompiler {
             const vmArgs = 'version-manager set 5.0.0'.split(' ');
 
             debug(
-                `[${this.pluginName}](OpenAPIYamlCompiler) running ${cli} ${vmArgs.join(' ')}`
+                `[${
+                    this.pluginName
+                }](OpenAPIYamlCompiler) running ${cli} ${vmArgs.join(' ')}`
             );
 
             const vmRes = spawn.sync(cli, vmArgs, {
                 stdio: ['pipe', 'pipe', 'pipe'],
-                cwd: getCplaceAscPath()
+                cwd: getCplaceAscPath(),
             });
 
             const genArgs =
@@ -115,21 +115,22 @@ export class OpenAPIYamlCompiler implements ICompiler {
                 );
 
             debug(
-                `[${this.pluginName}](OpenAPIYamlCompiler) running ${cli} ${genArgs.join(' ')}`
+                `[${
+                    this.pluginName
+                }](OpenAPIYamlCompiler) running ${cli} ${genArgs.join(' ')}`
             );
 
             const genRes = spawn.sync(cli, genArgs, {
                 stdio: ['pipe', 'pipe', 'pipe'],
-                cwd: getCplaceAscPath()
+                cwd: getCplaceAscPath(),
             });
 
             if (vmRes.status !== 0 || genRes.status !== 0) {
-                const output = genRes.status !== 0 ? genRes.output : vmRes.output;
+                const output =
+                    genRes.status !== 0 ? genRes.output : vmRes.output;
                 const error = genRes.status !== 0 ? genRes.error : vmRes.error;
                 console.error(
-                    cerr`(OpenAPIYamlCompiler) [${
-                        this.pluginName
-                    }] OpenAPI YAML compilation failed with error ${output} ${error}`
+                    cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${output} ${error}`
                 );
                 throw Error(
                     `[${this.pluginName}] OpenAPI YAML compilation failed...`
@@ -176,13 +177,13 @@ export class OpenAPIYamlCompiler implements ICompiler {
     }
 
     /**
-     * Removes auto generated OpenAPI files. For deletion, it uses rimraf node module.
+     * Removes auto generated OpenAPI files.
      * @param plugin Provided plugin for which auto generated OpenAPI files should be removed.
      */
     private removeGeneratedOpenAPIFiles(plugin: string): Promise<any> {
         return new Promise((resolve) => {
             const dist = path.resolve(`${process.cwd()}/openapitools.json`);
-            rimraf(dist, (err) => {
+            fs.rm(dist, (err) => {
                 if (err) {
                     console.error(
                         cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${err.message}`
@@ -223,14 +224,14 @@ export class OpenAPIYamlCompiler implements ICompiler {
     }
 
     /**
-     * Removes plugin/api/dist/openapi folder. For deletion it uses rimraf node module.
+     * Removes plugin/api/dist/openapi folder.
      * @param plugin Provided plugin for which dist/openapi folder should be removed.
      */
     private removePluginDist(plugin: string): Promise<any> {
         return new Promise((resolve) => {
             const pluginPath = this.getPluginPath(plugin);
             const dist = path.resolve(`${pluginPath}/api/dist/openapi`);
-            rimraf(dist, (err) => {
+            fs.rm(dist, (err) => {
                 if (err) {
                     console.error(
                         cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${err.message}`

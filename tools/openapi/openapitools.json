@@ -1,8 +1,8 @@
 {
-  "$schema": "../../@openapitools/openapi-generator-cli/config.schema.json",
-  "spaces": 2,
-  "generator-cli": {
-    "version": "5.0.0",
-    "storageDir": "./versions"
-  }
+    "$schema": "../../@openapitools/openapi-generator-cli/config.schema.json",
+    "spaces": 2,
+    "generator-cli": {
+        "version": "5.0.0",
+        "storageDir": "./versions"
+    }
 }

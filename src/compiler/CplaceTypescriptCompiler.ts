@@ -161,7 +161,9 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                         ),
                         use: [
                             {
-                                loader: path.dirname(require.resolve("raw-loader")),
+                                loader: path.dirname(
+                                    require.resolve('raw-loader')
+                                ),
                             },
                         ],
                     },
@@ -221,7 +223,9 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
                 exclude: /node_modules/,
                 use: [
                     {
-                        loader: path.dirname(require.resolve("source-map-loader")),
+                        loader: path.dirname(
+                            require.resolve('source-map-loader')
+                        ),
                     },
                 ],
                 enforce: 'pre',

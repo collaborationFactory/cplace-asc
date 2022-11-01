@@ -240,7 +240,10 @@ export class VendorCompiler implements ICompiler {
                 filename: '[name].js',
             },
             resolveLoader: {
-                modules: [getProjectNodeModulesPath(), getCplaceAscNodeModulesPath()],
+                modules: [
+                    getProjectNodeModulesPath(),
+                    getCplaceAscNodeModulesPath(),
+                ],
             },
             resolve: {
                 modules: [

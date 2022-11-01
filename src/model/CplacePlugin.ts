@@ -7,7 +7,6 @@ import * as fs from 'fs';
 import * as glob from 'glob';
 import { CplaceTSConfigGenerator } from './CplaceTSConfigGenerator';
 import { cerr, cgreen, debug, GREEN_CHECK } from '../utils';
-import * as rimraf from 'rimraf';
 import { CplaceTypescriptCompiler } from '../compiler/CplaceTypescriptCompiler';
 import { CompressCssCompiler } from '../compiler/CompressCssCompiler';
 import { NPMResolver } from './NPMResolver';
@@ -327,7 +326,7 @@ export default class CplacePlugin {
 
     private async removeDir(path: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            rimraf(path, (e) => {
+            fs.rm(path, (e) => {
                 if (!e) {
                     debug(
                         `(CplacePlugin) [${this.pluginName}] removed folder ${path}`
