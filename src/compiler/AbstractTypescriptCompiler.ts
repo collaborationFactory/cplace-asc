@@ -15,6 +15,7 @@ import {
 } from '../utils';
 import * as fs from 'fs';
 import * as glob from 'glob';
+import { getProjectNodeModulesBinPath } from '../model/utils';
 
 export abstract class AbstractTypescriptCompiler implements ICompiler {
     private static readonly HASH_FILE = 'typings.hash';
@@ -111,13 +112,7 @@ export abstract class AbstractTypescriptCompiler implements ICompiler {
     }
 
     private getTscExecutable(): string {
-        return path.resolve(
-            this.mainRepoDir,
-            'node_modules',
-            'typescript',
-            'bin',
-            'tsc'
-        );
+        return path.resolve(getProjectNodeModulesBinPath(), 'tsc');
     }
 
     private getHashFilePath(): string {
