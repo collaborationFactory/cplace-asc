@@ -204,47 +204,6 @@ export default class CplacePlugin {
         }
     }
 
-    public generateTsE2EConfig(
-        pluginResolver: ICplacePluginResolver,
-        isProduction: boolean,
-        localOnly: boolean
-    ): void {
-        if (!this.hasTypeScriptE2EAssets) {
-            throw Error(
-                `[${this.pluginName}] plugin does not have TypeScript E2E assets`
-            );
-        }
-        const dependenciesWithE2ETypeScript = this.pluginDescriptor.dependencies
-            .map((pluginDescriptor) => {
-                const plugin = pluginResolver(pluginDescriptor.name);
-                if (!plugin) {
-                    throw Error(
-                        `[${this.pluginName}] could not resolve dependency ${this.pluginName}`
-                    );
-                }
-                return plugin;
-            })
-            .filter((p) => p.hasTypeScriptE2EAssets);
-        const tsConfigGenerator = new E2ETSConfigGenerator(
-            this,
-            dependenciesWithE2ETypeScript,
-            localOnly,
-            isProduction
-        );
-        const tsconfigPath = tsConfigGenerator.createConfigAndGetPath();
-
-        if (!fs.existsSync(tsconfigPath)) {
-            console.error(
-                cerr`[${this.pluginName}] Could not generate tsconfig E2E file...`
-            );
-            throw Error(`[${this.pluginName}] tsconfig E2E generation failed`);
-        } else {
-            console.log(
-                `${GREEN_CHECK} [${this.pluginName}] wrote tsconfig E2E...`
-            );
-        }
-    }
-
     public async cleanGeneratedOutput(): Promise<void> {
         const promises: Promise<void>[] = [];
         if (this.hasLessAssets || this.hasCompressCssAssets) {

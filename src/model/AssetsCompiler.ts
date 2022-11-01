@@ -141,9 +141,13 @@ export class AssetsCompiler {
             if (
                 !isFileTracked(this.repositoryDir, path.resolve('package.json'))
             ) {
-                rimraf.sync(path.resolve(this.repositoryDir, 'package.json'));
-                rimraf.sync(
-                    path.resolve(this.repositoryDir, 'package-lock.json')
+                fs.rmSync(path.resolve(this.repositoryDir, 'package.json'), {
+                    recursive: true,
+                    force: true,
+                });
+                fs.rmSync(
+                    path.resolve(this.repositoryDir, 'package-lock.json'),
+                    { recursive: true, force: true }
                 );
             }
         }

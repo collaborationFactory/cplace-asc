@@ -8,6 +8,7 @@
         "noImplicitAny": false,
         "declaration": false,
         "declarationMap": false,
+        "skipLibCheck": true,
         "sourceMap": true,
         "outDir": "./dist",
         "resolveJsonModule": true
