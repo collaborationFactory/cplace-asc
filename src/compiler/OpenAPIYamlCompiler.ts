@@ -183,7 +183,7 @@ export class OpenAPIYamlCompiler implements ICompiler {
     private removeGeneratedOpenAPIFiles(plugin: string): Promise<any> {
         return new Promise((resolve) => {
             const dist = path.resolve(`${process.cwd()}/openapitools.json`);
-            fs.rm(dist, (err) => {
+            fs.rm(dist, { recursive: true, force: true }, (err) => {
                 if (err) {
                     console.error(
                         cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${err.message}`
@@ -231,7 +231,7 @@ export class OpenAPIYamlCompiler implements ICompiler {
         return new Promise((resolve) => {
             const pluginPath = this.getPluginPath(plugin);
             const dist = path.resolve(`${pluginPath}/api/dist/openapi`);
-            fs.rm(dist, (err) => {
+            fs.rm(dist, { recursive: true, force: true }, (err) => {
                 if (err) {
                     console.error(
                         cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${err.message}`

@@ -1,11 +1,6 @@
 import { execSync } from 'child_process';
 import { resolve } from 'path';
-import {
-    writeFileSync,
-    rmSync,
-    copyFileSync,
-    mkdirSync,
-} from 'fs';
+import { writeFileSync, rmSync, copyFileSync, mkdirSync } from 'fs';
 import * as rootPackageJSON from '../../package.json';
 import { CPLACE_ASC_DIST } from './shared';
 

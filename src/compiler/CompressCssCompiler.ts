@@ -117,7 +117,7 @@ export class CompressCssCompiler implements ICompiler {
     }
 
     private cleanOutput(outputFile: string): void {
-        fs.rmSync(outputFile);
-        fs.rmSync(outputFile.concat('.map'));
+        fs.rmSync(outputFile, { recursive: true, force: true });
+        fs.rmSync(outputFile.concat('.map'), { recursive: true, force: true });
     }
 }

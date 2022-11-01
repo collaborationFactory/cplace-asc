@@ -326,7 +326,7 @@ export default class CplacePlugin {
 
     private async removeDir(path: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            fs.rm(path, (e) => {
+            fs.rm(path, { recursive: true, force: true }, (e) => {
                 if (!e) {
                     debug(
                         `(CplacePlugin) [${this.pluginName}] removed folder ${path}`

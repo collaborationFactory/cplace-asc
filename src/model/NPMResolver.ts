@@ -178,7 +178,7 @@ export class NPMResolver {
                 fs.readdirSync(nodeModulesPath).forEach((dir) => {
                     const dirPath = path.resolve(nodeModulesPath, dir);
                     if (fs.lstatSync(dirPath).isSymbolicLink()) {
-                        fs.rmSync(dirPath);
+                        fs.rmSync(dirPath, { recursive: true, force: true });
                     }
                 });
                 console.log(
