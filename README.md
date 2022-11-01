@@ -60,57 +60,57 @@ $ cplace-asc --help
     </thead>
     <tbody>
     <tr>
-        <td><code>--plugin / -p</code>/td>
+        <td><code>--plugin / -p</code></td>
         <td><code>string</code> (*empty*)</td>
         <td>Specify the name of a single plugin for which the assets compiler should be started.<br>Will also compile dependencies of this plugin.</td>
     </tr>
     <tr>
-        <td><code>--watch / -w</code>/td>
+        <td><code>--watch / -w</code></td>
         <td><code>boolean</code> (<code>false</code>)</td>
         <td>When enabled the compiler will watch for changes in any source files and trigger recompilation. All plugins that depend on the modified plugin will also be recompiled.</td>
     </tr>
     <tr>
-        <td><code>--onlypre / -o</code>/td>
+        <td><code>--onlypre / -o</code></td>
         <td><code>boolean</code> (<code>false</code>)</td>
         <td>When active only preprocessing steps like generating the <code>tsconfig.json</code> files or cleaning the output directories (<code>--clean</code>) will be executed but no compilation.</td>
     </tr>
     <tr>
-        <td><code>--clean / -c</code>/td>
+        <td><code>--clean / -c</code></td>
         <td><code>boolean</code> (<code>false</code>)</td>
         <td>When enabled the assets compiler will first clean any output directories where compiled assets are placed (e.g. <code>generated_js</code> and <code>generated_css</code>).</td>
     </tr>
     <tr>
-            <td><code>--production / -P</code>/td>
+            <td><code>--production / -P</code></td>
             <td><code>boolean</code> (<code>false</code>)</td>
             <td>When enabled the assets compiler will ignore dependencies that are marked as <em>TEST</em> scoped. Furthermore, no source maps will be generated.</td>
         </tr>
     <tr>
-        <td><code>--verbose / -v</code>/td>
+        <td><code>--verbose / -v</code></td>
         <td><code>boolean</code> (<code>false</code>)</td>
         <td>When enabled verbose logging statements are output in order to facilitate debugging.</td>
     </tr>
     <tr>
-        <td><code>--threads / -t</code>/td>
+        <td><code>--threads / -t</code></td>
         <td><code>string</code> (*empty*)</td>
         <td>Defines maximum number of threads to run in parallel.</td>
     </tr>
     <tr>
-        <td><code>--localonly / -l</code>/td>
+        <td><code>--localonly / -l</code></td>
         <td><code>boolean</code> (<code>false</code>)</td>
         <td>When enabled it doesn't scan other directories than CWD for plugins.</td>
     </tr>
     <tr>
-        <td><code>--noparents / -x</code>/td>
+        <td><code>--noparents / -x</code></td>
         <td><code>boolean</code> (<code>false</code>)</td>
         <td>When enabled it only run compilation on plugins in current repository (still scans for other sources to be present).</td>
     </tr>
     <tr>
-        <td><code>--packagejson / -j</code>/td>
+        <td><code>--packagejson / -j</code></td>
         <td><code>boolean</code> (<code>false</code>)</td>
         <td>When enabled it generates package.json files (if missing) in the root and each plugin that has assets.</td>
     </tr>
     <tr>
-        <td><code>--withYaml / -y</code>/td>
+        <td><code>--withYaml / -y</code></td>
         <td><code>boolean</code> (<code>false</code>)</td>
         <td>When enabled it generates TypeScript files from the OpenAPI YAML specification.</td>
     </tr>
