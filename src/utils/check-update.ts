@@ -16,7 +16,7 @@ export async function checkForUpdate(): Promise<IUpdateDetails | undefined> {
 
     try {
         const packageJsonContent = fs.readFileSync(
-            path.join(__dirname, '..', '..', 'package.json'),
+            path.join(__dirname, '..', 'package.json'),
             'utf-8'
         );
         const packageJson = JSON.parse(packageJsonContent);
@@ -66,12 +66,12 @@ export function printUpdateDetails(updateDetails?: IUpdateDetails): void {
     const available = updateDetails.availableVersion.toString().padEnd(8);
     console.log();
     console.log(cgreen`!---------------------------------------------!`);
-    console.log(cgreen`! A newer version of @cplace/asc is available !`);
+    console.log(cgreen`! A newer version of @cplace/asc-local is available !`);
     console.log(
         cgreen`! >> ${installed} -> ${available}                     !`
     );
     console.log(cgreen`! -> Please update to the latest version:     !`);
-    console.log(cgreen`!    npm install -g @cplace/asc               !`);
+    console.log(cgreen`!    npm install @cplace/asc-local -D         !`);
     console.log(cgreen`!---------------------------------------------!`);
     console.log();
 }

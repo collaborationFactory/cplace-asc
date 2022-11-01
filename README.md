@@ -9,20 +9,62 @@
 | Developed by | collaboration Factory AG                                   |
 | Description  | Unser Kommandozeilen-Werkzeug um Frontend Assets zu bauen. |
 
-# cplace-asc
+# @cplace/asc-local
 
-`cplace-asc` is the new cplace assets compiler toolchain used to compile, bundle and minimize TypeScript, LESS and YAML
-sources into their JavaScript and CSS counterparts.
+`@cplace/asc-local` is the new cplace assets compiler toolchain used to compile, bundle and minimize TypeScript, LESS
+and YAML sources into their JavaScript and CSS counterparts.
 
 ## Installation
 
-Just run the following command which will install the assets compiler globally:
+Run the following command in your cplace repository:
 
 ```
-$ npm install -g @cplace/asc
+$ npm install @cplace/asc-local -D
 ```
 
 ## Usage
+
+### Running as Local Package
+
+```
+$ ./node_modules/.bin/cplace-asc
+```
+
+### Running with Shell/Batch Script
+
+```
+$ sh assets-compiler.sh
+```
+
+```
+$ assets-compiler.cmd
+```
+
+### Running with Shell Alias (Recommended)
+
+#### Alias Creation
+
+Add the following content to your `~/.bash_profile`:
+
+```
+LOCAL_ASC=./node_modules/.bin/cplace-asc
+alias cplace-asc='asc'
+asc() {
+    if [ -f "$LOCAL_ASC" ]; then
+        "$LOCAL_ASC" "$@"
+    else
+        cplace-asc "$@"
+    fi
+}
+```
+
+#### Running Alias
+
+```
+$ cplace-asc
+```
+
+### Parameters
 
 The assets compiler supports multiple parameters:
 
@@ -125,22 +167,27 @@ $ cplace-asc --help
 !---------------------------------------------!
 ! A newer version of @cplace/asc is available !
 ! -> Please update to the latest version:     !
-!    npm install -g @cplace/asc               !
+!    npm install @cplace/asc-local -D         !
 !---------------------------------------------!
-
-...
 ```
 
-## Publishing a new version
+## Publishing a New Version
 
-To publish a new version on the NPM registry take the following steps:
+### Publishing a New Release Version
 
-1. Manually bump the version number in `package.json` as desired (major / minor / patch).
-2. Push the update to GitHub.
-3. Create a new Release on GitHub:
-    1. Create _a new tag_ matching the version you want to publish, e.g. `v0.20.3`.
-    2. Put in the proper release notes as description of the Release.
-4. On creating the Release (_not as a draft_) the GitHub workflow will run and publish the package to NPM automatically.
+To publish a new release version to the NPM registry take the following steps:
+
+1. Create a release branch with the name x.x.x (e.g. 3.1.0)
+2. Manually bump the version number in `package.json` to match the branch name
+3. Push the branch to GitHub
+4. After your branch is pushed, CI will automatically release a new version
+
+### Publishing a New Snapshot Version
+
+To publish a new snapshot version to the NPM registry take the following steps:
+
+1. Push your feature branch to GitHub and open a PR (**without modifying the version** in the `package.json`)
+2. After your PR is merged, CI will automatically release a new snapshot version
 
 ## Source File Requirements
 
@@ -177,8 +224,6 @@ For each plugin there must be one main entry file `assets/api/API.yaml` which wi
 
 -   The compiler will spawn at most `X` number of compile processes in parallel where `X` equals the number of cores available on the system.
 -   Compilation is run inside a subprocess via a scheduler. Cancelling the assets compiler may leave intermediate processing steps running for a short time in the background.
--   The TypeScript compiler is the one located in the `main` repository's `node_modules` directory.
--   The `clean-css` compiler is the one located in the `main` repository's `node_modules` directory.
 
 ## Known Caveats
 
