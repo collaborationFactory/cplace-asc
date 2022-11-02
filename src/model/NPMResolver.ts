@@ -62,12 +62,10 @@ export class NPMResolver {
             console.log(
                 `⟲ [${pluginName}] (NPM) removing node_modules folder...`
             );
-            console.log(
-                fs.rmSync(nodeModulesFolder, {
-                    recursive: true,
-                    force: true,
-                })
-            );
+            fs.rmSync(nodeModulesFolder, {
+                recursive: true,
+                force: true,
+            });
         } else {
             console.log(
                 `⟲ [${pluginName}] (NPM) node_modules folder does not exist...`,

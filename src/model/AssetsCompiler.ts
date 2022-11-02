@@ -52,6 +52,11 @@ export interface IAssetsCompilerConfiguration {
     localOnly: boolean;
 
     /**
+     * Indicates if TypeScript files should be generated from the YAML files
+     */
+    withYaml: boolean;
+
+    /**
      * Indicates whether the compiler should be run in production mode
      */
     production: boolean;
@@ -176,6 +181,7 @@ export class AssetsCompiler {
             this.runConfig.production,
             this.runConfig.noParents,
             this.runConfig.watchFiles,
+            this.runConfig.withYaml,
             updateDetails
         );
 

@@ -76,6 +76,7 @@ export class Scheduler {
         private readonly isProduction: boolean,
         private readonly noParents: boolean,
         private readonly watchFiles: boolean,
+        private readonly withYaml: boolean,
         private readonly updateDetails?: IUpdateDetails
     ) {
         this.vendorJobs = this.createVendorJobTracker();
@@ -460,7 +461,8 @@ export class Scheduler {
         this.plugins.forEach((plugin) => {
             if (
                 plugin.hasOpenAPIYamlAssets &&
-                this.isInCompilationScope(plugin)
+                this.isInCompilationScope(plugin) &&
+                this.withYaml
             ) {
                 openAPIYamlPlugins.push(plugin);
             }

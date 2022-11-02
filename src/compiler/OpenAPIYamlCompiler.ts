@@ -90,7 +90,7 @@ export class OpenAPIYamlCompiler implements ICompiler {
 
     /**
      * Generates types from the API specification and place them in plugin/api/dist/openapi
-     * folder. For generation it uses openapi-generator-cli.
+     * folder. For generation, it uses openapi-generator-cli.
      * @param plugin Provided plugin for which types should be generated
      */
     private generatePluginTypes(plugin: string): Promise<any> {
@@ -213,7 +213,7 @@ export class OpenAPIYamlCompiler implements ICompiler {
     }
 
     /**
-     * Removes auto generated OpenAPI files. For deletion it uses rimraf node module.
+     * Removes auto generated OpenAPI files. For deletion, it uses rimraf node module.
      * @param plugin Provided plugin for which auto generated OpenAPI files should be removed.
      */
     private removeGeneratedOpenAPIFiles(plugin: string): Promise<any> {

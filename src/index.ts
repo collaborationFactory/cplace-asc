@@ -44,6 +44,7 @@ function run(updateDetails?: IUpdateDetails) {
         --localonly, -l         Enable to not scan other directories than CWD for plugins
         --noparents, -x         Enable to only run compilation on plugins in current repository (still scans for other sources to be present)
         --packagejson, -j       Generate package.json files (if missing) in the root and each plugin that has assets
+        --withYaml, -y          Generates TypeScript files from the OpenAPI YAML specification
         --verbose, -v           Enable verbose logging
         --production, -P        Enable production mode (ignores test dependencies and E2E)
 
@@ -68,6 +69,11 @@ function run(updateDetails?: IUpdateDetails) {
                 clean: {
                     type: 'boolean',
                     alias: 'c',
+                    default: false,
+                },
+                withYaml: {
+                    type: 'boolean',
+                    alias: 'y',
                     default: false,
                 },
                 threads: {
@@ -117,6 +123,12 @@ function run(updateDetails?: IUpdateDetails) {
     if (cli.flags.production && cli.flags.onlypre) {
         console.error(
             cerr`--production and --onlypre cannot be enabled simultaneously`
+        );
+        process.exit(1);
+    }
+    if (cli.flags.production && cli.flags.withYaml) {
+        console.error(
+            cerr`--production and --withYaml cannot be enabled simultaneously`
         );
         process.exit(1);
     }
@@ -177,6 +189,7 @@ function run(updateDetails?: IUpdateDetails) {
                 : os.cpus().length - 1,
             localOnly: cli.flags.localonly,
             production: cli.flags.production,
+            withYaml: cli.flags.withYaml,
             noParents: cli.flags.noparents || cli.flags.noParents,
             packagejson: cli.flags.packagejson,
         };
