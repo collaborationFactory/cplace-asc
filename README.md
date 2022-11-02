@@ -58,6 +58,12 @@ asc() {
 }
 ```
 
+Run the following command in your terminal:
+
+```
+$ source ~/.bash_profile
+```
+
 #### Running Alias
 
 ```
