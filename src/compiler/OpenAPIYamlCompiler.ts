@@ -177,27 +177,6 @@ export class OpenAPIYamlCompiler implements ICompiler {
     }
 
     /**
-     * Removes auto generated OpenAPI files.
-     * @param plugin Provided plugin for which auto generated OpenAPI files should be removed.
-     */
-    private removeGeneratedOpenAPIFiles(plugin: string): Promise<any> {
-        return new Promise((resolve) => {
-            const dist = path.resolve(`${process.cwd()}/openapitools.json`);
-            fs.rm(dist, { recursive: true, force: true }, (err) => {
-                if (err) {
-                    console.error(
-                        cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${err.message}`
-                    );
-                    throw Error(
-                        `[${this.pluginName}] OpenAPI YAML compilation failed...`
-                    );
-                }
-                resolve(true);
-            });
-        });
-    }
-
-    /**
      * Copies plugin types from plugin/api/dist/openapi to plugin/assets/ts/api
      * folder.
      * @param plugin Provided plugin for which types should be copied on the right location.
@@ -252,7 +231,7 @@ export class OpenAPIYamlCompiler implements ICompiler {
     private removeGeneratedOpenAPIFiles(plugin: string): Promise<any> {
         return new Promise((resolve) => {
             const dist = path.resolve(`${process.cwd()}/openapitools.json`);
-            rimraf(dist, (err) => {
+            fs.rm(dist, { recursive: true, force: true }, (err) => {
                 if (err) {
                     console.error(
                         cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${err.message}`

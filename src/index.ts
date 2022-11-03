@@ -191,7 +191,7 @@ function run(updateDetails?: IUpdateDetails) {
             production: cli.flags.production,
             packagejson: cli.flags.packagejson,
             noParents: cli.flags.noparents,
-            withYaml: cli.flags.withYaml
+            withYaml: cli.flags.withYaml,
         };
 
         console.log(getAvailableStats());
