@@ -64,6 +64,7 @@ export class LessCompiler implements ICompiler {
         return new Promise<CompilationResult>((resolve, reject) => {
             const lesscOptions: Options = {
                 compress: true,
+                math: 'always',
                 filename: path.resolve(entryFile),
                 plugins: lessPlugins(this.pluginName),
             };
