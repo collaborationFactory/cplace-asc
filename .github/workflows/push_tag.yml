@@ -2,8 +2,7 @@ name: 'Publish CI'
 on:
     push:
         tags:
-            - '*.*.*'
-            - '0.0.0-SNAPSHOT-*'
+            - '**'
 
 env:
     NODE_ENV: 'production'
