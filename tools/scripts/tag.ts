@@ -5,11 +5,17 @@ import * as rootPackageJSON from '../../package.json';
 const branch = execSync('git branch --show-current').toString();
 let version = rootPackageJSON.version;
 
-const publishedVersions = execSync(
-    'npm view @cplace/asc-local versions'
-).toString();
+let publishedVersions = '';
 
-if (publishedVersions.includes(version)) {
+try {
+    publishedVersions = execSync(
+        'npm view @cplace/asc-local versions'
+    ).toString();
+} catch (e: any) {
+    console.warn(e);
+}
+
+if (publishedVersions !== '' && publishedVersions.includes(version)) {
     throw Error(`${version} already exists!`);
 }
 
