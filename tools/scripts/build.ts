@@ -12,6 +12,7 @@ if (!version) {
 
 const PACKAGE_JSON_DIST = resolve(CPLACE_ASC_DIST, 'package.json');
 const OPENAPI_TOOLS_JSON = 'openapitools.json';
+const README = 'README.md';
 const OPENAPI_JAR = '5.0.0.jar';
 const OPENAPI_TOOLS = resolve(__dirname, '../openapi');
 const OPENAPI_VERSIONS_DIST = resolve(CPLACE_ASC_DIST, 'versions');
@@ -57,8 +58,15 @@ copyFileSync(
     resolve(CPLACE_ASC_DIST, OPENAPI_TOOLS_JSON)
 );
 mkdirSync(OPENAPI_VERSIONS_DIST);
+console.log(`Copying openapitools.json ...`);
 copyFileSync(
     `${OPENAPI_TOOLS}/${OPENAPI_JAR}`,
     resolve(OPENAPI_VERSIONS_DIST, OPENAPI_JAR)
 );
-console.log(`Copying openapitools.json ...`);
+console.log(`openapitools.json copied!`);
+console.log(`Copying README.md ...`);
+copyFileSync(
+    resolve(__dirname, '../../', README),
+    resolve(CPLACE_ASC_DIST, README)
+);
+console.log(`README.md copied!`);
