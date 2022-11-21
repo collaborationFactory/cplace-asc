@@ -123,10 +123,12 @@ export class VendorCompiler implements ICompiler {
             path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR),
         ]);
         if (res.status !== 0) {
+            let output = '';
+            if (res.output) {
+                output = res.output.toString();
+            }
             debug(
-                `(VendorCompiler) [${
-                    this.pluginName
-                }] index.ts compilation failed with error ${res.output.toString()}`
+                `(VendorCompiler) [${this.pluginName}] index.ts compilation failed with error ${output}, ${res.error}`
             );
             throw Error(`[${this.pluginName}] index.ts compilation failed!`);
         }
