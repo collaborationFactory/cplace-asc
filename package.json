@@ -1,6 +1,6 @@
 {
     "name": "@cplace/asc-local",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "description": "cplace assets compiler",
     "repository": "https://github.com/collaborationFactory/cplace-asc",
     "homepage": "https://github.com/collaborationFactory/cplace-asc",
@@ -49,7 +49,7 @@
         "script-loader": "^0.7.2",
         "source-map-loader": "^3.0.1",
         "terser-webpack-plugin": "^5.3.6",
-        "typescript": "^4.0.2",
+        "typescript": "4.6.4",
         "uglify-loader": "^3.0.0",
         "webpack": "^5.68.0",
         "webpack-merge": "^5.8.0",
