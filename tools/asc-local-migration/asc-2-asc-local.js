@@ -107,11 +107,12 @@ function cleanExistingPackageJSONDependencies(existingPackageJSONContent) {
 
 function updateExistingPackageJSONEngine(existingPackageJSONContent) {
     console.log('Updating package.json engines');
-    const engines = existingPackageJSONContent.engines;
-    if (engines) {
-        engines.node = NODE_VERSION;
-        engines.npm = NPM_VERSION;
+    if (!existingPackageJSONContent.engines) {
+        existingPackageJSONContent.engines = {};
     }
+    const engines = existingPackageJSONContent.engines;
+    engines.node = NODE_VERSION;
+    engines.npm = NPM_VERSION;
     writePackageJSONContent(existingPackageJSONContent);
 }
 
