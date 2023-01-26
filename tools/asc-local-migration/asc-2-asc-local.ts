@@ -1,9 +1,10 @@
 /**
  * This script is used to migrate a cplace project to Node 18 and to @cplace/asc local.
  */
-const { existsSync, writeFileSync, readFileSync } = require('fs');
-const { resolve } = require('path');
-const { execSync } = require('child_process');
+import { existsSync, writeFileSync, readFileSync } from 'fs';
+import { resolve } from 'path';
+import { execSync } from 'child_process';
+import { PackageJson } from 'type-fest';
 
 const WORKSPACE_ROOT = process.cwd();
 const PACKAGE_JSON_PATH = resolve(WORKSPACE_ROOT, 'package.json');
@@ -30,20 +31,14 @@ const WORKSPACE_NAME = execSync(`basename -s .git "${GIT_REPOSITORY}"`)
 const SHELL_SCRIPT_CONTENT = `
 #!/bin/bash
 readonly LOCAL_ASC=./node_modules/.bin/cplace-asc
-if [ -f "$LOCAL_ASC" ]; then
-    "$LOCAL_ASC" -w -c "$@"
-else
-    cplace-asc -w -c "$@"
-fi
+"$LOCAL_ASC" -w -c "$@"
 `.trim();
 
 const BATCH_SCRIPT_CONTENT = `
-set LOCAL_ASC = ".\\node_modules\\.bin\\cplace-asc"
-IF exist LOCAL_ASC (
-    LOCAL_ASC -w -c %*
-) else (
-    cplace-asc -w -c %*
-)
+@echo off
+set LOCAL_ASC="./node_modules/.bin/cplace-asc"
+echo Executing: %LOCAL_ASC% -w -c %*
+%LOCAL_ASC% -w -c %*
 `.trim();
 
 const PACKAGE_JSON_CONTENT = `
@@ -90,7 +85,9 @@ function updateExistingPackageJSONContent() {
     addCplaceAscLocal(existingPackageJSONContent);
 }
 
-function cleanExistingPackageJSONDependencies(existingPackageJSONContent) {
+function cleanExistingPackageJSONDependencies(
+    existingPackageJSONContent: PackageJson
+) {
     console.log('Cleaning dependencies');
     PACKAGES_TO_REMOVE.forEach((pkg) => {
         const dependencies = existingPackageJSONContent.dependencies;
@@ -111,7 +108,9 @@ function cleanExistingPackageJSONDependencies(existingPackageJSONContent) {
     writePackageJSONContent(existingPackageJSONContent);
 }
 
-function updateExistingPackageJSONEngine(existingPackageJSONContent) {
+function updateExistingPackageJSONEngine(
+    existingPackageJSONContent: PackageJson
+) {
     console.log('Updating package.json engines');
     if (!existingPackageJSONContent.engines) {
         existingPackageJSONContent.engines = {};
@@ -122,7 +121,7 @@ function updateExistingPackageJSONEngine(existingPackageJSONContent) {
     writePackageJSONContent(existingPackageJSONContent);
 }
 
-function addCplaceAscLocal(existingPackageJSONContent) {
+function addCplaceAscLocal(existingPackageJSONContent: PackageJson) {
     console.log('Adding @cplace/asc-local to devDependencies');
     if (!existingPackageJSONContent.devDependencies) {
         existingPackageJSONContent.devDependencies = {};
@@ -153,7 +152,7 @@ function handleGitIgnore() {
     }
 }
 
-function writePackageJSONContent(content) {
+function writePackageJSONContent(content: PackageJson) {
     writeFileSync(PACKAGE_JSON_PATH, JSON.stringify(content, null, 2));
 }
 
