@@ -279,8 +279,6 @@ export class RegistryInitializer {
             .concat(`${defaultRegistryConfigurationItems[2]}\n`)
             .concat(`${defaultRegistryConfigurationItems[3]}\n`);
         fs.writeFileSync(this.npmrcPath, npmrc, { encoding: 'utf-8' });
-        console.log('*****************************************');
-        console.log(npmrc);
         console.log(cgreen`✓`, 'Updated config in: ', this.npmrcPath);
     }
 }
