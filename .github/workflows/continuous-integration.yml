@@ -118,17 +118,17 @@ jobs:
             - name: Link
               run: npm link
 
-            - name: combineJavascript main
+            - name: cplace-asc main
               working-directory: ./main
               timeout-minutes: 20
-              run: ./gradlew combineJavascript
+              run: cplace-asc
 
-            - name: combineJavascript cplace-paw
+            - name: cplace-asc cplace-paw
               working-directory: ./cplace-paw
               timeout-minutes: 20
-              run: ./gradlew combineJavascript
+              run: cplace-asc
 
-            - name: combineJavascript cplace-project-planning
+            - name: cplace-asc cplace-project-planning
               working-directory: ./cplace-project-planning
               timeout-minutes: 20
-              run: ./gradlew combineJavascript
+              run: cplace-asc
