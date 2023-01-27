@@ -121,14 +121,14 @@ jobs:
             - name: cplace-asc main
               working-directory: ./main
               timeout-minutes: 20
-              run: cplace-asc
+              run: cplace-asc --verbose
 
             - name: cplace-asc cplace-paw
               working-directory: ./cplace-paw
               timeout-minutes: 20
-              run: cplace-asc
+              run: cplace-asc --verbose
 
             - name: cplace-asc cplace-project-planning
               working-directory: ./cplace-project-planning
               timeout-minutes: 20
-              run: cplace-asc
+              run: cplace-asc --verbose
