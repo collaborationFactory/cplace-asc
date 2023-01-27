@@ -16,7 +16,7 @@ export class RegistryInitializer {
     public static readonly GRADLE_HOME = '.gradle';
     public static readonly GRADLE_PROPERTIES = 'gradle.properties';
 
-    private static readonly JFROG_NPM_REGISTRY_LIST = [
+    private static readonly REGISTRY_LIST = [
         RegistryInitializer.JROG_CPLACE_NPM_REGISTRY,
         RegistryInitializer.JROG_CPLACE_NPM_LOCAL_REGISTRY,
         RegistryInitializer.JROG_CPLACE_ASSETS_NPM_REGISTRY,
@@ -147,7 +147,7 @@ export class RegistryInitializer {
             return;
         }
 
-        RegistryInitializer.JFROG_NPM_REGISTRY_LIST.forEach((registry) => {
+        RegistryInitializer.REGISTRY_LIST.forEach((registry) => {
             this.removeSingleRegistryCredentials(registry);
         });
     }
