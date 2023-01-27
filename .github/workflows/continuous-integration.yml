@@ -46,7 +46,7 @@ jobs:
                     - macos-latest
                     - windows-latest
                 node_version:
-                    - 12.x
+                    - 14.x
         name: Node ${{ matrix.node_version }} - ${{ matrix.architecture }} on ${{ matrix.os }}
         steps:
             - name: Cancel Previous Runs
