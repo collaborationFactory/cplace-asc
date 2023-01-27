@@ -3,6 +3,7 @@ import * as path from 'path';
 import { cgreen, cred, debug } from '../utils';
 import * as fs from 'fs';
 import * as os from 'os';
+import { existsSync } from 'fs';
 
 export class RegistryInitializer {
     public static readonly JROG_CPLACE_NPM_REGISTRY = 'cplace-npm';
@@ -11,24 +12,15 @@ export class RegistryInitializer {
         'cplace-assets-npm';
     public static readonly JROG_REGISTRY_URL =
         '//cplace.jfrog.io/artifactory/api/npm/';
+    public static readonly PUBLIC_NPM_REGISTRY = 'registry.npmjs.org';
     public static readonly GRADLE_HOME = '.gradle';
     public static readonly GRADLE_PROPERTIES = 'gradle.properties';
 
-    private static readonly OLD_JFROG_CREDENTIALS_LIST = [
-        {
-            scope: '@cplace-next',
-            registryUrl: RegistryInitializer.JROG_REGISTRY_URL,
-            npmRegistry: RegistryInitializer.JROG_CPLACE_NPM_REGISTRY
-        },
-        {
-            scope: '@cplace-next',
-            registryUrl: RegistryInitializer.JROG_REGISTRY_URL,
-            npmRegistry: RegistryInitializer.JROG_CPLACE_NPM_LOCAL_REGISTRY
-        },            {
-            scope: '@cplace-3rdparty-modified',
-            registryUrl: RegistryInitializer.JROG_REGISTRY_URL,
-            npmRegistry: RegistryInitializer.JROG_CPLACE_ASSETS_NPM_REGISTRY
-        },
+    private static readonly JFROG_NPM_REGISTRY_LIST = [
+        RegistryInitializer.JROG_CPLACE_NPM_REGISTRY,
+        RegistryInitializer.JROG_CPLACE_NPM_LOCAL_REGISTRY,
+        RegistryInitializer.JROG_CPLACE_ASSETS_NPM_REGISTRY,
+        RegistryInitializer.PUBLIC_NPM_REGISTRY,
     ];
 
     private currentNpmrcConfig: string = '';
@@ -48,14 +40,13 @@ export class RegistryInitializer {
                 this.extractTokenFromGradleProps();
             }
 
-            if (!execSync(this.npmrcPath)) {
+            if (!existsSync(this.npmrcPath)) {
                 RegistryInitializer.createEmptyNmprc(this.npmrcPath);
             }
 
             this.setCurrentNpmrcConfig();
-            this.cleanOldJfrogCredentials();
-            this.updateNpmrc();
-
+            this.removeAllRegistryCredentials();
+            this.addDefaultRegistryCredentialsToNpmrc();
         } catch (e) {
             console.error(
                 cred`✗`,
@@ -150,54 +141,81 @@ export class RegistryInitializer {
         this.npmrcPath = cleanNpmrcPath;
     }
 
-    private cleanOldJfrogCredentials() {
-        debug(`Cleaning old jFrog credentials`);
+    private removeAllRegistryCredentials() {
+        debug(`Cleaning registries jFrog credentials`);
         if (!this.currentNpmrcConfig) {
             return;
         }
 
-        RegistryInitializer.OLD_JFROG_CREDENTIALS_LIST.forEach((item) => {
-            if (this.hasJfrogCredentials(item.scope, item.registryUrl, item.npmRegistry)) {
-                this.cleanScopeNpmrcConfigCredentials(item.scope, item.registryUrl, item.npmRegistry)
-            }
+        RegistryInitializer.JFROG_NPM_REGISTRY_LIST.forEach((registry) => {
+            this.removeSingleRegistryCredentials(registry);
         });
     }
 
-    private cleanScopeNpmrcConfigCredentials(scope: string, registryUrl: string, registryName: string): void {
-        debug(`Cleaning ${scope} scope jFrog credentials`);
-        const fullRegistryPath = this.getFullRegistryPath(registryUrl, registryName);
-        const scopeMapping = `${scope}:registry=https:${fullRegistryPath}`;
-        const auth = this.getAuthInfo(registryUrl, registryName);
-        const alwaysAuth = this.getAlwaysAuthInfo(registryUrl, registryName);
-        const email = this.getEmailInfo(registryUrl, registryName);
-        const currentNpmrcConfigLines = this.currentNpmrcConfig.split('\n');
-        const linesToRemove = [scopeMapping, auth, alwaysAuth, email];
-        currentNpmrcConfigLines.forEach(line => {
-            if (linesToRemove.includes(line)) {
+    private removeSingleRegistryCredentials(registry: string): void {
+        debug(`Cleaning ${registry} registry jFrog credentials`);
+        const linesToRemove = this.currentNpmrcConfig
+            .split('\n')
+            .filter((configLine) => configLine.includes(registry));
+        fs.writeFileSync(
+            this.npmrcPath,
+            this.getCleanedNpmrcConfig(linesToRemove),
+            {
+                encoding: 'utf-8',
+            }
+        );
+        this.setCurrentNpmrcConfig();
+    }
+
+    private getCleanedNpmrcConfig(linesToRemove: string[]): string {
+        let currentNpmrcConfigLines = this.currentNpmrcConfig.split('\n');
+        const indexesToRemove: number[] = [];
+        currentNpmrcConfigLines.forEach((line) => {
+            if (linesToRemove.includes(line) || !line) {
                 const index = currentNpmrcConfigLines.indexOf(line);
-                currentNpmrcConfigLines.splice(index, 1);
+                if (index !== undefined || !line) {
+                    indexesToRemove.push(index);
+                }
             }
         });
-        const cleanedNpmrcConfig = currentNpmrcConfigLines.join('\n');
-        fs.writeFileSync(this.npmrcPath, cleanedNpmrcConfig, {
-            encoding: 'utf-8',
-        });
+        currentNpmrcConfigLines = currentNpmrcConfigLines.filter(
+            (line, lineIndex) =>
+                !indexesToRemove.some((index) => lineIndex === index)
+        );
+        return currentNpmrcConfigLines.join('\n');
     }
 
     private getFullRegistryPath(registryUrl: string, registryName: string) {
         return `${registryUrl}${registryName}/`;
     }
 
-    private getAuthInfo(registryUrl: string, registryName: string): string {
-        return `${this.getFullRegistryPath(registryUrl, registryName)}:_auth=${this.npmrcBasicAuthToken}`
+    private getRegistryInfo(registryUrl: string, registryName: string) {
+        return `registry=https:${this.getFullRegistryPath(
+            registryUrl,
+            registryName
+        )}`;
     }
 
-    private getAlwaysAuthInfo(registryUrl: string, registryName: string): string {
-        return `${this.getFullRegistryPath(registryUrl, registryName)}:always-auth=true`;
+    private getAuthInfo(registryUrl: string, registryName: string): string {
+        return `${this.getFullRegistryPath(registryUrl, registryName)}:_auth=${
+            this.npmrcBasicAuthToken
+        }`;
+    }
+
+    private getAlwaysAuthInfo(
+        registryUrl: string,
+        registryName: string
+    ): string {
+        return `${this.getFullRegistryPath(
+            registryUrl,
+            registryName
+        )}:always-auth=true`;
     }
 
     private getEmailInfo(registryUrl: string, registryName: string): string {
-        return `${this.getFullRegistryPath(registryUrl, registryName)}:email=${this.npmrcUser}`;
+        return `${this.getFullRegistryPath(registryUrl, registryName)}:email=${
+            this.npmrcUser
+        }`;
     }
 
     private extractTokenFromGradleProps() {
@@ -231,30 +249,36 @@ export class RegistryInitializer {
         }
     }
 
-    private hasJfrogCredentials(
-        scope: string,
-        registryUrl: string,
-        registryName: string
-    ): boolean {
-        return this.currentNpmrcConfig.includes(
-            `${scope}:registry=https:${registryUrl}${registryName}/`
-        );
+    private getDefaultRegistryConfigItems(): string[] {
+        return [
+            this.getRegistryInfo(
+                RegistryInitializer.JROG_REGISTRY_URL,
+                RegistryInitializer.JROG_CPLACE_NPM_REGISTRY
+            ),
+            this.getAuthInfo(
+                RegistryInitializer.JROG_REGISTRY_URL,
+                RegistryInitializer.JROG_CPLACE_NPM_REGISTRY
+            ),
+            this.getAlwaysAuthInfo(
+                RegistryInitializer.JROG_REGISTRY_URL,
+                RegistryInitializer.JROG_CPLACE_NPM_REGISTRY
+            ),
+            this.getEmailInfo(
+                RegistryInitializer.JROG_REGISTRY_URL,
+                RegistryInitializer.JROG_CPLACE_NPM_REGISTRY
+            ),
+        ];
     }
 
-    private updateNpmrc() {
-        console.info('⟲ Appending config to: ', this.npmrcPath);
-
-        const fullRegistryPath = `${RegistryInitializer.JROG_REGISTRY_URL}${RegistryInitializer.JROG_CPLACE_NPM_REGISTRY}/`;
-        let npmrc = `\n$registry=https:${fullRegistryPath}\n`;
-        npmrc =
-            npmrc + `${fullRegistryPath}:_auth=${this.npmrcBasicAuthToken}\n`;
-        npmrc = npmrc + `${fullRegistryPath}:always-auth=true\n`;
-        npmrc = npmrc + `${fullRegistryPath}:email=${this.npmrcUser}\n`;
-        fs.appendFileSync(this.npmrcPath, npmrc, { encoding: 'utf-8' });
-        console.log(
-            cgreen`✓`,
-            'Appended config to existing config at: ',
-            this.npmrcPath
-        );
+    private addDefaultRegistryCredentialsToNpmrc() {
+        const defaultRegistryConfigurationItems =
+            this.getDefaultRegistryConfigItems();
+        let npmrc = this.currentNpmrcConfig
+            .concat(`\n${defaultRegistryConfigurationItems[0]}\n`)
+            .concat(`${defaultRegistryConfigurationItems[1]}\n`)
+            .concat(`${defaultRegistryConfigurationItems[2]}\n`)
+            .concat(`${defaultRegistryConfigurationItems[3]}\n`);
+        fs.writeFileSync(this.npmrcPath, npmrc, { encoding: 'utf-8' });
+        console.log(cgreen`✓`, 'Updated config in: ', this.npmrcPath);
     }
 }
