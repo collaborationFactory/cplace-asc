@@ -15,14 +15,18 @@ try {
     console.warn(e);
 }
 
-if (publishedVersions !== '' && publishedVersions.includes(version)) {
-    throw Error(`${version} already exists!`);
-}
+console.log(`Current branch: ${branch}`);
 
 if (branch === 'master') {
     const hash = execSync('git rev-parse origin/master').toString();
     version = '0.0.0'.concat('-SNAPSHOT-').concat(hash);
 }
+
+if (publishedVersions !== '' && publishedVersions.includes(version)) {
+    throw Error(`${version} already exists!`);
+}
+
+console.log(`Current version: ${version}`);
 
 console.log(
     execSync(`git tag -a ${version} -m "Version ${version}"`).toString()
