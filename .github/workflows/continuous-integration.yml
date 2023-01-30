@@ -46,7 +46,7 @@ jobs:
                     - macos-latest
                     - windows-latest
                 node_version:
-                    - 12.x
+                    - 14.x
         name: Node ${{ matrix.node_version }} - ${{ matrix.architecture }} on ${{ matrix.os }}
         steps:
             - name: Cancel Previous Runs
@@ -98,7 +98,7 @@ jobs:
               uses: actions/setup-java@v2
               with:
                   distribution: 'adopt'
-                  java-version: '11'
+                  java-version: '17'
 
             - name: Create plugin descriptors in main
               working-directory: ./main
@@ -118,17 +118,17 @@ jobs:
             - name: Link
               run: npm link
 
-            - name: combineJavascript main
+            - name: cplace-asc main
               working-directory: ./main
               timeout-minutes: 20
-              run: ./gradlew combineJavascript
+              run: cplace-asc --verbose
 
-            - name: combineJavascript cplace-paw
+            - name: cplace-asc cplace-paw
               working-directory: ./cplace-paw
               timeout-minutes: 20
-              run: ./gradlew combineJavascript
+              run: cplace-asc --verbose
 
-            - name: combineJavascript cplace-project-planning
+            - name: cplace-asc cplace-project-planning
               working-directory: ./cplace-project-planning
               timeout-minutes: 20
-              run: ./gradlew combineJavascript
+              run: cplace-asc --verbose

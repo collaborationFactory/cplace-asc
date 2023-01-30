@@ -1,6 +1,6 @@
 {
     "name": "@cplace/asc",
-    "version": "1.2.14",
+    "version": "1.2.15",
     "lockfileVersion": 1,
     "requires": true,
     "dependencies": {
@@ -4477,7 +4477,7 @@
         },
         "generic-pool": {
             "version": "3.9.0",
-            "resolved": "https://registry.npmjs.org/generic-pool/-/generic-pool-3.9.0.tgz",
+            "resolved": "https://cplace.jfrog.io/artifactory/api/npm/cplace-npm/generic-pool/-/generic-pool-3.9.0.tgz",
             "integrity": "sha512-hymDOu5B53XvN4QT9dBmZxPX4CWhBPPLguTZ9MMFeFa/Kg0xWVfylOVNlJji/E7yTZWFd/q9GO5TxDLq156D7g=="
         },
         "gensync": {
