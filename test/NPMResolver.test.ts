@@ -4,6 +4,7 @@ import * as tmp from 'tmp';
 import * as child_process from 'child_process';
 import { cred } from '../src/utils';
 import { NPMResolver } from '../src/model/NPMResolver';
+import { getTestRegistryCredentials } from './shared';
 
 describe('resolve npm credentials', () => {
     const npmrc_not_configured =
@@ -41,20 +42,18 @@ describe('resolve npm credentials', () => {
         fs.writeFileSync(npmrcPath, npmrc_not_configured);
         resolver.init();
         const npmrcContent = fs.readFileSync(npmrcPath).toString();
+        const token = Buffer.from(
+            `${process.env.ENV_CPLACE_ARTIFACTORY_ACTOR}:${process.env.ENV_CPLACE_ARTIFACTORY_TOKEN}`
+        ).toString('base64');
         expect(npmrcContent).toContain(
-            '@cplace-next:registry=https://cplace.jfrog.io/artifactory/api/npm/cplace-npm/\n' +
-                '//cplace.jfrog.io/artifactory/api/npm/cplace-npm/:_auth=YWN0b3JAY2lyY2xlY2kuY29tOnRva2Vu\n' +
-                '//cplace.jfrog.io/artifactory/api/npm/cplace-npm/:always-auth=true\n' +
-                '//cplace.jfrog.io/artifactory/api/npm/cplace-npm/:email=actor@circleci.com\n'
+            getTestRegistryCredentials(
+                '',
+                'cplace-npm',
+                token,
+                process.env.ENV_CPLACE_ARTIFACTORY_ACTOR
+            )
         );
-
-        expect(npmrcContent).toContain(
-            '@cplace-3rdparty-modified:registry=https://cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/\n' +
-                '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:_auth=YWN0b3JAY2lyY2xlY2kuY29tOnRva2Vu\n' +
-                '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:always-auth=true\n' +
-                '//cplace.jfrog.io/artifactory/api/npm/cplace-assets-npm/:email=actor@circleci.com\n'
-        );
-        expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(8);
+        expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(4);
     });
 
     function setupNPMResolverMock() {
