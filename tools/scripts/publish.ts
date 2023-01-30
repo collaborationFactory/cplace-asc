@@ -2,7 +2,13 @@ import { execSync } from 'child_process';
 import { CPLACE_ASC_DIST } from './shared';
 import { resolve } from 'path';
 
-const version = process.env.TAG;
+const tag = process.env.TAG;
+
+if (!tag) {
+    throw Error('No tag provided!');
+}
+
+const version = tag.split('v')[1];
 const isSnapshot = version?.includes('SNAPSHOT');
 
 console.log(`Building cplace-asc...`);
