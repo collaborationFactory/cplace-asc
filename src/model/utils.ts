@@ -7,16 +7,18 @@ import * as os from 'os';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
-const PACKAGE_JSON_PATH = resolve(__dirname, '../../package.json');
+function getPackageJsonContent() {
+    const PACKAGE_JSON_PATH = resolve(__dirname, '../package.json');
+    const packageJson_String = readFileSync(PACKAGE_JSON_PATH, 'utf8');
+    return JSON.parse(packageJson_String);
+}
 
 /**
  * Returns a human-readable info line with the number of cpus/cores
  * and the current memory details
  */
 export function getAvailableStats() {
-    const packageJson_String = readFileSync(PACKAGE_JSON_PATH, 'utf8');
-    const packageJson = JSON.parse(packageJson_String);
-    const versionString = packageJson.version;
+    const versionString = getPackageJsonContent().version;
     let op: string[] = [];
     op.push(`Currently running version: ${versionString}`);
     op.push(`Available cpus/cores: ${os.cpus().length}`);
@@ -58,4 +60,20 @@ export function isFileTracked(
         return false;
     }
     return true;
+}
+
+export function getProjectNodeModulesPath(): string {
+    return resolve(process.cwd(), 'node_modules');
+}
+
+export function getCplaceAscPath(): string {
+    return resolve(process.cwd(), 'node_modules', getPackageJsonContent().name);
+}
+
+export function getCplaceAscNodeModulesPath(): string {
+    return resolve(getCplaceAscPath(), 'node_modules');
+}
+
+export function getProjectNodeModulesBinPath(): string {
+    return resolve(getProjectNodeModulesPath(), '.bin');
 }

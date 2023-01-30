@@ -9,7 +9,6 @@ export interface ICompileRequest {
     ts?: boolean;
     openAPIYaml?: boolean;
     vendor?: boolean;
-    tsE2E?: boolean;
     compressCss?: boolean;
     combineJs?: boolean;
 }

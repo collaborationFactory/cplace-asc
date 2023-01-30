@@ -8,8 +8,10 @@
         "noImplicitAny": false,
         "declaration": false,
         "declarationMap": false,
+        "skipLibCheck": true,
         "sourceMap": true,
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "resolveJsonModule": true
     },
     "include": ["src/**/*"],
     "exclude": ["**/*.spec.ts"],

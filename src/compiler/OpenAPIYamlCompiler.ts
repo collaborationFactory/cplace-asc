@@ -1,9 +1,9 @@
 import * as path from 'path';
-import * as rimraf from 'rimraf';
-import { cerr, formatDuration, GREEN_CHECK } from '../utils';
+import { cerr, debug, formatDuration, GREEN_CHECK } from '../utils';
 import { CompilationResult, ICompiler } from './interfaces';
-import spawn = require('cross-spawn');
+import * as spawn from 'cross-spawn';
 import * as fs from 'fs';
+import { getCplaceAscPath, getProjectNodeModulesBinPath } from '../model/utils';
 
 export class OpenAPIYamlCompiler implements ICompiler {
     constructor(
@@ -12,13 +12,6 @@ export class OpenAPIYamlCompiler implements ICompiler {
         private readonly assetsPath: string,
         private readonly mainRepoDir: string
     ) {}
-
-    /**
-     * Gets path of node_modules executables
-     */
-    private static getNodeModulesBinPath(): string {
-        return path.resolve(__dirname, '../../', 'node_modules/.bin/');
-    }
 
     /**
      * Executes provided array of promises sequentially.
@@ -68,13 +61,13 @@ export class OpenAPIYamlCompiler implements ICompiler {
      */
     private cleanup(plugin: string): Promise<any> {
         return Promise.all([
-            //   this.removeGeneratedOpenAPIFiles(plugin),
+            this.removeGeneratedOpenAPIFiles(plugin),
             this.removePluginDist(plugin),
         ]);
     }
 
     /**
-     *  Builds types for a provided plugin. First it generates types, than it
+     *  Builds types for a provided plugin. First it generates types, then it
      *  copies types in plugin/assets/ts/api folder, and at the end it cleans
      *  the distribution folder.
      * @param plugin Provided plugin
@@ -97,28 +90,47 @@ export class OpenAPIYamlCompiler implements ICompiler {
         return new Promise((resolve) => {
             const pluginPath = this.getPluginPath(plugin);
             const cli = path.resolve(
-                OpenAPIYamlCompiler.getNodeModulesBinPath(),
+                getProjectNodeModulesBinPath(),
                 'openapi-generator-cli'
             );
             const yaml = path.resolve(`${pluginPath}/api/API.yaml`);
             const dist = path.resolve(`${pluginPath}/api/dist/openapi`);
 
+            const vmArgs = 'version-manager set 5.0.0'.split(' ');
+
+            debug(
+                `[${
+                    this.pluginName
+                }](OpenAPIYamlCompiler) running ${cli} ${vmArgs.join(' ')}`
+            );
+
+            const vmRes = spawn.sync(cli, vmArgs, {
+                stdio: ['pipe', 'pipe', 'pipe'],
+                cwd: getCplaceAscPath(),
+            });
+
             const genArgs =
                 `generate -i ${yaml} -g typescript-angular -o ${dist} --additional-properties=ngVersion=6.1.7,npmName=restClient,supportsES6=true,npmVersion=6.9.0,withInterfaces=true`.split(
                     ' '
                 );
+
+            debug(
+                `[${
+                    this.pluginName
+                }](OpenAPIYamlCompiler) running ${cli} ${genArgs.join(' ')}`
+            );
+
             const genRes = spawn.sync(cli, genArgs, {
                 stdio: ['pipe', 'pipe', 'pipe'],
-                env: {
-                    ...process.env,
-                    PWD: path.resolve(__dirname, '..', '..'),
-                },
+                cwd: getCplaceAscPath(),
             });
-            if (genRes.status !== 0) {
+
+            if (vmRes.status !== 0 || genRes.status !== 0) {
+                const output =
+                    genRes.status !== 0 ? genRes.output : vmRes.output;
+                const error = genRes.status !== 0 ? genRes.error : vmRes.error;
                 console.error(
-                    cerr`(OpenAPIYamlCompiler) [${
-                        this.pluginName
-                    }] OpenAPI YAML compilation failed with error ${genRes.output.toString()}`
+                    cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${output} ${error}`
                 );
                 throw Error(
                     `[${this.pluginName}] OpenAPI YAML compilation failed...`
@@ -143,7 +155,7 @@ export class OpenAPIYamlCompiler implements ICompiler {
                     '/assets/ts/api/*.ts'
                 );
                 const eolConverter = path.resolve(
-                    OpenAPIYamlCompiler.getNodeModulesBinPath(),
+                    getProjectNodeModulesBinPath(),
                     'eolConverter'
                 );
                 const res = spawn.sync(eolConverter, ['crlf', files], {
@@ -191,14 +203,14 @@ export class OpenAPIYamlCompiler implements ICompiler {
     }
 
     /**
-     * Removes plugin/api/dist/openapi folder. For deletion it uses rimraf node module.
+     * Removes plugin/api/dist/openapi folder.
      * @param plugin Provided plugin for which dist/openapi folder should be removed.
      */
     private removePluginDist(plugin: string): Promise<any> {
         return new Promise((resolve) => {
             const pluginPath = this.getPluginPath(plugin);
             const dist = path.resolve(`${pluginPath}/api/dist/openapi`);
-            rimraf(dist, (err) => {
+            fs.rm(dist, { recursive: true, force: true }, (err) => {
                 if (err) {
                     console.error(
                         cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${err.message}`
@@ -219,7 +231,7 @@ export class OpenAPIYamlCompiler implements ICompiler {
     private removeGeneratedOpenAPIFiles(plugin: string): Promise<any> {
         return new Promise((resolve) => {
             const dist = path.resolve(`${process.cwd()}/openapitools.json`);
-            rimraf(dist, (err) => {
+            fs.rm(dist, { recursive: true, force: true }, (err) => {
                 if (err) {
                     console.error(
                         cerr`(OpenAPIYamlCompiler) [${this.pluginName}] OpenAPI YAML compilation failed with error ${err.message}`

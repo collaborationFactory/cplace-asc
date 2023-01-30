@@ -23,16 +23,15 @@ const Processfactory: Factory<ChildProcess> = {
     create: async () => {
         return fork(COMPILER_ENTRY_POINT);
     },
-    // @ts-ignore
     destroy: async (_process: ChildProcess) => {
-        return _process.kill();
+        _process.kill();
     },
 };
 
 export class ExecutorService {
     private readonly pool: Pool<ChildProcess>;
     private running = 0;
-    private pids: Array<number> = [];
+    private pids: Set<number> = new Set();
 
     constructor(private readonly maxParallelism: number) {
         debug(`(ExecutorService) got maxParallelism: ${maxParallelism}`);
@@ -54,7 +53,9 @@ export class ExecutorService {
             this.pool.acquire().then(
                 (process) => {
                     if (!watchFiles) {
-                        this.pids.push(process.pid);
+                        if (process.pid != null) {
+                            this.pids.add(process.pid);
+                        }
                     }
                     let resolved = false;
                     const exit = (code) => {
@@ -73,7 +74,9 @@ export class ExecutorService {
                         resolved = true;
                         if (message.state === ProcessState.DONE) {
                             this.running--;
-                            resolve(message.result);
+                            resolve(
+                                message.result || CompilationResult.UNCHANGED
+                            );
                         } else {
                             this.running--;
                             if (watchFiles) {

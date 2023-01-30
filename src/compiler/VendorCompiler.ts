@@ -10,11 +10,15 @@ import * as crypto from 'crypto';
 import * as eol from 'eol';
 import { CompressCssCompiler } from './CompressCssCompiler';
 import { CplaceTypescriptCompiler } from './CplaceTypescriptCompiler';
-import spawn = require('cross-spawn');
-
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
-const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+import * as spawn from 'cross-spawn';
+import * as MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import * as CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
+import * as TerserPlugin from 'terser-webpack-plugin';
+import {
+    getCplaceAscNodeModulesPath,
+    getProjectNodeModulesBinPath,
+    getProjectNodeModulesPath,
+} from '../model/utils';
 
 export class VendorCompiler implements ICompiler {
     public static readonly DEST_CSS_DIR = 'generated_css';
@@ -33,14 +37,15 @@ export class VendorCompiler implements ICompiler {
         private readonly pluginName: string,
         private readonly dependencyPaths: string[],
         private readonly assetsPath: string,
-        private readonly mainRepoDir: string
+        private readonly mainRepoDir: string,
+        private readonly isProduction: boolean
     ) {
         this.compressCssCompiler = new CompressCssCompiler(
             this.pluginName,
             this.dependencyPaths,
             this.assetsPath,
             this.mainRepoDir,
-            true
+            isProduction
         );
     }
 
@@ -106,7 +111,7 @@ export class VendorCompiler implements ICompiler {
      */
     private tscPluginIndex(): boolean {
         debug(`(VendorCompiler) [${this.pluginName}] compiling index.ts...`);
-        const tsc = path.resolve(__dirname, '../../', 'node_modules/.bin/tsc');
+        const tsc = path.resolve(getProjectNodeModulesBinPath(), 'tsc');
         const index = path.join(this.assetsPath, 'index.ts');
         if (!fs.existsSync(index)) {
             return false;
@@ -117,14 +122,13 @@ export class VendorCompiler implements ICompiler {
             `--outDir`,
             path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR),
         ]);
-        debug(
-            `(VendorCompiler) [${this.pluginName}] index.ts tsc return code: ${res.status}`
-        );
         if (res.status !== 0) {
+            let output = '';
+            if (res.output) {
+                output = res.output.toString();
+            }
             debug(
-                `(VendorCompiler) [${
-                    this.pluginName
-                }] index.ts compilation failed with error ${res.output.toString()}`
+                `(VendorCompiler) [${this.pluginName}] index.ts compilation failed with error ${output}, ${res.error}`
             );
             throw Error(`[${this.pluginName}] index.ts compilation failed!`);
         }
@@ -203,7 +207,8 @@ export class VendorCompiler implements ICompiler {
             `⟲ [${this.pluginName}] loading custom vendor webpack configuration...`
         );
         try {
-            return require(pluginSpecificConfigFile);
+            const pluginSpecificConfig = require(pluginSpecificConfigFile);
+            return pluginSpecificConfig;
         } catch (e) {
             console.error(
                 cerr`Error while loading configuration ${pluginSpecificConfigFile}`
@@ -218,7 +223,7 @@ export class VendorCompiler implements ICompiler {
      */
     private getPluginWebpackConfig(): Configuration {
         return {
-            mode: 'production',
+            mode: this.isProduction ? 'production' : 'development',
             entry: {
                 vendor: path.resolve(
                     this.assetsPath,
@@ -237,7 +242,10 @@ export class VendorCompiler implements ICompiler {
                 filename: '[name].js',
             },
             resolveLoader: {
-                modules: [path.resolve(__dirname, '../../', 'node_modules')],
+                modules: [
+                    getProjectNodeModulesPath(),
+                    getCplaceAscNodeModulesPath(),
+                ],
             },
             resolve: {
                 modules: [
@@ -260,18 +268,19 @@ export class VendorCompiler implements ICompiler {
                             ],
                         },
                     }),
-                    new UglifyJsPlugin({
-                        extractComments: true,
+                    new TerserPlugin({
+                        minify: TerserPlugin.terserMinify,
                         parallel: true,
-                        uglifyOptions: {
-                            output: {
+                        extractComments: true,
+                        terserOptions: {
+                            format: {
                                 comments: false,
                             },
                         },
                     }),
                 ],
             },
-            devtool: false,
+            devtool: this.isProduction ? false : 'source-map',
             plugins: [
                 new MiniCssExtractPlugin({
                     filename: `../${VendorCompiler.DEST_CSS_DIR}/${VendorCompiler.VENDOR_CSS_FILE}`,
@@ -330,16 +339,18 @@ export class VendorCompiler implements ICompiler {
 
             if (!buffer.length) {
                 // if entry file is empty, there is no need to bundle
-                resolve();
+                resolve(
+                    `(VendorCompiler) [${this.pluginName}] No entry file! Bundling skipped!`
+                );
                 return;
             }
 
             const mergedConfig = merge(config, pluginSpecificConfig);
             webpack(mergedConfig, (err, stats) => {
-                if (err) {
-                    reject(`${err.message}`);
-                } else if (stats.hasErrors()) {
-                    reject(`${stats.toString()}`);
+                if (stats && stats.hasErrors()) {
+                    reject(stats.toString());
+                } else if (err) {
+                    reject(err);
                 } else {
                     const endTime = new Date().getTime();
                     console.log(
@@ -348,7 +359,9 @@ export class VendorCompiler implements ICompiler {
                             endTime - startTime
                         )})`
                     );
-                    resolve();
+                    resolve(
+                        `(VendorCompiler) [${this.pluginName}] Vendors successfully bundled!`
+                    );
                 }
             });
         });

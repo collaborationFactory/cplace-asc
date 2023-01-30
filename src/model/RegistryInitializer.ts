@@ -47,7 +47,7 @@ export class RegistryInitializer {
             this.setCurrentNpmrcConfig();
             this.removeAllRegistryCredentials();
             this.addDefaultRegistryCredentialsToNpmrc();
-        } catch (e) {
+        } catch (e: any) {
             console.error(
                 cred`✗`,
                 e.message,

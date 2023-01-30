@@ -28,7 +28,6 @@ interface ISchedulingResult {
 export class Scheduler {
     private static readonly WATCH_PATTERNS = {
         ts: 'ts|htm?(l)',
-        tsE2E: 'ts',
         less: 'less',
         css: 'css',
         openAPIYaml: 'yaml',
@@ -36,7 +35,6 @@ export class Scheduler {
     };
 
     private readonly tsJobs: JobTracker;
-    private readonly tsE2EJobs: JobTracker;
     private readonly lessJobs: JobTracker;
     private readonly openAPIYamlJobs: JobTracker;
     private readonly compressCssJobs: JobTracker;
@@ -45,7 +43,6 @@ export class Scheduler {
 
     private watchers = {
         ts: new Map<string, FSWatcher>(),
-        tsE2E: new Map<string, FSWatcher>(),
         less: new Map<string, FSWatcher>(),
         css: new Map<string, FSWatcher>(),
         openAPIYaml: new Map<string, FSWatcher>(),
@@ -81,7 +78,6 @@ export class Scheduler {
     ) {
         this.vendorJobs = this.createVendorJobTracker();
         this.tsJobs = this.createTsJobTracker();
-        this.tsE2EJobs = this.createTsE2EJobTracker();
         this.lessJobs = this.createLessJobTracker();
         this.openAPIYamlJobs = this.createOpenAPIYamlJobTracker();
         this.compressCssJobs = this.createCompressCssJobTracker();
@@ -158,19 +154,6 @@ export class Scheduler {
         const nextCompressCssPlugin =
             compressCssSchedulingResult.scheduledPlugin;
 
-        let nextTsE2EPlugin: string | null | undefined = null;
-        if (!this.isProduction) {
-            const tsE2ESchedulingResult = this.getAndScheduleNextJob(
-                this.tsE2EJobs,
-                'tsE2E',
-                'tsE2E'
-            );
-            if (tsE2ESchedulingResult.backoff) {
-                return;
-            }
-            nextTsE2EPlugin = tsE2ESchedulingResult.scheduledPlugin;
-        }
-
         const tsSchedulingResult = this.getAndScheduleNextJob(
             this.tsJobs,
             'ts',
@@ -197,7 +180,6 @@ export class Scheduler {
 
         if (
             nextTsPlugin === null &&
-            nextTsE2EPlugin == null &&
             nextLessPlugin === null &&
             nextCompressCssPlugin === null &&
             nextOpenAPIYamlPlugin === null &&
@@ -216,7 +198,6 @@ export class Scheduler {
             }
         } else if (
             nextTsPlugin ||
-            nextTsE2EPlugin ||
             nextLessPlugin ||
             nextCompressCssPlugin ||
             nextOpenAPIYamlPlugin ||
@@ -235,7 +216,6 @@ export class Scheduler {
             | 'ts'
             | 'less'
             | 'compressCss'
-            | 'tsE2E'
             | 'openAPIYaml'
             | 'vendor'
             | 'combineJs',
@@ -243,7 +223,6 @@ export class Scheduler {
             | 'ts'
             | 'less'
             | 'css'
-            | 'tsE2E'
             | 'openAPIYaml'
             | 'vendor'
             | 'combineJs'
@@ -315,9 +294,6 @@ export class Scheduler {
         this.watchers.ts.forEach((watcher) => {
             watcher.close();
         });
-        this.watchers.tsE2E.forEach((watcher) => {
-            watcher.close();
-        });
         this.watchers.less.forEach((watcher) => {
             watcher.close();
         });
@@ -352,31 +328,6 @@ export class Scheduler {
                     ),
                     this.filterTypeScriptPlugins(plugin.dependents),
                     [this.vendorJobs.isJobDone.bind(this.vendorJobs)]
-                )
-        );
-        return new JobTracker(jobs);
-    }
-
-    private createTsE2EJobTracker(): JobTracker {
-        const tsE2EPlugins: CplacePlugin[] = [];
-        this.plugins.forEach((plugin) => {
-            if (
-                plugin.hasTypeScriptE2EAssets &&
-                this.isInCompilationScope(plugin)
-            ) {
-                tsE2EPlugins.push(plugin);
-            }
-        });
-
-        const jobs: JobDetails[] = tsE2EPlugins.map(
-            (plugin) =>
-                new JobDetails(
-                    plugin.pluginName,
-                    this.filterTypeScriptE2EPlugins(
-                        plugin.pluginDescriptor.dependencies
-                    ),
-                    this.filterTypeScriptE2EPlugins(plugin.dependents),
-                    []
                 )
         );
         return new JobTracker(jobs);
@@ -514,15 +465,6 @@ export class Scheduler {
             .map((p) => p.pluginName);
     }
 
-    private filterTypeScriptE2EPlugins(plugins: PluginDescriptor[]): string[] {
-        return plugins
-            .map((p) => this.getPlugin(p.name))
-            .filter(
-                (p) => p.hasTypeScriptE2EAssets && this.isInCompilationScope(p)
-            )
-            .map((p) => p.pluginName);
-    }
-
     private filterLessPlugins(plugins: PluginDescriptor[]): string[] {
         return plugins
             .map((p) => this.getPlugin(p.name))
@@ -548,14 +490,7 @@ export class Scheduler {
 
     private registerWatch(
         pluginName: string,
-        type:
-            | 'ts'
-            | 'less'
-            | 'css'
-            | 'tsE2E'
-            | 'openAPIYaml'
-            | 'vendor'
-            | 'combineJs'
+        type: 'ts' | 'less' | 'css' | 'openAPIYaml' | 'vendor' | 'combineJs'
     ): void {
         if (!this.watchFiles) {
             return;
@@ -568,10 +503,6 @@ export class Scheduler {
         let watchDir = path.join(plugin.assetsDir, type);
         let jobTracker;
         switch (type) {
-            case 'tsE2E':
-                watchDir = path.join(plugin.assetsDir, 'e2e');
-                jobTracker = this.tsE2EJobs;
-                break;
             case 'ts':
                 jobTracker = this.tsJobs;
                 break;

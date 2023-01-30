@@ -12,7 +12,6 @@ import {
     generateExtendedPluginDescriptor,
     generatePackageJson,
     generateParentRepos,
-    generateSimplePluginDescriptor,
     generateVersionGradle,
 } from './helper/TestHelpers';
 
@@ -138,6 +137,7 @@ describe('test generating a package.json file in repo root', () => {
             production: false,
             noParents: false,
             packagejson: true,
+            withYaml: false,
         };
 
         PackageVersion.initialize(mainRepoPath);
