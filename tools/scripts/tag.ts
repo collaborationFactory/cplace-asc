@@ -28,7 +28,9 @@ if (publishedVersions !== '' && publishedVersions.includes(version)) {
     throw Error(`${version} already exists!`);
 }
 
-const cmd = `git tag -m "version ${version}" -a v${version}`;
+const tag = `v${version}`;
+
+const cmd = `git tag -m "version ${tag}" -a ${tag}`;
 
 console.log(execSync(cmd).toString());
-console.log(execSync(`git push origin ${version}`).toString());
+console.log(execSync(`git push origin ${tag}`).toString());
