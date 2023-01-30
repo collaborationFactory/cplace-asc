@@ -31,4 +31,4 @@ if (publishedVersions !== '' && publishedVersions.includes(version)) {
 const cmd = `git tag -m "version ${version}" -a ${version}`;
 
 console.log(execSync(cmd).toString());
-// console.log(execSync(`git push origin ${version}`).toString());
+console.log(execSync(`git push origin ${version}`).toString());
