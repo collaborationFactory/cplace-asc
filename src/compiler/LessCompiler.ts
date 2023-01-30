@@ -63,6 +63,8 @@ export class LessCompiler implements ICompiler {
         console.log(`⟲ [${this.pluginName}] starting LESS compilation...`);
         return new Promise<CompilationResult>((resolve, reject) => {
             const lesscOptions: Options = {
+                compress: true,
+                math: 'always',
                 filename: path.resolve(entryFile),
                 plugins: lessPlugins(this.pluginName),
             };
@@ -98,12 +100,24 @@ export class LessCompiler implements ICompiler {
                         fs.mkdirSync(lessOutputDir);
                     }
 
+                    let sourceMaps = output.map;
+
+                    if (!sourceMaps) {
+                        const defaultMaps = {
+                            version: 3,
+                            sources: [`../less/${filename}.less`],
+                            names: [],
+                            mappings: '',
+                        };
+                        sourceMaps = JSON.stringify(defaultMaps);
+                    }
+
                     const promises = [
                         writeFile(outputFile, output.css, 'utf8'),
                     ];
                     if (!this.isProduction) {
                         promises.push(
-                            writeFile(sourceMapFile, output.map, 'utf8')
+                            writeFile(sourceMapFile, sourceMaps, 'utf8')
                         );
                     }
 

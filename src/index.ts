@@ -21,7 +21,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { PackageVersion } from './model/PackageVersion';
 import { CplaceVersion } from './model/CplaceVersion';
-import meow = require('meow');
+import * as meow from 'meow';
 
 checkNodeVersion();
 checkForUpdate()
@@ -46,7 +46,7 @@ function run(updateDetails?: IUpdateDetails) {
         --packagejson, -j       Generate package.json files (if missing) in the root and each plugin that has assets
         --withYaml, -y          Generates TypeScript files from the OpenAPI YAML specification
         --verbose, -v           Enable verbose logging
-        --production, -P        Enable production mode (ignores test dependencies and E2E)
+        --production, -P        Enable production mode (ignores test dependencies)
 
 `,
         {
@@ -54,7 +54,7 @@ function run(updateDetails?: IUpdateDetails) {
                 plugin: {
                     type: 'string',
                     alias: 'p',
-                    default: null,
+                    default: '',
                 },
                 watch: {
                     type: 'boolean',
@@ -77,9 +77,9 @@ function run(updateDetails?: IUpdateDetails) {
                     default: false,
                 },
                 threads: {
-                    type: 'string',
+                    type: 'number',
                     alias: 't',
-                    default: null,
+                    default: 1,
                 },
                 localonly: {
                     type: 'boolean',
@@ -110,7 +110,7 @@ function run(updateDetails?: IUpdateDetails) {
         }
     );
 
-    if (cli.flags.plugin !== null && !cli.flags.plugin) {
+    if (cli.flags.plugin && cli.flags.plugin === '') {
         console.error(cerr`Missing value for --plugin|-p argument`);
         process.exit(1);
     }
@@ -134,15 +134,13 @@ function run(updateDetails?: IUpdateDetails) {
     }
 
     if (cli.flags.threads !== null) {
-        const t = parseInt(cli.flags.threads);
-        if (isNaN(t)) {
+        if (isNaN(cli.flags.threads)) {
             console.error(
                 cerr`Number of --threads|-t must be greater or equal to 0 `
             );
             process.exit(1);
             return;
         }
-        cli.flags.threads = t;
     }
 
     if (cli.flags.verbose) {
@@ -178,7 +176,9 @@ function run(updateDetails?: IUpdateDetails) {
         PackageVersion.initialize(mainRepoPath);
         CplaceVersion.initialize(process.cwd());
 
-        const plugins = cli.flags.plugin ? cli.flags.plugin.split(',') : [];
+        const plugins = cli.flags.plugin
+            ? (cli.flags.plugin as string).split(',')
+            : [];
         const config: IAssetsCompilerConfiguration = {
             rootPlugins: plugins,
             watchFiles: cli.flags.watch,
@@ -189,9 +189,9 @@ function run(updateDetails?: IUpdateDetails) {
                 : os.cpus().length - 1,
             localOnly: cli.flags.localonly,
             production: cli.flags.production,
-            withYaml: cli.flags.withYaml,
-            noParents: cli.flags.noparents || cli.flags.noParents,
             packagejson: cli.flags.packagejson,
+            noParents: cli.flags.noparents,
+            withYaml: cli.flags.withYaml,
         };
 
         console.log(getAvailableStats());
@@ -225,7 +225,7 @@ function run(updateDetails?: IUpdateDetails) {
                 setTimeout(() => process.exit(1), 200);
             }
         );
-    } catch (err) {
+    } catch (err: any) {
         console.error(cerr`Failed to start assets compiler: ${err.message}`);
         if (isDebugEnabled()) {
             console.error(err);

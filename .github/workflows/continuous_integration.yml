@@ -16,16 +16,17 @@ jobs:
 
             - uses: actions/setup-node@v1
               with:
-                  node-version: 12.x
+                  node-version: 18.11.0
 
             - name: Cache Node Modules
               id: npm-cache
               uses: actions/cache@v2
               with:
                   path: '**/node_modules'
-                  key: ${{ runner.os }}-modules-${{ hashFiles('**/npm-shrinkwrap.json') }}
+                  key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
 
             - name: Install modules
+              if: steps.npm-cache.outputs.cache-hit != 'true'
               run: npm ci
 
             - name: Formatter
@@ -46,7 +47,7 @@ jobs:
                     - macos-latest
                     - windows-latest
                 node_version:
-                    - 14.x
+                    - 18.11.0
         name: Node ${{ matrix.node_version }} - ${{ matrix.architecture }} on ${{ matrix.os }}
         steps:
             - name: Cancel Previous Runs
@@ -61,22 +62,23 @@ jobs:
               uses: actions/checkout@v3
               with:
                   repository: collaborationFactory/cplace
+                  ref: feature/PFM-TASK-3041-Adjust-main-to-Node-version-18-11-0
                   path: main
                   token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
-            - name: Checkout cplace-project-planning
-              uses: actions/checkout@v3
-              with:
-                  repository: collaborationFactory/cplace-project-planning
-                  path: cplace-project-planning
-                  token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
-
-            - name: Checkout cplace-paw
-              uses: actions/checkout@v3
-              with:
-                  repository: collaborationFactory/cplace-paw
-                  path: cplace-paw
-                  token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
+            #            - name: Checkout cplace-project-planning
+            #              uses: actions/checkout@v3
+            #              with:
+            #                  repository: collaborationFactory/cplace-project-planning
+            #                  path: cplace-project-planning
+            #                  token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
+            #
+            #            - name: Checkout cplace-paw
+            #              uses: actions/checkout@v3
+            #              with:
+            #                  repository: collaborationFactory/cplace-paw
+            #                  path: cplace-paw
+            #                  token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
             - name: Setup node
               uses: actions/setup-node@v2
@@ -89,9 +91,10 @@ jobs:
               uses: actions/cache@v2
               with:
                   path: '**/node_modules'
-                  key: ${{ runner.os }}-modules-${{ hashFiles('**/npm-shrinkwrap.json') }}
+                  key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
 
             - name: Install modules
+              if: steps.npm-cache.outputs.cache-hit != 'true'
               run: npm ci
 
             - name: Setup JDK
@@ -104,31 +107,35 @@ jobs:
               working-directory: ./main
               run: ./gradlew generatePluginDescriptor
 
-            - name: Create plugin descriptors cplace-project-planning
-              working-directory: ./cplace-project-planning
-              run: ./gradlew generatePluginDescriptor
-
-            - name: Create plugin descriptors cplace-paw
-              working-directory: ./cplace-paw
-              run: ./gradlew generatePluginDescriptor
+            #            - name: Create plugin descriptors cplace-project-planning
+            #              working-directory: ./cplace-project-planning
+            #              run: ./gradlew generatePluginDescriptor
+            #
+            #            - name: Create plugin descriptors cplace-paw
+            #              working-directory: ./cplace-paw
+            #              run: ./gradlew generatePluginDescriptor
 
             - name: Build
-              run: npm run prepare
-
-            - name: Link
-              run: npm link
+              run: npm run test-build
 
             - name: cplace-asc main
               working-directory: ./main
               timeout-minutes: 20
-              run: cplace-asc --verbose
+              run: |
+                  npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT.tgz -D
+                  chmod 777 node_modules/.bin/cplace-asc
+                  node_modules/.bin/cplace-asc
 
-            - name: cplace-asc cplace-paw
-              working-directory: ./cplace-paw
-              timeout-minutes: 20
-              run: cplace-asc --verbose
-
-            - name: cplace-asc cplace-project-planning
-              working-directory: ./cplace-project-planning
-              timeout-minutes: 20
-              run: cplace-asc --verbose
+#            - name: cplace-asc cplace-paw
+#              working-directory: ./cplace-paw
+#              timeout-minutes: 20
+#              run: |
+#                  npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT.tgz -D
+#                  node_modules/.bin/cplace-asc
+#
+#            - name: cplace-asc cplace-project-planning
+#              working-directory: ./cplace-project-planning
+#              timeout-minutes: 20
+#              run: |
+#                  npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT.tgz -D
+#                  node_modules/.bin/cplace-asc

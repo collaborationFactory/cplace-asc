@@ -10,6 +10,7 @@ import {
     cerr,
     cgreen,
     csucc,
+    cwarn,
     debug,
     formatDuration,
     IUpdateDetails,
@@ -17,7 +18,6 @@ import {
 import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
 import { isFileTracked } from './utils';
-import rimraf = require('rimraf');
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -141,9 +141,13 @@ export class AssetsCompiler {
             if (
                 !isFileTracked(this.repositoryDir, path.resolve('package.json'))
             ) {
-                rimraf.sync(path.resolve(this.repositoryDir, 'package.json'));
-                rimraf.sync(
-                    path.resolve(this.repositoryDir, 'package-lock.json')
+                fs.rmSync(path.resolve(this.repositoryDir, 'package.json'), {
+                    recursive: true,
+                    force: true,
+                });
+                fs.rmSync(
+                    path.resolve(this.repositoryDir, 'package-lock.json'),
+                    { recursive: true, force: true }
                 );
             }
         }
@@ -159,11 +163,8 @@ export class AssetsCompiler {
             }
         }
 
-        this.npmResolver = new NPMResolver(
-            mainRepoPath,
-            this.runConfig.watchFiles
-        );
-        await this.npmResolver.resolve();
+        this.npmResolver = new NPMResolver(mainRepoPath);
+        this.npmResolver.init();
 
         if (this.runConfig.onlyPreprocessing) {
             console.log();
@@ -226,9 +227,6 @@ export class AssetsCompiler {
     public async shutdown(): Promise<void> {
         if (!!this.scheduler) {
             this.scheduler.stop();
-        }
-        if (!!this.npmResolver) {
-            this.npmResolver.stop();
         }
 
         if (!!this.executor) {
@@ -300,13 +298,9 @@ export class AssetsCompiler {
                 );
             }
             if (project.hasTypeScriptE2EAssets) {
-                if (!this.runConfig.production) {
-                    project.generateTsE2EConfig(
-                        (p) => projects.get(p),
-                        false,
-                        this.runConfig.localOnly
-                    );
-                }
+                console.log(
+                    cwarn`[${project.pluginName}] E2E assets are no longer compiled! Starting from the cplace release 23.1 all the E2E tests should be moved into a dedicated E2E repository. In addition, E2E tests must be written using Cypress!`
+                );
             }
         });
 

@@ -35,33 +35,12 @@ describe('resolve npm credentials', () => {
         tmpTestFolder.removeCallback();
     });
 
-    test('no userconfig in npm config', () => {
-        const checkAndInstall = jest.spyOn(
-            NPMResolver.prototype as any,
-            'checkAndInstall'
-        );
-        checkAndInstall.mockImplementation(() => {});
-        console.error = jest.fn();
-
-        jest.spyOn(child_process, 'execSync').mockReturnValueOnce(
-            Buffer.from('no user configured')
-        );
-        const resolver = new NPMResolver('', false);
-        return resolver.resolve().then(() => {
-            expect(console.error).toHaveBeenCalledWith(
-                cred`✗`,
-                'No userconfig found in npm config',
-                'You can ignore this for cplace versions before 5.16.'
-            );
-        });
-    });
-
     test('cplace-asc can initialize jfrog credentials in circleci env', () => {
         process.env.ENV_CPLACE_ARTIFACTORY_ACTOR = 'actor@circleci.com';
         process.env.ENV_CPLACE_ARTIFACTORY_TOKEN = 'token';
         const resolver = setupNPMResolverMock();
         fs.writeFileSync(npmrcPath, npmrc_not_configured);
-        resolver.resolve();
+        resolver.init();
         const npmrcContent = fs.readFileSync(npmrcPath).toString();
         const token = Buffer.from(
             `${process.env.ENV_CPLACE_ARTIFACTORY_ACTOR}:${process.env.ENV_CPLACE_ARTIFACTORY_TOKEN}`
@@ -78,14 +57,9 @@ describe('resolve npm credentials', () => {
     });
 
     function setupNPMResolverMock() {
-        const checkAndInstall = jest.spyOn(
-            NPMResolver.prototype as any,
-            'checkAndInstall'
-        );
-        checkAndInstall.mockImplementation(() => {});
         jest.spyOn(child_process, 'execSync').mockReturnValueOnce(
             Buffer.from('userconfig = "' + npmrcPath + '"')
         );
-        return new NPMResolver('', false);
+        return new NPMResolver('');
     }
 });

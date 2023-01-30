@@ -83,6 +83,8 @@ describe('test the handling of plugin descriptor', () => {
             localOnly: false,
             production: false,
             noParents: false,
+            withYaml: false,
+            packagejson: false,
         };
 
         PackageVersion.initialize(mainRepoPath);
@@ -122,6 +124,8 @@ describe('test the handling of plugin descriptor', () => {
             localOnly: false,
             production: false,
             noParents: false,
+            withYaml: false,
+            packagejson: false,
         };
 
         const assetsCompiler = new AssetsCompiler(config, otherRepoPath);
