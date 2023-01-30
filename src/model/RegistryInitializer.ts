@@ -170,9 +170,8 @@ export class RegistryInitializer {
     private getCleanedNpmrcConfig(linesToRemove: string[]): string {
         let currentNpmrcConfigLines = this.currentNpmrcConfig.split('\n');
         const indexesToRemove: number[] = [];
-        currentNpmrcConfigLines.forEach((line) => {
+        currentNpmrcConfigLines.forEach((line, index) => {
             if (linesToRemove.includes(line) || !line) {
-                const index = currentNpmrcConfigLines.indexOf(line);
                 if (index !== undefined || !line) {
                     indexesToRemove.push(index);
                 }

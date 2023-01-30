@@ -36,6 +36,14 @@ describe('configuring jfrog credentials', () => {
         'cplace-npm-local'
     );
     const CPLACE_NPM = getTestRegistryCredentials('@cplace-next', 'cplace-npm');
+    const FORTAWESOME_CPLACE_NPM = getTestRegistryCredentials(
+        '@fortawesome',
+        'cplace-npm'
+    );
+    const CPLACE_NPM_TEST = getTestRegistryCredentials(
+        '@cplace-next',
+        'cplace-npm-test'
+    );
     const CPLACE_ASSETS_NPM = getTestRegistryCredentials(
         '@cplace-3rdparty-modified',
         'cplace-assets-npm'
@@ -106,11 +114,16 @@ describe('configuring jfrog credentials', () => {
         const registryInitializerPrototype = setupRegistryInitializerMock();
         fs.writeFileSync(
             npmrcPath,
-            CPLACE_NPM_LOCAL.concat(`\n${CPLACE_ASSETS_NPM}`)
+            FORTAWESOME_CPLACE_NPM.concat(`\n${CPLACE_NPM_TEST}`)
+                .concat(`\n${CPLACE_ASSETS_NPM}`)
+                .concat(`\n${CPLACE_NPM}`)
         );
         registryInitializerPrototype.initRegistry();
         const npmrcContent = fs.readFileSync(npmrcPath).toString();
-        expect(npmrcContent).not.toContain(CPLACE_NPM_LOCAL);
+        expect(npmrcContent).not.toContain(FORTAWESOME_CPLACE_NPM);
+        expect(npmrcContent).not.toContain(CPLACE_NPM_TEST);
+        expect(npmrcContent).not.toContain(CPLACE_ASSETS_NPM);
+        expect(npmrcContent).not.toContain(CPLACE_NPM);
         expect(npmrcContent).toContain(CPLACE_DEFAULT_REGISTRY);
         expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(4);
     });
