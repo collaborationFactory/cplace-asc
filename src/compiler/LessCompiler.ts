@@ -6,7 +6,6 @@ import * as less from 'less';
 import { CompilationResult, ICompiler } from './interfaces';
 import { cerr, cgreen, formatDuration, GREEN_CHECK } from '../utils';
 import { CompressCssCompiler } from './CompressCssCompiler';
-import Options = Less.Options;
 import { lessPlugins } from '../model/LessPlugins';
 
 export class LessCompiler implements ICompiler {
@@ -62,7 +61,7 @@ export class LessCompiler implements ICompiler {
         const start = new Date().getTime();
         console.log(`⟲ [${this.pluginName}] starting LESS compilation...`);
         return new Promise<CompilationResult>((resolve, reject) => {
-            const lesscOptions: Options = {
+            const lesscOptions: Less.Options = {
                 compress: true,
                 math: 'always',
                 filename: path.resolve(entryFile),
