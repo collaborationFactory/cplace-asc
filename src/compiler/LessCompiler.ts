@@ -61,7 +61,7 @@ export class LessCompiler implements ICompiler {
         const start = new Date().getTime();
         console.log(`⟲ [${this.pluginName}] starting LESS compilation...`);
         return new Promise<CompilationResult>((resolve, reject) => {
-            const lesscOptions: Less.Options = {
+            const lesscOptions: any = {
                 compress: true,
                 math: 'always',
                 filename: path.resolve(entryFile),
@@ -79,7 +79,8 @@ export class LessCompiler implements ICompiler {
             }
 
             const lessContent = fs.readFileSync(entryFile, 'utf8');
-            less.render(lessContent, lesscOptions)
+            const render = less.render as any;
+            render(lessContent, lesscOptions)
                 .catch((err) => {
                     console.error(cerr`${err}`);
                     throw Error(`[${this.pluginName}] LESS compilation failed`);
