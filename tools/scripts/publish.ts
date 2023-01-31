@@ -14,7 +14,7 @@ const isSnapshot = version?.includes('SNAPSHOT');
 console.log(`Building cplace-asc...`);
 const buildScriptPath = resolve(__dirname, 'build.ts');
 console.log(
-    execSync(`npm run ts-node ${buildScriptPath} ${version}`).toString()
+    execSync(`npx ts-node ${buildScriptPath} ${version}`).toString()
 );
 console.log(`cplace-asc successfully built!`);
 process.chdir(CPLACE_ASC_DIST);
