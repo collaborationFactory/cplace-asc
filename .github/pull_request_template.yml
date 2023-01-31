@@ -2,5 +2,8 @@ Resolves [PFM-ISSUE-xxx](url)
 
 **Checklist:**
 - [ ] Version updated (if applicable)
+- [ ] Tests added (if applicable)
 - [ ] Code formatted
-- [ ] Chosen correct branch as a merge target (For @cplace/asc is the legacy-asc, for @cplace/asc-local is master)
+- [ ] Chosen correct branch as a merge target (For @cplace/asc use the legacy-asc branch, for @cplace/asc-local use master, or a release branch like 2.x.x etc.)
+- [ ] Milestone added
+- [ ] PR labels added
