@@ -36,10 +36,7 @@ let tsc = tscBin;
 if (env === 'production') {
     tsc = `${tscBin} --project ./tsconfig.prod.json`;
 }
-console.log(
-    `Compiling with: ${tsc} `,
-    execSync(tsc, { stdio: 'inherit' }).toString()
-);
+console.log(`Compiling with: ${tsc} `, execSync(tsc).toString());
 console.log('Compiling DONE!');
 
 const newPackageJSON = Object.keys(rootPackageJSON).reduce((acc, key) => {
