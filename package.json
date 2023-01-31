@@ -11,7 +11,8 @@
     },
     "scripts": {
         "test": "jest",
-        "test-build": "ts-node tools/scripts/build.ts 0.0.0-SNAPSHOT && npm pack ./dist --pack-destination ./dist",
+        "ts-node": "ts-node",
+        "test-build": "npm run ts-node tools/scripts/build.ts 0.0.0-SNAPSHOT && npm pack ./dist --pack-destination ./dist",
         "prettier-check": "prettier --check .",
         "prettier-write": "prettier --write ."
     },
