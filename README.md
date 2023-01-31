@@ -44,7 +44,7 @@ $ assets-compiler.cmd
 
 #### Alias Creation
 
-Add the following content to your `~/.bash_profile`:
+Add the following content to your `~/.zshrc`:
 
 ```
 LOCAL_ASC=./node_modules/.bin/cplace-asc
@@ -61,7 +61,7 @@ asc() {
 Run the following command in your terminal:
 
 ```
-$ source ~/.bash_profile
+$ source ~/.zshrc
 ```
 
 #### Running Alias
