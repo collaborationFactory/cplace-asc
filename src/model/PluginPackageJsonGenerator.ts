@@ -15,10 +15,9 @@ export class PluginPackageJsonGenerator extends AbstractPackageJsonGenerator {
     }
 
     public getPackageName() {
-        return `@${this.plugin.pluginDescriptor.group.replace(
-            /\./g,
-            '-'
-        )}/${this.plugin.pluginDescriptor.name.replace(
+        return `@cplace-assets/${
+            this.plugin.pluginDescriptor.repoName
+        }_${this.plugin.pluginDescriptor.name.replace(
             /\./g,
             '-'
         )}`.toLowerCase();
