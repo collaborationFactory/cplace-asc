@@ -9,7 +9,8 @@ import { ExecutorService, Scheduler } from '../executor';
 import {
     cerr,
     cgreen,
-    csucc, cwarn,
+    csucc,
+    cwarn,
     debug,
     formatDuration,
     IUpdateDetails,
@@ -110,7 +111,7 @@ export class AssetsCompiler {
     ) {
         if (AssetsCompiler.shouldUseAscLocal()) {
             console.warn(
-                cwarn `Starting from the cplace release 23.2 you should be using @cplace/asc-local instead of @cplace/asc!`
+                cwarn`Starting from the cplace release 23.2 you should be using @cplace/asc-local instead of @cplace/asc!`
             );
         }
         this.repositoryName = path.basename(repositoryDir);
