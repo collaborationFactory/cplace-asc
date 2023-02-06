@@ -9,7 +9,7 @@ import { ExecutorService, Scheduler } from '../executor';
 import {
     cerr,
     cgreen,
-    csucc,
+    csucc, cwarn,
     debug,
     formatDuration,
     IUpdateDetails,
@@ -18,6 +18,7 @@ import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
 import { isFileTracked } from './utils';
 import rimraf = require('rimraf');
+import { CplaceVersion } from './CplaceVersion';
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -107,8 +108,23 @@ export class AssetsCompiler {
         private readonly runConfig: IAssetsCompilerConfiguration,
         private readonly repositoryDir: string
     ) {
+        if (AssetsCompiler.shouldUseAscLocal()) {
+            console.warn(
+                cwarn `Starting from the cplace release 23.2 you should be using @cplace/asc-local instead of @cplace/asc!`
+            );
+        }
         this.repositoryName = path.basename(repositoryDir);
         this.projects = this.setupProjects();
+    }
+
+    private static shouldUseAscLocal(): boolean {
+        const version = CplaceVersion.get();
+        const isMajorHigherThen23 = version.major > 23;
+        const isMinorHigherOrEqual2 =
+            version.major === 23 && version.minor >= 2;
+        const is23_1Snapshot =
+            version.major === 23 && version.minor === 1 && version.snapshot;
+        return isMajorHigherThen23 || isMinorHigherOrEqual2 || is23_1Snapshot;
     }
 
     public async start(updateDetails?: IUpdateDetails): Promise<void> {

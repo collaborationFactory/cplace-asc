@@ -238,25 +238,21 @@ function run(updateDetails?: IUpdateDetails) {
 
 function checkNodeVersion(): void {
     const nodeVersionUtils = new NodeVersionUtils();
-    console.log(
-        `Currently used node version: ${nodeVersionUtils.processVersion()}`
-    );
-    debug(`Project node version: ${nodeVersionUtils.projectVersion()}`);
 
     if (!nodeVersionUtils.versionsDefined()) {
         console.log(
-            'Failed to check node version, assuming correct version...'
+            '⟲ Failed to check node version, assuming correct version...'
         );
         return;
     }
 
     if (nodeVersionUtils.strictVersionEqual()) {
-        console.log(cgreen`✓`, 'Node version correctly set!');
+        console.log(cgreen`✓`, 'You are using a correct Node version!');
         return;
     }
 
     if (!nodeVersionUtils.majorVersionEqual()) {
-        console.error(cerr`You are using the incorrect major Node version!`);
+        console.error(cerr`You are using an incorrect major Node version!`);
         process.exit(1);
     }
 
@@ -264,13 +260,13 @@ function checkNodeVersion(): void {
 
     if (!nodeVersionUtils.minorVersionEqual()) {
         console.warn(
-            `You are using the incorrect minor Node version! ${assetsWarning}`
+            cwarn`You are using an incorrect minor Node version! ${assetsWarning}`
         );
     }
 
     if (!nodeVersionUtils.patchVersionEqual()) {
         console.warn(
-            `You are using the incorrect patch Node version! ${assetsWarning}`
+            cwarn`You are using an incorrect patch Node version! ${assetsWarning}`
         );
     }
 }

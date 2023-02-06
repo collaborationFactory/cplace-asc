@@ -22,4 +22,8 @@ export abstract class AbstractNodeVersion {
         this.minor = minor;
         this.patch = patch;
     }
+
+    protected semanticVersions(version: string): string[] {
+        return version.split('.');
+    }
 }

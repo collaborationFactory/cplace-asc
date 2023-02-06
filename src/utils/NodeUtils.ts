@@ -1,38 +1,55 @@
 import { ProcessNodeVersion } from '../model/ProcessNodeVersion';
-import { ProjectNodeVersion } from '../model/ProjectNodeVersion';
+import { SupportedNodeVersion } from '../model/SupportedNodeVersion';
+import { debug } from '../utils';
 
 export class NodeVersionUtils {
     private processNodeVersion = new ProcessNodeVersion();
-    private projectNodeVersion = new ProjectNodeVersion();
+    private supportedNodeVersion = new SupportedNodeVersion();
 
     public processVersion() {
         return this.processNodeVersion.toString();
     }
 
-    public projectVersion() {
-        return this.projectNodeVersion.toString();
+    public supportedVersion() {
+        return this.supportedNodeVersion.toString();
     }
 
     public versionsDefined(): boolean {
         return (
-            this.projectNodeVersion.isDefined() &&
+            this.supportedNodeVersion.isDefined() &&
             this.processNodeVersion.isDefined()
         );
     }
 
     public strictVersionEqual(): boolean {
-        return this.processVersion() === this.projectVersion();
+        this.compareDebugLog();
+        return this.processVersion() === this.supportedVersion();
     }
 
     public majorVersionEqual(): boolean {
-        return this.processNodeVersion.major === this.projectNodeVersion.major;
+        this.compareDebugLog();
+        return (
+            this.processNodeVersion.major === this.supportedNodeVersion.major
+        );
     }
 
     public minorVersionEqual(): boolean {
-        return this.processNodeVersion.minor === this.projectNodeVersion.minor;
+        this.compareDebugLog();
+        return (
+            this.processNodeVersion.minor === this.supportedNodeVersion.minor
+        );
     }
 
     public patchVersionEqual(): boolean {
-        return this.processNodeVersion.patch === this.projectNodeVersion.patch;
+        this.compareDebugLog();
+        return (
+            this.processNodeVersion.patch === this.supportedNodeVersion.patch
+        );
+    }
+
+    private compareDebugLog() {
+        debug(
+            `Comparing ${this.processNodeVersion} ${this.supportedNodeVersion}`
+        );
     }
 }
