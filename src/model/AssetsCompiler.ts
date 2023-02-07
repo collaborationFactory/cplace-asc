@@ -110,7 +110,7 @@ export class AssetsCompiler {
     ) {
         if (!AssetsCompiler.shouldUseAscLocal()) {
             console.warn(
-                cwarn `@cplace/asc-local should only be used starting from the cplace release 23.2!`
+                cwarn`@cplace/asc-local should only be used starting from the cplace release 23.2!`
             );
         }
         this.repositoryName = path.basename(repositoryDir);
