@@ -107,13 +107,13 @@ jobs:
               working-directory: ./main
               run: ./gradlew generatePluginDescriptor
 
-            #            - name: Create plugin descriptors cplace-project-planning
-            #              working-directory: ./cplace-project-planning
-            #              run: ./gradlew generatePluginDescriptor
-            #
-            #            - name: Create plugin descriptors cplace-paw
-            #              working-directory: ./cplace-paw
-            #              run: ./gradlew generatePluginDescriptor
+            - name: Create plugin descriptors cplace-project-planning
+              working-directory: ./cplace-project-planning
+              run: ./gradlew generatePluginDescriptor
+
+            - name: Create plugin descriptors cplace-paw
+              working-directory: ./cplace-paw
+              run: ./gradlew generatePluginDescriptor
 
             - name: Build
               run: npm run test-build
@@ -126,16 +126,18 @@ jobs:
                   chmod 777 node_modules/.bin/cplace-asc
                   node_modules/.bin/cplace-asc
 
-#            - name: cplace-asc cplace-paw
-#              working-directory: ./cplace-paw
-#              timeout-minutes: 20
-#              run: |
-#                  npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT.tgz -D
-#                  node_modules/.bin/cplace-asc
-#
-#            - name: cplace-asc cplace-project-planning
-#              working-directory: ./cplace-project-planning
-#              timeout-minutes: 20
-#              run: |
-#                  npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT.tgz -D
-#                  node_modules/.bin/cplace-asc
+            - name: cplace-asc cplace-paw
+              working-directory: ./cplace-paw
+              timeout-minutes: 20
+              run: |
+                  npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT.tgz -D
+                  chmod 777 node_modules/.bin/cplace-asc
+                  node_modules/.bin/cplace-asc
+
+            - name: cplace-asc cplace-project-planning
+              working-directory: ./cplace-project-planning
+              timeout-minutes: 20
+              run: |
+                  npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT.tgz -D
+                  chmod 777 node_modules/.bin/cplace-asc
+                  node_modules/.bin/cplace-asc
