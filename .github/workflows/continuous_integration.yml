@@ -66,19 +66,19 @@ jobs:
                   path: main
                   token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
-            #            - name: Checkout cplace-project-planning
-            #              uses: actions/checkout@v3
-            #              with:
-            #                  repository: collaborationFactory/cplace-project-planning
-            #                  path: cplace-project-planning
-            #                  token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
-            #
-            #            - name: Checkout cplace-paw
-            #              uses: actions/checkout@v3
-            #              with:
-            #                  repository: collaborationFactory/cplace-paw
-            #                  path: cplace-paw
-            #                  token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
+            - name: Checkout cplace-project-planning
+              uses: actions/checkout@v3
+              with:
+                  repository: collaborationFactory/cplace-project-planning
+                  path: cplace-project-planning
+                  token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
+
+            - name: Checkout cplace-paw
+              uses: actions/checkout@v3
+              with:
+                  repository: collaborationFactory/cplace-paw
+                  path: cplace-paw
+                  token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
             - name: Setup node
               uses: actions/setup-node@v2
