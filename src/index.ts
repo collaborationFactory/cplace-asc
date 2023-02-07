@@ -256,7 +256,7 @@ function checkNodeVersion(): void {
         process.exit(1);
     }
 
-    const assetsWarning = `Your assets might not be complied correctly!`;
+    const assetsWarning = `Your assets might not be compiled correctly!`;
 
     if (!nodeVersionUtils.minorVersionEqual()) {
         console.warn(
