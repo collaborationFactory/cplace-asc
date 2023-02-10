@@ -4,7 +4,6 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
-import CplacePlugin from './CplacePlugin';
 import { PackageJson } from 'type-fest';
 import { debug, GREEN_CHECK } from '../utils';
 import { CplaceVersion } from './CplaceVersion';
