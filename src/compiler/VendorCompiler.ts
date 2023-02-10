@@ -45,7 +45,7 @@ export class VendorCompiler implements ICompiler {
             this.dependencyPaths,
             this.assetsPath,
             this.mainRepoDir,
-            isProduction
+            this.isProduction
         );
     }
 
@@ -58,7 +58,8 @@ export class VendorCompiler implements ICompiler {
 
         const dependenciesWereUpdated = NPMResolver.installPluginDependencies(
             this.pluginName,
-            this.assetsPath
+            this.assetsPath,
+            this.isProduction
         );
 
         const pluginIndexExists = this.tscPluginIndex();
