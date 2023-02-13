@@ -58,35 +58,14 @@ export class NPMResolver {
         const oldCwd = process.cwd();
         process.chdir(assetsPath);
 
-        const nodeModulesFolder = NPMResolver.getNodeModulesPath(assetsPath);
-        if (fs.existsSync(nodeModulesFolder)) {
-            console.log(
-                `⟲ [${pluginName}] (NPM) removing node_modules folder...`
-            );
-            fs.rmSync(nodeModulesFolder, {
-                recursive: true,
-                force: true,
-            });
-        } else {
-            console.log(
-                `⟲ [${pluginName}] (NPM) node_modules folder does not exist...`,
-                nodeModulesFolder
-            );
-        }
         console.log(`⟲ [${pluginName}] (NPM) installing dependencies...`);
         let res;
         if (isProduction) {
             console.log(`⟲ [${pluginName}] (NPM) running: npm ci`);
             res = spawn.sync('npm', ['ci'], { encoding: 'utf-8' });
         } else {
-            console.log(
-                `⟲ [${pluginName}] (NPM) running: npm install --force --package-lock false`
-            );
-            res = spawn.sync(
-                'npm',
-                ['install', '--force', '--package-lock', 'false'],
-                { encoding: 'utf-8' }
-            );
+            console.log(`⟲ [${pluginName}] (NPM) running: npm install`);
+            res = spawn.sync('npm', ['install'], { encoding: 'utf-8' });
         }
 
         if (res.status !== 0) {
