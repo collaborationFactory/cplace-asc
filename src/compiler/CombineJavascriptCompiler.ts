@@ -211,11 +211,7 @@ export class CombineJavascriptCompiler implements ICompiler {
                         this.assetsPath,
                         '.' + includeLine
                     );
-                    const relativePath = path.relative(
-                        this.assetsPath,
-                        resolvedFile
-                    );
-                    result.push(`.${path.sep}${relativePath}`);
+                    result.push(resolvedFile);
                 }
             }
         });
