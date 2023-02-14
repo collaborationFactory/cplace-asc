@@ -6,11 +6,11 @@ export class NodeVersionUtils {
     private processNodeVersion = new ProcessNodeVersion();
     private supportedNodeVersion = new SupportedNodeVersion();
 
-    public processVersion() {
+    public processVersion(): string | undefined {
         return this.processNodeVersion.toString();
     }
 
-    public supportedVersion() {
+    public supportedVersion(): string | undefined {
         return this.supportedNodeVersion.toString();
     }
 

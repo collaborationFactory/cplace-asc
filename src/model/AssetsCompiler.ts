@@ -120,12 +120,11 @@ export class AssetsCompiler {
 
     private static shouldUseAscLocal(): boolean {
         const version = CplaceVersion.get();
-        const isMajorHigherThen23 = version.major > 23;
-        const isMinorHigherOrEqual2 =
-            version.major === 23 && version.minor >= 2;
+        const isAtLeast23_2 =
+            (version.major === 23 && version.minor >= 2) || version.major > 23;
         const is23_1Snapshot =
             version.major === 23 && version.minor === 1 && version.snapshot;
-        return isMajorHigherThen23 || isMinorHigherOrEqual2 || is23_1Snapshot;
+        return isAtLeast23_2 || is23_1Snapshot;
     }
 
     public async start(updateDetails?: IUpdateDetails): Promise<void> {
