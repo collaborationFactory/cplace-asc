@@ -1,4 +1,4 @@
-import { debug } from '../utils';
+import { cwarn } from '../utils';
 
 export abstract class AbstractNodeVersion {
     public major: string | undefined;
@@ -9,7 +9,7 @@ export abstract class AbstractNodeVersion {
         if (this.major && this.minor && this.patch) {
             return [this.major, this.minor, this.patch].join('.');
         } else {
-            debug('Can not get Node version!');
+            console.warn(cwarn`Can not get Node version!`);
         }
     }
 
