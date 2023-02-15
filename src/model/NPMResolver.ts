@@ -41,7 +41,8 @@ export class NPMResolver {
      */
     public static installPluginDependencies(
         pluginName: string,
-        assetsPath: string
+        assetsPath: string,
+        isProduction: boolean
     ): boolean {
         if (!fs.existsSync(NPMResolver.getPluginPackageJsonPath(assetsPath))) {
             console.log(
@@ -57,43 +58,27 @@ export class NPMResolver {
         const oldCwd = process.cwd();
         process.chdir(assetsPath);
 
-        const nodeModulesFolder = NPMResolver.getNodeModulesPath(assetsPath);
-        if (fs.existsSync(nodeModulesFolder)) {
-            console.log(
-                `⟲ [${pluginName}] (NPM) removing node_modules folder...`
-            );
-            fs.rmSync(nodeModulesFolder, {
-                recursive: true,
-                force: true,
-            });
-        } else {
-            console.log(
-                `⟲ [${pluginName}] (NPM) node_modules folder does not exist...`,
-                nodeModulesFolder
-            );
-        }
         console.log(`⟲ [${pluginName}] (NPM) installing dependencies...`);
-        debug(
-            `[${pluginName}] (NPM) running: npm install --force --package-lock false`
-        );
-        const res = spawn.sync('npm', [
-            'install',
-            '--force',
-            '--package-lock',
-            'false',
-        ]);
+        let res;
+        if (isProduction) {
+            console.log(`⟲ [${pluginName}] (NPM) running: npm ci`);
+            res = spawn.sync('npm', ['ci'], { encoding: 'utf-8' });
+        } else {
+            console.log(`⟲ [${pluginName}] (NPM) running: npm install`);
+            res = spawn.sync('npm', ['install'], { encoding: 'utf-8' });
+        }
+
         if (res.status !== 0) {
-            debug(
-                `[${pluginName}] (NPM) installing dependencies failed with error ${res.stderr}`
-            );
             throw Error(
-                `[${pluginName}] (NPM) installing dependencies failed!`
+                `[${pluginName}] (NPM) installing dependencies failed! \n\n${res.stderr}`
             );
+            process.exit(1);
         }
         console.log(
             cgreen`✓`,
             `[${pluginName}] (NPM) dependencies successfully installed`
         );
+        debug(`⟲ [${pluginName}] (NPM) installation details \n\n${res.stdout}`);
         NPMResolver.removePluginSymlinks(pluginName, assetsPath);
         process.chdir(oldCwd);
         return true;
