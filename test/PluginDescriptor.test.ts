@@ -13,6 +13,7 @@ import {
     generateParentRepos,
     generateSimplePluginDescriptor,
 } from './helper/TestHelpers';
+import { CplaceVersion } from '../src/model/CplaceVersion';
 
 describe('test the handling of plugin descriptor', () => {
     const mainRepoName = 'main';
@@ -88,6 +89,7 @@ describe('test the handling of plugin descriptor', () => {
         };
 
         PackageVersion.initialize(mainRepoPath);
+        CplaceVersion.initialize(otherRepoPath);
         const assetsCompiler = new AssetsCompiler(config, otherRepoPath);
         assetsCompiler.start().then(
             () => {

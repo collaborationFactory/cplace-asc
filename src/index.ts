@@ -10,6 +10,7 @@ import {
 } from './model/AssetsCompiler';
 import {
     cerr,
+    cgreen,
     checkForUpdate,
     cwarn,
     debug,
@@ -22,6 +23,7 @@ import * as path from 'path';
 import { PackageVersion } from './model/PackageVersion';
 import { CplaceVersion } from './model/CplaceVersion';
 import * as meow from 'meow';
+import { NodeVersionUtils } from './utils/NodeUtils';
 
 checkNodeVersion();
 checkForUpdate()
@@ -235,17 +237,36 @@ function run(updateDetails?: IUpdateDetails) {
 }
 
 function checkNodeVersion(): void {
-    let major = Number.MAX_VALUE;
-    try {
-        const parts = process.version.split('.');
-        major = Number(parts[0].replace(/\D/, ''));
-    } catch {
+    const nodeVersionUtils = new NodeVersionUtils();
+
+    if (!nodeVersionUtils.versionsDefined()) {
         console.log(
-            'Failed to check node version, assuming correct version...'
+            '⟲ Failed to check node version, assuming correct version...'
+        );
+        return;
+    }
+
+    if (nodeVersionUtils.strictVersionEqual()) {
+        console.log(cgreen`✓`, 'You are using a correct Node version!');
+        return;
+    }
+
+    if (!nodeVersionUtils.majorVersionEqual()) {
+        console.error(cerr`You are using an incorrect major Node version!`);
+        process.exit(1);
+    }
+
+    const assetsWarning = `Your assets might not be compiled correctly!`;
+
+    if (!nodeVersionUtils.minorVersionEqual()) {
+        console.warn(
+            cwarn`You are using an incorrect minor Node version! ${assetsWarning}`
         );
     }
-    if (major < 8) {
-        console.error('ERROR: Requires node version 8.x (LTS)...');
-        process.exit(1);
+
+    if (!nodeVersionUtils.patchVersionEqual()) {
+        console.warn(
+            cwarn`You are using an incorrect patch Node version! ${assetsWarning}`
+        );
     }
 }

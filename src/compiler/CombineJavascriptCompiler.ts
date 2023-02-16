@@ -6,6 +6,10 @@ import * as fs from 'fs';
 import * as webpack from 'webpack';
 import { Configuration } from 'webpack';
 import * as TerserPlugin from 'terser-webpack-plugin';
+import {
+    getCplaceAscNodeModulesPath,
+    getProjectNodeModulesPath,
+} from '../model/utils';
 
 export class CombineJavascriptCompiler implements ICompiler {
     public static readonly OUTPUT_DIR = '_generated_';
@@ -120,7 +124,10 @@ export class CombineJavascriptCompiler implements ICompiler {
                 jquery: 'jQuery',
             },
             resolveLoader: {
-                modules: [path.resolve(__dirname, '../../', 'node_modules')],
+                modules: [
+                    getProjectNodeModulesPath(),
+                    getCplaceAscNodeModulesPath(),
+                ],
             },
             entry: {
                 compressed: sourcesToCombine,
@@ -204,11 +211,7 @@ export class CombineJavascriptCompiler implements ICompiler {
                         this.assetsPath,
                         '.' + includeLine
                     );
-                    const relativePath = path.relative(
-                        this.assetsPath,
-                        resolvedFile
-                    );
-                    result.push(`.${path.sep}${relativePath}`);
+                    result.push(resolvedFile);
                 }
             }
         });

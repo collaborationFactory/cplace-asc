@@ -18,6 +18,7 @@ import {
 import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
 import { isFileTracked } from './utils';
+import { CplaceVersion } from './CplaceVersion';
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -107,8 +108,22 @@ export class AssetsCompiler {
         private readonly runConfig: IAssetsCompilerConfiguration,
         private readonly repositoryDir: string
     ) {
+        if (!AssetsCompiler.shouldUseAscLocal()) {
+            console.warn(
+                cwarn`@cplace/asc-local should only be used starting from the cplace release 23.2!`
+            );
+        }
         this.repositoryName = path.basename(repositoryDir);
         this.projects = this.setupProjects();
+    }
+
+    private static shouldUseAscLocal(): boolean {
+        const version = CplaceVersion.get();
+        const isAtLeast23_2 =
+            (version.major === 23 && version.minor >= 2) || version.major > 23;
+        const is23_1Snapshot =
+            version.major === 23 && version.minor === 1 && version.snapshot;
+        return isAtLeast23_2 || is23_1Snapshot;
     }
 
     public async start(updateDetails?: IUpdateDetails): Promise<void> {
