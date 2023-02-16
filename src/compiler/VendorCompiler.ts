@@ -33,14 +33,15 @@ export class VendorCompiler implements ICompiler {
         private readonly pluginName: string,
         private readonly dependencyPaths: string[],
         private readonly assetsPath: string,
-        private readonly mainRepoDir: string
+        private readonly mainRepoDir: string,
+        private readonly isProduction: boolean
     ) {
         this.compressCssCompiler = new CompressCssCompiler(
             this.pluginName,
             this.dependencyPaths,
             this.assetsPath,
             this.mainRepoDir,
-            true
+            this.isProduction
         );
     }
 
@@ -53,7 +54,8 @@ export class VendorCompiler implements ICompiler {
 
         const dependenciesWereUpdated = NPMResolver.installPluginDependencies(
             this.pluginName,
-            this.assetsPath
+            this.assetsPath,
+            this.isProduction
         );
 
         const pluginIndexExists = this.tscPluginIndex();
