@@ -81,7 +81,7 @@ function run(updateDetails?: IUpdateDetails) {
                 threads: {
                     type: 'number',
                     alias: 't',
-                    default: 1,
+                    default: 0,
                 },
                 localonly: {
                     type: 'boolean',
@@ -186,7 +186,7 @@ function run(updateDetails?: IUpdateDetails) {
             watchFiles: cli.flags.watch,
             onlyPreprocessing: cli.flags.onlypre,
             clean: cli.flags.clean,
-            maxParallelism: !!cli.flags.threads
+            maxParallelism: cli.flags.threads
                 ? cli.flags.threads
                 : os.cpus().length - 1,
             localOnly: cli.flags.localonly,

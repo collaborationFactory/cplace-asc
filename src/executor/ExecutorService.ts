@@ -4,7 +4,6 @@
 
 import { createPool, Factory, Pool } from 'generic-pool';
 import * as path from 'path';
-import * as node_process from 'process';
 import { ChildProcess, fork } from 'child_process';
 import {
     CompilationResult,
@@ -31,7 +30,10 @@ const Processfactory: Factory<ChildProcess> = {
 export class ExecutorService {
     private readonly pool: Pool<ChildProcess>;
     private running = 0;
-    private pids: Set<number> = new Set();
+    private childProcesses: Map<number, ChildProcess> = new Map<
+        number,
+        ChildProcess
+    >();
 
     constructor(private readonly maxParallelism: number) {
         debug(`(ExecutorService) got maxParallelism: ${maxParallelism}`);
@@ -54,7 +56,10 @@ export class ExecutorService {
                 (process) => {
                     if (!watchFiles) {
                         if (process.pid != null) {
-                            this.pids.add(process.pid);
+                            this.childProcesses.set(process.pid, process);
+                            debug(
+                                `⟲ Added child process with pid ${process.pid}`
+                            );
                         }
                     }
                     let resolved = false;
@@ -67,6 +72,10 @@ export class ExecutorService {
                     };
 
                     process.send(compileRequest);
+
+                    process.once('error', () => {
+                        this.killAllProcesses();
+                    });
 
                     process.once('message', (message: ICompileResponse) => {
                         process.removeListener('exit', exit);
@@ -101,9 +110,14 @@ export class ExecutorService {
      * @private
      */
     private killAllProcesses(): void {
-        this.pids.forEach((pid) => {
-            node_process.kill(pid);
+        this.childProcesses.forEach((childProcess, pid) => {
+            console.log(`⟲ Killing child process with pid ${pid}`);
+            childProcess.kill();
         });
+        console.log(
+            `⟲ Shutting down the main process with pid ${process.pid}!`
+        );
+        process.exit(1);
     }
 
     public destroy(): PromiseLike<void> {

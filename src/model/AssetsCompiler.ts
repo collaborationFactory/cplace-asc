@@ -108,6 +108,7 @@ export class AssetsCompiler {
         private readonly runConfig: IAssetsCompilerConfiguration,
         private readonly repositoryDir: string
     ) {
+        console.log(`⟲ Starting the main process with pid ${process.pid}`);
         if (!AssetsCompiler.shouldUseAscLocal()) {
             console.warn(
                 cwarn`@cplace/asc-local should only be used starting from the cplace release 23.2!`
