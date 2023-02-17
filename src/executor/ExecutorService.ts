@@ -32,7 +32,10 @@ const Processfactory: Factory<ChildProcess> = {
 export class ExecutorService {
     private readonly pool: Pool<ChildProcess>;
     private running = 0;
-    private pids: Array<number> = [];
+    private childProcesses: Map<number, ChildProcess> = new Map<
+        number,
+        ChildProcess
+    >();
 
     constructor(private readonly maxParallelism: number) {
         debug(`(ExecutorService) got maxParallelism: ${maxParallelism}`);
@@ -54,7 +57,12 @@ export class ExecutorService {
             this.pool.acquire().then(
                 (process) => {
                     if (!watchFiles) {
-                        this.pids.push(process.pid);
+                        if (process.pid != null) {
+                            this.childProcesses.set(process.pid, process);
+                            debug(
+                                `⟲ Added child process with pid ${process.pid}`
+                            );
+                        }
                     }
                     let resolved = false;
                     const exit = (code) => {
@@ -66,6 +74,10 @@ export class ExecutorService {
                     };
 
                     process.send(compileRequest);
+
+                    process.once('error', () => {
+                        this.killAllProcesses();
+                    });
 
                     process.once('message', (message: ICompileResponse) => {
                         process.removeListener('exit', exit);
@@ -98,9 +110,14 @@ export class ExecutorService {
      * @private
      */
     private killAllProcesses(): void {
-        this.pids.forEach((pid) => {
-            node_process.kill(pid);
+        this.childProcesses.forEach((childProcess, pid) => {
+            console.log(`⟲ Killing child process with pid ${pid}`);
+            childProcess.kill();
         });
+        console.log(
+            `⟲ Shutting down the main process with pid ${process.pid}!`
+        );
+        process.exit(1);
     }
 
     public destroy(): PromiseLike<void> {
