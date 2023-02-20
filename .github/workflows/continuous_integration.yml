@@ -124,7 +124,7 @@ jobs:
               run: |
                   npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT.tgz -D
                   chmod 777 node_modules/.bin/cplace-asc
-                  node_modules/.bin/cplace-asc
+                  node_modules/.bin/cplace-asc --production --clean
 
 #            - name: cplace-asc cplace-paw
 #              working-directory: ./cplace-paw
@@ -132,7 +132,7 @@ jobs:
 #              run: |
 #                  npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT.tgz -D
 #                  chmod 777 node_modules/.bin/cplace-asc
-#                  node_modules/.bin/cplace-asc
+#                  node_modules/.bin/cplace-asc --production --clean
 #
 #            - name: cplace-asc cplace-project-planning
 #              working-directory: ./cplace-project-planning
@@ -140,4 +140,4 @@ jobs:
 #              run: |
 #                  npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT.tgz -D
 #                  chmod 777 node_modules/.bin/cplace-asc
-#                  node_modules/.bin/cplace-asc
+#                  node_modules/.bin/cplace-asc --production --clean
