@@ -48,10 +48,14 @@ export class NPMResolver {
         let res;
         if (isProduction) {
             console.log(`⟲ [${pluginName}] (NPM) running: npm ci`);
-            res = spawn.sync('npm', ['ci'], { encoding: 'utf-8' });
+            res = spawn.sync('npm', ['ci', '--legacy-peer-deps'], {
+                encoding: 'utf-8',
+            });
         } else {
             console.log(`⟲ [${pluginName}] (NPM) running: npm install`);
-            res = spawn.sync('npm', ['install'], { encoding: 'utf-8' });
+            res = spawn.sync('npm', ['install', '--legacy-peer-deps'], {
+                encoding: 'utf-8',
+            });
         }
 
         if (res.status !== 0) {
