@@ -27,7 +27,7 @@ import { NodeVersionUtils } from './utils/NodeUtils';
 
 checkNodeVersion();
 checkForUpdate()
-  .then((details) => run(details))
+    .then((details) => run(details))
     .catch(() => run());
 
 function run(updateDetails?: IUpdateDetails) {
@@ -236,7 +236,9 @@ function run(updateDetails?: IUpdateDetails) {
 }
 
 function checkNodeVersion(): void {
-    const cplaceVersion: CplaceVersion = CplaceVersion.initialize(process.cwd());
+    const cplaceVersion: CplaceVersion = CplaceVersion.initialize(
+        process.cwd()
+    );
     const nodeVersionUtils = new NodeVersionUtils();
 
     if (!nodeVersionUtils.versionsDefined()) {
