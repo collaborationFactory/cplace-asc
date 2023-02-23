@@ -62,6 +62,7 @@ jobs:
               with:
                   repository: collaborationFactory/cplace
                   path: main
+                  ref: 'release/23.1'
                   token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
             - name: Checkout cplace-project-planning
@@ -69,6 +70,7 @@ jobs:
               with:
                   repository: collaborationFactory/cplace-project-planning
                   path: cplace-project-planning
+                  ref: 'release/23.1'
                   token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
             - name: Checkout cplace-paw
@@ -76,6 +78,7 @@ jobs:
               with:
                   repository: collaborationFactory/cplace-paw
                   path: cplace-paw
+                  ref: 'release/23.1'
                   token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
             - name: Setup node
