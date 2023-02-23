@@ -1,6 +1,7 @@
 import { ProcessNodeVersion } from '../model/ProcessNodeVersion';
 import { SupportedNodeVersion } from '../model/SupportedNodeVersion';
-import { debug } from '../utils';
+import { cerr, debug } from '../utils';
+import { CplaceVersion } from '../model/CplaceVersion';
 
 export class NodeVersionUtils {
     private processNodeVersion = new ProcessNodeVersion();

@@ -178,7 +178,6 @@ function run(updateDetails?: IUpdateDetails) {
 
     try {
         PackageVersion.initialize(mainRepoPath);
-        CplaceVersion.initialize(process.cwd());
 
         const plugins = cli.flags.plugin ? cli.flags.plugin.split(',') : [];
         const config: IAssetsCompilerConfiguration = {
@@ -237,7 +236,17 @@ function run(updateDetails?: IUpdateDetails) {
 }
 
 function checkNodeVersion(): void {
+    const cplaceVersion: CplaceVersion = CplaceVersion.initialize(
+        process.cwd()
+    );
     const nodeVersionUtils = new NodeVersionUtils();
+
+    if (cplaceVersion.major <= 5 && cplaceVersion.minor <= 12) {
+        console.log(
+            `⟲ cplaceVersion ${CplaceVersion.toString()} is less or equal to 5.12.0 -> assuming node version is correct`
+        );
+        return;
+    }
 
     if (!nodeVersionUtils.versionsDefined()) {
         console.log(
