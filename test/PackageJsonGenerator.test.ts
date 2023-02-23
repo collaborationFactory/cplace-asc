@@ -154,6 +154,8 @@ describe('test generating a package.json file in repo root', () => {
         expect(fs.existsSync(pluginPackageJson)).toBeTruthy();
         let packageJsonContent = fs.readFileSync(pluginPackageJson).toString();
         let packageJson = JSON.parse(packageJsonContent);
-        expect(packageJson['name']).toEqual('@cf-cplace/cf-cplace-plugin2');
+        expect(packageJson['name']).toEqual(
+            '@cplace-assets/cplace-paw_cf-cplace-plugin2'
+        );
     });
 });
