@@ -27,14 +27,8 @@ export class NodeVersionUtils {
         return this.processVersion() === this.supportedVersion();
     }
 
-    public majorVersionEqual(cplaceVersion: CplaceVersion): boolean {
+    public majorVersionEqual(): boolean {
         this.compareDebugLog();
-        if (cplaceVersion.major <= 5 && cplaceVersion.minor <= 12) {
-            console.log(
-                `⟲ cplaceVersion ${CplaceVersion.toString()} is less or equal to 5.12.0 -> all node versions are allowed.`
-            );
-            return true;
-        }
         return (
             this.processNodeVersion.major === this.supportedNodeVersion.major
         );

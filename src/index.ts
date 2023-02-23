@@ -241,6 +241,13 @@ function checkNodeVersion(): void {
     );
     const nodeVersionUtils = new NodeVersionUtils();
 
+    if (cplaceVersion.major <= 5 && cplaceVersion.minor <= 12) {
+        console.log(
+            `⟲ cplaceVersion ${CplaceVersion.toString()} is less or equal to 5.12.0 -> assuming node version is correct`
+        );
+        return;
+    }
+
     if (!nodeVersionUtils.versionsDefined()) {
         console.log(
             '⟲ Failed to check node version, assuming correct version...'
@@ -253,7 +260,7 @@ function checkNodeVersion(): void {
         return;
     }
 
-    if (!nodeVersionUtils.majorVersionEqual(cplaceVersion)) {
+    if (!nodeVersionUtils.majorVersionEqual()) {
         console.error(cerr`You are using an incorrect major Node version!`);
         process.exit(1);
     }
