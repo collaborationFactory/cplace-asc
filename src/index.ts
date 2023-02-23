@@ -27,7 +27,7 @@ import { NodeVersionUtils } from './utils/NodeUtils';
 
 checkNodeVersion();
 checkForUpdate()
-    .then((details) => run(details))
+  .then((details) => run(details))
     .catch(() => run());
 
 function run(updateDetails?: IUpdateDetails) {
@@ -178,7 +178,6 @@ function run(updateDetails?: IUpdateDetails) {
 
     try {
         PackageVersion.initialize(mainRepoPath);
-        CplaceVersion.initialize(process.cwd());
 
         const plugins = cli.flags.plugin ? cli.flags.plugin.split(',') : [];
         const config: IAssetsCompilerConfiguration = {
@@ -237,6 +236,7 @@ function run(updateDetails?: IUpdateDetails) {
 }
 
 function checkNodeVersion(): void {
+    const cplaceVersion: CplaceVersion = CplaceVersion.initialize(process.cwd());
     const nodeVersionUtils = new NodeVersionUtils();
 
     if (!nodeVersionUtils.versionsDefined()) {
@@ -251,7 +251,7 @@ function checkNodeVersion(): void {
         return;
     }
 
-    if (!nodeVersionUtils.majorVersionEqual()) {
+    if (!nodeVersionUtils.majorVersionEqual(cplaceVersion)) {
         console.error(cerr`You are using an incorrect major Node version!`);
         process.exit(1);
     }
