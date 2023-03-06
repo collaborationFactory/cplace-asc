@@ -243,7 +243,7 @@ function checkNodeVersion(): void {
 
     if (cplaceVersion.major <= 5 && cplaceVersion.minor <= 18) {
         console.log(
-            `⟲ cplaceVersion ${CplaceVersion.toString()} is less or equal to 5.12.0 -> assuming node version is correct`
+            `⟲ cplaceVersion ${CplaceVersion.toString()} is less or equal to 5.18.0 -> assuming node version is correct`
         );
         return;
     }
