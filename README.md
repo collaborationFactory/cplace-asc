@@ -44,7 +44,6 @@ $ assets-compiler.cmd
 
 It is also possible to create an alias for the `cplace-asc` command to help you switch between @cplace/asc and @cplace/asc-local.
 
-
 ### Parameters
 
 The assets compiler supports multiple parameters:
