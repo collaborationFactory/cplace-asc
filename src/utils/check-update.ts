@@ -65,14 +65,14 @@ export function printUpdateDetails(updateDetails?: IUpdateDetails): void {
     const installed = updateDetails.installedVersion.toString().padStart(8);
     const available = updateDetails.availableVersion.toString().padEnd(8);
     console.log();
-    console.log(cgreen`!---------------------------------------------!`);
+    console.log(cgreen`!---------------------------------------------------!`);
     console.log(cgreen`! A newer version of @cplace/asc-local is available !`);
     console.log(
-        cgreen`! >> ${installed} -> ${available}                     !`
+        cgreen`! >> ${installed} -> ${available}                           !`
     );
-    console.log(cgreen`! -> Please update to the latest version:     !`);
-    console.log(cgreen`!    npm install @cplace/asc-local -D         !`);
-    console.log(cgreen`!---------------------------------------------!`);
+    console.log(cgreen`! -> Please update to the latest version:           !`);
+    console.log(cgreen`!    npm install @cplace/asc-local -D               !`);
+    console.log(cgreen`!---------------------------------------------------!`);
     console.log();
 }
 
