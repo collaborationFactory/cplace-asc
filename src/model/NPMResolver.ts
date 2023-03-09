@@ -82,11 +82,6 @@ export class NPMResolver {
             );
             return false;
         }
-
-        NPMResolver.warnNonExactPluginDependenciesVersions(
-            pluginName,
-            NPMResolver.getPluginPackageJsonPath(assetsPath)
-        );
         const oldCwd = process.cwd();
         process.chdir(assetsPath);
 
@@ -128,72 +123,6 @@ export class NPMResolver {
      */
     public static getPluginNodeModulesPath(assetsPath: string): string {
         return path.resolve(assetsPath, NPMResolver.NODE_MODULES);
-    }
-
-    /**
-     * Plugin dependencies should have exact versions. This method will log if there are any dependencies with non-exact
-     * version
-     * @param pluginName Name of a cplace plugin
-     * @param packageJsonPath package.json path
-     * @private
-     */
-    private static warnNonExactPluginDependenciesVersions(
-        pluginName: string,
-        packageJsonPath: string
-    ): void {
-        const nonExactVersions =
-            NPMResolver.getNonExactPluginDependenciesVersions(
-                pluginName,
-                packageJsonPath
-            );
-        if (nonExactVersions.length) {
-            console.log(
-                cwarn`⇢ [${pluginName}] (NPM) The following dependencies should have strict versions:`,
-                cwarn`\n\n${nonExactVersions.join('\r\n')}\n\n`,
-                cwarn`To avoid potential malfunctions, please install dependencies the following way:\n`,
-                cwarn`npm install yourdependency --save-exact\n`
-            );
-        }
-    }
-
-    /**
-     * Gets all non-exact versions from the plugin package.json
-     * @param pluginName Name of a cplace plugin
-     * @param packageJsonPath package.json path
-     * @private
-     */
-    private static getNonExactPluginDependenciesVersions(
-        pluginName: string,
-        packageJsonPath: string
-    ): string[] {
-        const packageJsonString = fs.readFileSync(packageJsonPath, {
-            encoding: 'utf8',
-        });
-        let packageJson;
-        try {
-            packageJson = JSON.parse(packageJsonString);
-        } catch (e) {
-            debug(`[${pluginName}] (NPM) can't parse ${packageJsonPath}`);
-            return [];
-        }
-        const dependencies = packageJson.dependencies;
-        if (!dependencies) {
-            return [];
-        }
-        const rangeCharacters = ['^', '~', '>', '<', 'x', '*', '||'];
-        return Object.keys(dependencies).reduce(
-            (acc: string[], dependency: string) => {
-                const version: string = dependencies[dependency];
-                const hasRangeCharacter = rangeCharacters.some(
-                    (rangeCharacter) => version.includes(rangeCharacter)
-                );
-                if (hasRangeCharacter) {
-                    acc.push(dependency.concat(':').concat(version));
-                }
-                return acc;
-            },
-            []
-        );
     }
 
     /**
