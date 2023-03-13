@@ -203,13 +203,16 @@ export class NPMResolver {
      * @private
      */
     private static createPluginHashFile(assetsPath: string): void {
-        fs.writeFileSync(
-            NPMResolver.getPluginHashFilePath(assetsPath),
-            NPMResolver.getHash4PackageLock(
-                NPMResolver.getPluginPackageLockPath(assetsPath)
-            ),
-            { encoding: 'utf8' }
-        );
+        const nodeModulesPath = path.resolve(assetsPath, 'node_modules');
+        if (fs.existsSync(nodeModulesPath)) {
+            fs.writeFileSync(
+                NPMResolver.getPluginHashFilePath(assetsPath),
+                NPMResolver.getHash4PackageLock(
+                    NPMResolver.getPluginPackageLockPath(assetsPath)
+                ),
+                { encoding: 'utf8' }
+            );
+        }
     }
 
     /**
