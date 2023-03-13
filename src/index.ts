@@ -35,7 +35,7 @@ function run(updateDetails?: IUpdateDetails) {
         `
     Usage:
         Go to the root folder of your cplace project. Then you can start cplace-asc: 
-        $ cplace-asc
+        $ ./node_modules/.bin/cplace-asc
 
     Options:
         --plugin, -p <plugins>  Run for specified plugins (and dependencies) - comma separated list of plugin names

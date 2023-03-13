@@ -40,49 +40,23 @@ $ sh assets-compiler.sh
 $ assets-compiler.cmd
 ```
 
-### Running with Shell Alias (Recommended)
+### Running with a Shell Alias
 
-#### Alias Creation
-
-Add the following content to your `~/.zshrc`:
-
-```
-LOCAL_ASC=./node_modules/.bin/cplace-asc
-alias cplace-asc='asc'
-asc() {
-    if [ -f "$LOCAL_ASC" ]; then
-        "$LOCAL_ASC" "$@"
-    else
-        cplace-asc "$@"
-    fi
-}
-```
-
-Run the following command in your terminal:
-
-```
-$ source ~/.zshrc
-```
-
-#### Running Alias
-
-```
-$ cplace-asc
-```
+It is also possible to create an alias for the `cplace-asc` command to help you switch between @cplace/asc and @cplace/asc-local.
 
 ### Parameters
 
 The assets compiler supports multiple parameters:
 
 ```
-$ cplace-asc --help
+$ ./node_modules/.bin/cplace-asc --help
 ⇢ Checking whether newer version is available... ✓
 
 
   cplace assets compiler
 
   Usage:
-      $ cplace-asc
+      $ ./node_modules/.bin/cplace-asc
 
   Options:
         --plugin, -p <plugins>  Run for specified plugins (and dependencies) - comma separated list of plugin names
@@ -168,13 +142,13 @@ $ cplace-asc --help
 The tool will automatically check for updates on every run, so you will be prompted with a large message when a newer version is available:
 
 ```
-$ cplace-asc --help
+$ ./node_modules/.bin/cplace-asc --help
 ⇢ Checking whether newer version is available... ✓
-!---------------------------------------------!
-! A newer version of @cplace/asc is available !
-! -> Please update to the latest version:     !
-!    npm install @cplace/asc-local -D         !
-!---------------------------------------------!
+!---------------------------------------------------!
+! A newer version of @cplace/asc-local is available !
+! -> Please update to the latest version:           !
+!    npm install @cplace/asc-local -D               !
+!---------------------------------------------------!
 ```
 
 ## Publishing a New Version
