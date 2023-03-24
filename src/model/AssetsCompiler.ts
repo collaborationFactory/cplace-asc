@@ -9,8 +9,8 @@ import { ExecutorService, Scheduler } from '../executor';
 import {
     cerr,
     cgreen,
+    cred,
     csucc,
-    cwarn,
     debug,
     formatDuration,
     IUpdateDetails,
@@ -18,8 +18,8 @@ import {
 import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
 import { isFileTracked } from './utils';
-import rimraf = require('rimraf');
 import { CplaceVersion } from './CplaceVersion';
+import rimraf = require('rimraf');
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -111,9 +111,11 @@ export class AssetsCompiler {
     ) {
         console.log(`⟲ Starting the main process with pid ${process.pid}`);
         if (AssetsCompiler.shouldUseAscLocal()) {
-            console.warn(
-                cwarn`Starting from the cplace release 23.2 you should be using @cplace/asc-local instead of @cplace/asc!`
+            console.error(
+                cred`✗`,
+                `Starting from the cplace release 23.2 you should be using @cplace/asc-local instead of @cplace/asc!`
             );
+            throw Error(`cplace-asc won't start! Check the error above!`);
         }
         this.repositoryName = path.basename(repositoryDir);
         this.projects = this.setupProjects();
@@ -121,11 +123,9 @@ export class AssetsCompiler {
 
     private static shouldUseAscLocal(): boolean {
         const version = CplaceVersion.get();
-        const isAtLeast23_2 =
-            (version.major === 23 && version.minor >= 2) || version.major > 23;
-        const is23_1Snapshot =
-            version.major === 23 && version.minor === 1 && version.snapshot;
-        return isAtLeast23_2 || is23_1Snapshot;
+        return (
+            (version.major === 23 && version.minor >= 2) || version.major > 23
+        );
     }
 
     public async start(updateDetails?: IUpdateDetails): Promise<void> {
