@@ -4,31 +4,23 @@
  */
 
 import { getAvailableStats } from './model/utils';
-import {
-    AssetsCompiler,
-    IAssetsCompilerConfiguration,
-} from './model/AssetsCompiler';
-import {
-    cerr,
-    cgreen,
-    checkForUpdate,
-    cwarn,
-    debug,
-    enableDebug,
-    isDebugEnabled,
-    IUpdateDetails,
-} from './utils';
+import { AssetsCompiler, IAssetsCompilerConfiguration, } from './model/AssetsCompiler';
+import { cerr, cgreen, checkForUpdate, cwarn, debug, enableDebug, isDebugEnabled, IUpdateDetails, } from './utils';
 import * as os from 'os';
 import * as path from 'path';
 import { PackageVersion } from './model/PackageVersion';
 import { CplaceVersion } from './model/CplaceVersion';
-import meow = require('meow');
 import { NodeVersionUtils } from './utils/NodeUtils';
+import * as fs from "fs";
+import meow = require('meow');
 
+const cplaceVersion: CplaceVersion = CplaceVersion.initialize(
+  process.cwd()
+);
 checkNodeVersion();
 checkForUpdate()
-    .then((details) => run(details))
-    .catch(() => run());
+  .then((details) => run(details))
+  .catch(() => run());
 
 function run(updateDetails?: IUpdateDetails) {
     const cli = meow(
@@ -167,13 +159,23 @@ function run(updateDetails?: IUpdateDetails) {
         process.exit(1);
         return;
     } else if (
-        path.basename(mainRepoPath) !== 'main' &&
-        !cli.flags.onlypre &&
-        !cli.flags.localonly
+      path.basename(mainRepoPath) !== 'main' &&
+      !cli.flags.onlypre &&
+      !cli.flags.localonly
     ) {
         console.warn(
-            cwarn`Sry main Repository is not called 'main' LESS Compilation might fail, please rename your folder to 'main'`
+          cwarn`Sry main Repository is not called 'main' LESS Compilation might fail, please rename your folder to 'main'`
         );
+    }
+
+    // check node_modules folder is there as a leftover when switching back from a cplace/asc-local release branch
+    if (!path.basename(process.cwd()).includes('main') &&
+      fs.existsSync(path.join(process.cwd(), 'node_modules')) &&
+      (cplaceVersion.major < 23 || (cplaceVersion.major === 23 && cplaceVersion.minor === 1))) {
+        console.error(cerr`Please remove node_modules folder from your project root. \n
+        node_modules folder is not allowed in repos that are not main/cplace below release 23.2 \n 
+        (-> ${path.join(process.cwd(), 'node_modules')})`);
+        process.exit(1);
     }
 
     try {
@@ -236,9 +238,6 @@ function run(updateDetails?: IUpdateDetails) {
 }
 
 function checkNodeVersion(): void {
-    const cplaceVersion: CplaceVersion = CplaceVersion.initialize(
-        process.cwd()
-    );
     const nodeVersionUtils = new NodeVersionUtils();
 
     if (cplaceVersion.major <= 5 && cplaceVersion.minor <= 18) {
