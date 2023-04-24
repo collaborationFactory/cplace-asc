@@ -22,9 +22,11 @@ import * as os from 'os';
 import * as path from 'path';
 import { PackageVersion } from './model/PackageVersion';
 import { CplaceVersion } from './model/CplaceVersion';
-import meow = require('meow');
 import { NodeVersionUtils } from './utils/NodeUtils';
+import * as fs from 'fs';
+import meow = require('meow');
 
+const cplaceVersion: CplaceVersion = CplaceVersion.initialize(process.cwd());
 checkNodeVersion();
 checkForUpdate()
     .then((details) => run(details))
@@ -176,6 +178,19 @@ function run(updateDetails?: IUpdateDetails) {
         );
     }
 
+    // check node_modules folder is there as a leftover when switching back from a cplace/asc-local release branch
+    if (
+        !path.basename(process.cwd()).includes('main') &&
+        fs.existsSync(path.join(process.cwd(), 'node_modules')) &&
+        (cplaceVersion.major < 23 ||
+            (cplaceVersion.major === 23 && cplaceVersion.minor === 1))
+    ) {
+        console.error(cerr`Please remove node_modules folder from your project root. \n
+        node_modules folder is not allowed in repos that are not main/cplace below release 23.2 \n 
+        (-> ${path.join(process.cwd(), 'node_modules')})`);
+        process.exit(1);
+    }
+
     try {
         PackageVersion.initialize(mainRepoPath);
 
@@ -236,9 +251,6 @@ function run(updateDetails?: IUpdateDetails) {
 }
 
 function checkNodeVersion(): void {
-    const cplaceVersion: CplaceVersion = CplaceVersion.initialize(
-        process.cwd()
-    );
     const nodeVersionUtils = new NodeVersionUtils();
 
     if (cplaceVersion.major <= 5 && cplaceVersion.minor <= 18) {
