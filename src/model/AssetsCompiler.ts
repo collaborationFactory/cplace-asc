@@ -153,16 +153,6 @@ export class AssetsCompiler {
                     await plugin.cleanGeneratedOutput();
                 }
             }
-
-            debug(`(AssetsCompiler) cleaning generated package.json file...`);
-            if (
-                !isFileTracked(this.repositoryDir, path.resolve('package.json'))
-            ) {
-                rimraf.sync(path.resolve(this.repositoryDir, 'package.json'));
-                rimraf.sync(
-                    path.resolve(this.repositoryDir, 'package-lock.json')
-                );
-            }
         }
 
         if (this.runConfig.packagejson) {
