@@ -273,23 +273,6 @@ export default class CplacePlugin {
             );
             promises.push(this.removeDir(generatedDir));
         }
-        if (
-            !isFileTracked(
-                this.pluginDir,
-                path.resolve(this.pluginDir, 'assets', 'package.json')
-            )
-        ) {
-            promises.push(
-                this.removeDir(
-                    path.resolve(this.pluginDir, 'assets', 'package.json')
-                )
-            );
-            promises.push(
-                this.removeDir(
-                    path.resolve(this.pluginDir, 'assets', 'package-lock.json')
-                )
-            );
-        }
         await Promise.all(promises);
 
         if (promises.length) {
