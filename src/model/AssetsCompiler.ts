@@ -152,20 +152,6 @@ export class AssetsCompiler {
                     await plugin.cleanGeneratedOutput();
                 }
             }
-
-            debug(`(AssetsCompiler) cleaning generated package.json file...`);
-            if (
-                !isFileTracked(this.repositoryDir, path.resolve('package.json'))
-            ) {
-                fs.rmSync(path.resolve(this.repositoryDir, 'package.json'), {
-                    recursive: true,
-                    force: true,
-                });
-                fs.rmSync(
-                    path.resolve(this.repositoryDir, 'package-lock.json'),
-                    { recursive: true, force: true }
-                );
-            }
         }
 
         if (this.runConfig.packagejson) {
