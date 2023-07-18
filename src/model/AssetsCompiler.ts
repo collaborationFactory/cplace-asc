@@ -17,9 +17,7 @@ import {
 } from '../utils';
 import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
-import { isFileTracked } from './utils';
 import { CplaceVersion } from './CplaceVersion';
-import rimraf = require('rimraf');
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -306,7 +304,10 @@ export class AssetsCompiler {
                     this.runConfig.localOnly
                 );
             }
-            if (project.hasTypeScriptE2EAssets) {
+            if (
+                project.hasTypeScriptE2EAssets &&
+                CplaceVersion.isVersionLowerThen23()
+            ) {
                 if (!this.runConfig.production) {
                     project.generateTsE2EConfig(
                         (p) => projects.get(p),

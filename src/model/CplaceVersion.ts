@@ -95,4 +95,12 @@ export class CplaceVersion {
         }
         return CplaceVersion._version;
     }
+
+    public static isVersionLowerThen23() {
+        const version = this.get();
+        if (!version) {
+            return true;
+        }
+        return version.major < 23;
+    }
 }
