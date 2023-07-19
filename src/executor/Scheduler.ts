@@ -11,6 +11,7 @@ import { FSWatcher } from 'chokidar';
 import {
     cerr,
     csucc,
+    cwarn,
     debug,
     isDebugEnabled,
     IUpdateDetails,
@@ -19,6 +20,7 @@ import {
 import { CompilationResult, ICompileRequest } from '../compiler/interfaces';
 import Timeout = NodeJS.Timeout;
 import { PluginDescriptor } from '../model/PluginDescriptor';
+import { CplaceVersion } from '../model/CplaceVersion';
 
 interface ISchedulingResult {
     scheduledPlugin?: string | null | undefined;
@@ -360,11 +362,22 @@ export class Scheduler {
     private createTsE2EJobTracker(): JobTracker {
         const tsE2EPlugins: CplacePlugin[] = [];
         this.plugins.forEach((plugin) => {
-            if (
+            const shouldCompileE2EAssets =
                 plugin.hasTypeScriptE2EAssets &&
-                this.isInCompilationScope(plugin)
+                this.isInCompilationScope(plugin);
+            if (
+                shouldCompileE2EAssets &&
+                CplaceVersion.isVersionLowerThen23()
             ) {
                 tsE2EPlugins.push(plugin);
+            }
+            if (
+                shouldCompileE2EAssets &&
+                !CplaceVersion.isVersionLowerThen23()
+            ) {
+                console.log(
+                    cwarn`[${plugin.pluginName}] E2E assets are no longer compiled! Starting from the cplace release 23.1 all the E2E tests should be moved into a dedicated E2E repository. In addition, E2E tests must be written using Cypress!`
+                );
             }
         });
 
