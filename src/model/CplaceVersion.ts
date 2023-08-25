@@ -16,7 +16,7 @@ export class CplaceVersion {
         public readonly snapshot: boolean
     ) {}
 
-    public static initialize(currentRepo: string): void {
+    public static initialize(currentRepo: string, cplaceVersion: string): void {
         if (
             this._currentVersion ||
             this._cplaceVersion ||
@@ -27,54 +27,66 @@ export class CplaceVersion {
             );
         }
 
-        const versionFilePath = path.resolve(
-            currentRepo,
-            CplaceVersion.VERSION_GRADLE
-        );
-        if (!fs.existsSync(versionFilePath)) {
-            console.warn(
-                cwarn`[NPM] Could not find version.gradle in repo ${currentRepo}...`
-            );
-            console.warn(cwarn`[CplaceVersion] -> Assuming version 1.0.0`);
-            CplaceVersion._currentVersion = new CplaceVersion(1, 0, 0, false);
+        if (cplaceVersion) {
+            this.parseCurrentVersion(cplaceVersion as string);
         } else {
-            const versionFileContent = fs.readFileSync(versionFilePath, 'utf8');
-            const currentVersionString = this.readVersionStringFromFile(
-                versionFileContent,
-                'currentVersion'
+            const versionFilePath = path.resolve(
+                currentRepo,
+                CplaceVersion.VERSION_GRADLE
             );
-            const cplaceVersionString = this.readVersionStringFromFile(
-                versionFileContent,
-                'cplaceVersion'
-            );
-            const createdOnBranchString = this.readVersionStringFromFile(
-                versionFileContent,
-                'createdOnBranch'
-            );
-
-            this.parseCreatedOnBranch(createdOnBranchString as string);
-            this.parseCurrentVersion(currentVersionString as string);
-            this.parseCplaceVersion(cplaceVersionString as string);
-
-            if (
-                this._currentVersion == undefined &&
-                this._cplaceVersion == undefined &&
-                this._createdOnBranch == undefined
-            ) {
-                console.error(
-                    cerr`[CplaceVersion] Version string not found in version.gradle file`
+            if (!fs.existsSync(versionFilePath)) {
+                console.warn(
+                    cwarn`[NPM] Could not find version.gradle in repo ${currentRepo}...`
                 );
-                throw new Error(
-                    `[CplaceVersion] Version string not found in version.gradle file`
+                console.warn(cwarn`[CplaceVersion] -> Assuming version 1.0.0`);
+                CplaceVersion._currentVersion = new CplaceVersion(
+                    1,
+                    0,
+                    0,
+                    false
                 );
+            } else {
+                const versionFileContent = fs.readFileSync(
+                    versionFilePath,
+                    'utf8'
+                );
+                const currentVersionString = this.readVersionStringFromFile(
+                    versionFileContent,
+                    'currentVersion'
+                );
+                const cplaceVersionString = this.readVersionStringFromFile(
+                    versionFileContent,
+                    'cplaceVersion'
+                );
+                const createdOnBranchString = this.readVersionStringFromFile(
+                    versionFileContent,
+                    'createdOnBranch'
+                );
+
+                this.parseCreatedOnBranch(createdOnBranchString as string);
+                this.parseCurrentVersion(currentVersionString as string);
+                this.parseCplaceVersion(cplaceVersionString as string);
             }
+        }
 
-            if (this._currentVersion == undefined) {
-                if (this._cplaceVersion) {
-                    this._currentVersion = this._cplaceVersion;
-                } else {
-                    this._currentVersion = this._createdOnBranch;
-                }
+        if (
+            this._currentVersion == undefined &&
+            this._cplaceVersion == undefined &&
+            this._createdOnBranch == undefined
+        ) {
+            console.error(
+                cerr`[CplaceVersion] Cplace version was not detected in version.gradle file`
+            );
+            throw new Error(
+                `[CplaceVersion] Cplace version was not detected in version.gradle file`
+            );
+        }
+
+        if (this._currentVersion == undefined) {
+            if (this._cplaceVersion) {
+                this._currentVersion = this._cplaceVersion;
+            } else {
+                this._currentVersion = this._createdOnBranch;
             }
         }
     }

@@ -49,6 +49,7 @@ function run(updateDetails?: IUpdateDetails) {
         --withYaml, -y          Generates TypeScript files from the OpenAPI YAML specification
         --verbose, -v           Enable verbose logging
         --production, -P        Enable production mode (ignores test dependencies)
+        --cplaceversion         Explicitly spcify the current cplace version
 
 `,
         {
@@ -107,6 +108,10 @@ function run(updateDetails?: IUpdateDetails) {
                     type: 'boolean',
                     alias: 'P',
                     default: false,
+                },
+                cplaceversion: {
+                    type: 'string',
+                    default: '',
                 },
             },
         }
@@ -176,7 +181,7 @@ function run(updateDetails?: IUpdateDetails) {
 
     try {
         PackageVersion.initialize(mainRepoPath);
-        CplaceVersion.initialize(process.cwd());
+        CplaceVersion.initialize(process.cwd(), cli.flags.cplaceversion);
 
         const plugins = cli.flags.plugin
             ? (cli.flags.plugin as string).split(',')
@@ -194,6 +199,7 @@ function run(updateDetails?: IUpdateDetails) {
             packagejson: cli.flags.packagejson,
             noParents: cli.flags.noparents,
             withYaml: cli.flags.withYaml,
+            cplaceversion: cli.flags.cplaceversion,
         };
 
         console.log(getAvailableStats());

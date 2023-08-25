@@ -71,6 +71,11 @@ export interface IAssetsCompilerConfiguration {
      * Indicates that package.json files will be created in the root and each plugin that has assets.
      */
     packagejson: boolean;
+
+    /**
+     * Ecplicitly sets the current cplace version.
+     */
+    cplaceversion: string;
 }
 
 /**
