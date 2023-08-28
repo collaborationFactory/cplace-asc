@@ -137,7 +137,7 @@ describe('test generating a package.json file in repo root', () => {
             production: false,
             noParents: false,
             packagejson: true,
-            cplaceversion: "",
+            cplaceversion: '',
             withYaml: false,
         };
 
