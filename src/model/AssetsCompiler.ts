@@ -73,7 +73,7 @@ export interface IAssetsCompilerConfiguration {
     packagejson: boolean;
 
     /**
-     * Ecplicitly sets the current cplace version.
+     * Explicitly sets the current cplace version.
      */
     cplaceversion: string;
 }

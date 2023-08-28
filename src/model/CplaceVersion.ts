@@ -16,7 +16,17 @@ export class CplaceVersion {
         public readonly snapshot: boolean
     ) {}
 
-    public static initialize(currentRepo: string, cplaceVersion: string): void {
+    public static initialize(
+        currentRepo: string,
+        cplaceVersion?: string,
+        force?: boolean
+    ): void {
+        if (force) {
+            this._currentVersion = undefined;
+            this._cplaceVersion = undefined;
+            this._createdOnBranch = undefined;
+        }
+
         if (
             this._currentVersion ||
             this._cplaceVersion ||
@@ -130,7 +140,7 @@ export class CplaceVersion {
 
     private static parseCurrentVersion(currentVersion: string): void {
         if (currentVersion) {
-            const versionPattern = /([0-9]{2})\.([1-4]).([0-9]+)(-SNAPSHOT)?/;
+            const versionPattern = /([0-9]+)\.([0-9]+).([0-9]+)(-SNAPSHOT)?/;
             this._currentVersion = this.parseVersion(
                 currentVersion,
                 versionPattern

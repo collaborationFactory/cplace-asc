@@ -49,7 +49,7 @@ function run(updateDetails?: IUpdateDetails) {
         --withYaml, -y          Generates TypeScript files from the OpenAPI YAML specification
         --verbose, -v           Enable verbose logging
         --production, -P        Enable production mode (ignores test dependencies)
-        --cplaceversion         Explicitly spcify the current cplace version
+        --cplaceversion, -V     Explicitly specify the current cplace version
 
 `,
         {
@@ -111,6 +111,7 @@ function run(updateDetails?: IUpdateDetails) {
                 },
                 cplaceversion: {
                     type: 'string',
+                    alias: 'V',
                     default: '',
                 },
             },

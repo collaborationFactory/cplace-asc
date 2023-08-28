@@ -92,10 +92,22 @@ export function generateParentRepos(location: string, names: string[]): void {
     );
 }
 
-export function generateVersionGradle(location: string, version: string): void {
+export function generateVersionGradle(
+    location: string,
+    createdOnBranch: string,
+    cplaceVersion?: string,
+    currentVersion?: string
+): void {
     let content = `ext {
-        currentVersion= '${version}'
-    };`;
+        createdOnBranch= '${createdOnBranch}'
+    `;
+    if (cplaceVersion) {
+        content += `cplaceVersion='${cplaceVersion}\n`;
+    }
+    if (currentVersion) {
+        content += `currentVersion='${currentVersion}\n`;
+    }
+    content += `};`;
 
     fs.writeFileSync(path.resolve(location, 'version.gradle'), content, {
         encoding: 'utf8',
