@@ -5,7 +5,9 @@ import * as path from 'path';
 export class CplaceVersion {
     private static readonly VERSION_GRADLE = 'version.gradle';
 
-    private static _version: CplaceVersion | undefined = undefined;
+    private static _currentVersion: CplaceVersion | undefined = undefined;
+    private static _cplaceVersion: CplaceVersion | undefined = undefined;
+    private static _createdOnBranch: CplaceVersion | undefined = undefined;
 
     private constructor(
         public readonly major: number,
@@ -14,73 +16,161 @@ export class CplaceVersion {
         public readonly snapshot: boolean
     ) {}
 
-    public static initialize(currentRepo: string): CplaceVersion {
-        if (CplaceVersion._version !== undefined) {
+    public static initialize(
+        currentRepo: string,
+        cplaceVersion?: string,
+        force?: boolean
+    ): void {
+        if (force) {
+            this._currentVersion = undefined;
+            this._cplaceVersion = undefined;
+            this._createdOnBranch = undefined;
+        }
+
+        if (
+            this._currentVersion ||
+            this._cplaceVersion ||
+            this._createdOnBranch
+        ) {
             throw new Error(
                 `(CplaceVersion) version has already been initialized`
             );
         }
 
-        const versionFilePath = path.resolve(
-            currentRepo,
-            CplaceVersion.VERSION_GRADLE
-        );
-        if (!fs.existsSync(versionFilePath)) {
-            console.warn(
-                cwarn`[NPM] Could not find version.gradle in repo ${currentRepo}...`
-            );
-            console.warn(cwarn`[CplaceVersion] -> Assuming version 1.0.0`);
-            CplaceVersion._version = new CplaceVersion(1, 0, 0, false);
+        if (cplaceVersion) {
+            this.parseCurrentVersion(cplaceVersion as string);
         } else {
-            const versionFileContent = fs.readFileSync(versionFilePath, 'utf8');
-            const versionString = versionFileContent
-                .split('\n')
-                .find((line) => line.includes('currentVersion'));
-            if (!versionString) {
-                console.error(
-                    cerr`[CplaceVersion] Version string not found in version.gradle file`
-                );
-                throw new Error(
-                    `[CplaceVersion] Version string not found in version.gradle file`
-                );
-            }
-
-            const version = versionString
-                .split('=')[1]
-                .replace(/'/g, '')
-                .trim();
-            const versionSnapshotParts = version.split('-');
-
-            const versionParts = versionSnapshotParts[0].split('.');
-            versionParts.push(
-                versionSnapshotParts.length > 1 &&
-                    versionSnapshotParts[1].toLowerCase().includes('snapshot')
-                    ? 'true'
-                    : 'false'
+            const versionFilePath = path.resolve(
+                currentRepo,
+                CplaceVersion.VERSION_GRADLE
             );
+            if (!fs.existsSync(versionFilePath)) {
+                console.warn(
+                    cwarn`[NPM] Could not find version.gradle in repo ${currentRepo}...`
+                );
+                console.warn(cwarn`[CplaceVersion] -> Assuming version 1.0.0`);
+                CplaceVersion._currentVersion = new CplaceVersion(
+                    1,
+                    0,
+                    0,
+                    false
+                );
+            } else {
+                const versionFileContent = fs.readFileSync(
+                    versionFilePath,
+                    'utf8'
+                );
+                const currentVersionString = this.readVersionStringFromFile(
+                    versionFileContent,
+                    'currentVersion'
+                );
+                const cplaceVersionString = this.readVersionStringFromFile(
+                    versionFileContent,
+                    'cplaceVersion'
+                );
+                const createdOnBranchString = this.readVersionStringFromFile(
+                    versionFileContent,
+                    'createdOnBranch'
+                );
 
-            if (versionParts.length < 3) {
-                console.error(
-                    cerr`[CplaceVersion] Expected version to consist of 3 parts`
-                );
-                throw new Error(
-                    `[CplaceVersion] Expected version to consist of 3 parts`
-                );
+                this.parseCreatedOnBranch(createdOnBranchString as string);
+                this.parseCurrentVersion(currentVersionString as string);
+                this.parseCplaceVersion(cplaceVersionString as string);
             }
+        }
 
-            CplaceVersion._version = new CplaceVersion(
-                parseInt(versionParts[0]),
-                parseInt(versionParts[1]),
-                parseInt(versionParts[2]),
-                versionParts[3] == 'true'
+        if (
+            this._currentVersion == undefined &&
+            this._cplaceVersion == undefined &&
+            this._createdOnBranch == undefined
+        ) {
+            console.error(
+                cerr`[CplaceVersion] Cplace version was not detected in version.gradle file`
+            );
+            throw new Error(
+                `[CplaceVersion] Cplace version was not detected in version.gradle file`
             );
         }
-        return CplaceVersion._version;
+
+        if (this._currentVersion == undefined) {
+            if (this._cplaceVersion) {
+                this._currentVersion = this._cplaceVersion;
+            } else {
+                this._currentVersion = this._createdOnBranch;
+            }
+        }
+    }
+
+    private static readVersionStringFromFile(
+        versionFileContent: string,
+        stringPattern: string
+    ): string | null {
+        const versionString = versionFileContent
+            .split('\n')
+            .find(
+                (line) =>
+                    line.includes(stringPattern) &&
+                    !line.trim().startsWith('//')
+            );
+
+        return versionString
+            ? versionString.split('=')[1].replace(/'/g, '').trim()
+            : null;
+    }
+
+    private static parseVersion(
+        versionString: string,
+        versionPattern
+    ): CplaceVersion | undefined {
+        const match = versionString.match(versionPattern);
+        if (!match) {
+            console.error(
+                cerr`[CplaceVersion] provided version string does not match the provided pattern`
+            );
+            return undefined;
+        }
+
+        return new CplaceVersion(
+            parseInt(match[1]),
+            parseInt(match[2]),
+            parseInt(match[3] ?? 0),
+            match[4] != null
+        );
+    }
+
+    private static parseCurrentVersion(currentVersion: string): void {
+        if (currentVersion) {
+            const versionPattern = /([0-9]+)\.([0-9]+).([0-9]+)(-SNAPSHOT)?/;
+            this._currentVersion = this.parseVersion(
+                currentVersion,
+                versionPattern
+            );
+        }
+    }
+
+    private static parseCplaceVersion(cplaceVersionString: string): void {
+        if (cplaceVersionString) {
+            const versionPattern = /([0-9]{2})\.([1-4])/;
+            this._cplaceVersion = this.parseVersion(
+                cplaceVersionString,
+                versionPattern
+            );
+        }
+    }
+
+    private static parseCreatedOnBranch(createdOnBranchString: string): void {
+        if (createdOnBranchString) {
+            const versionPattern = /release\/([0-9]{2})\.([1-4])/;
+            this._createdOnBranch = this.parseVersion(
+                createdOnBranchString,
+                versionPattern
+            );
+        }
     }
 
     public static toString(): string {
-        let version = `${this._version?.major}.${this._version?.minor}.${this._version?.patch}`;
-        if (this._version?.snapshot) {
+        let version = `${this._currentVersion?.major}.${this._currentVersion?.minor}.${this._currentVersion?.patch}`;
+        if (this._currentVersion?.snapshot) {
             version += '-SNAPSHOT';
         }
 
@@ -88,12 +178,12 @@ export class CplaceVersion {
     }
 
     public static get(): CplaceVersion {
-        if (CplaceVersion._version === undefined) {
+        if (CplaceVersion._currentVersion === undefined) {
             throw new Error(
                 `(CplaceVersion) version has not yet been initialized`
             );
         }
-        return CplaceVersion._version;
+        return CplaceVersion._currentVersion;
     }
 
     public static isVersionLowerThen23() {
