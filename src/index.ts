@@ -190,7 +190,8 @@ function run(updateDetails?: IUpdateDetails) {
         !path.basename(process.cwd()).includes('main') &&
         fs.existsSync(path.join(process.cwd(), 'node_modules')) &&
         (CplaceVersion.get().major < 23 ||
-            (CplaceVersion.get().major === 23 && CplaceVersion.get().minor === 1))
+            (CplaceVersion.get().major === 23 &&
+                CplaceVersion.get().minor === 1))
     ) {
         console.error(cerr`Please remove node_modules folder from your project root. \n
         node_modules folder is not allowed in repos that are not main/cplace below release 23.2 \n 
