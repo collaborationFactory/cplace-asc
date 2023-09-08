@@ -13,7 +13,7 @@ export class CplaceVersion {
         public readonly major: number,
         public readonly minor: number,
         public readonly patch: number,
-        public readonly snapshot: boolean
+        public readonly appendix: string
     ) {}
 
     public static initialize(
@@ -49,12 +49,7 @@ export class CplaceVersion {
                     cwarn`[NPM] Could not find version.gradle in repo ${currentRepo}...`
                 );
                 console.warn(cwarn`[CplaceVersion] -> Assuming version 1.0.0`);
-                CplaceVersion._currentVersion = new CplaceVersion(
-                    1,
-                    0,
-                    0,
-                    false
-                );
+                CplaceVersion._currentVersion = new CplaceVersion(1, 0, 0, '');
             } else {
                 const versionFileContent = fs.readFileSync(
                     versionFilePath,
@@ -134,13 +129,14 @@ export class CplaceVersion {
             parseInt(match[1]),
             parseInt(match[2]),
             parseInt(match[3] ?? 0),
-            match[4] != null
+            match[4] ?? ''
         );
     }
 
     private static parseCurrentVersion(currentVersion: string): void {
         if (currentVersion) {
-            const versionPattern = /([0-9]+)\.([0-9]+).([0-9]+)(-SNAPSHOT)?/;
+            const versionPattern =
+                /([0-9]+)\.([0-9]+).([0-9]+)-?(SNAPSHOT|RC\.[0-9]+)?/;
             this._currentVersion = this.parseVersion(
                 currentVersion,
                 versionPattern
@@ -169,10 +165,7 @@ export class CplaceVersion {
     }
 
     public static toString(): string {
-        let version = `${this._currentVersion?.major}.${this._currentVersion?.minor}.${this._currentVersion?.patch}`;
-        if (this._currentVersion?.snapshot) {
-            version += '-SNAPSHOT';
-        }
+        let version = `${this._currentVersion?.major}.${this._currentVersion?.minor}.${this._currentVersion?.patch}-${this._currentVersion?.appendix}`;
 
         return version;
     }
