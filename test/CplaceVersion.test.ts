@@ -35,13 +35,13 @@ describe('test the cplace version detection', () => {
     test('cplace release version provided as parameter', () => {
         CplaceVersion.initialize(mainRepoPath, '23.1.5', true);
 
-        assertCplaceVersion(23, 1, 5, false);
+        assertCplaceVersion(23, 1, 5, '');
     });
 
     test('cplace snapshot version provided as parameter', () => {
         CplaceVersion.initialize(mainRepoPath, '23.1.5-SNAPSHOT', true);
 
-        assertCplaceVersion(23, 1, 5, true);
+        assertCplaceVersion(23, 1, 5, 'SNAPSHOT');
     });
 
     test('cplace snapshot version in curentVerison of version file', () => {
@@ -53,21 +53,33 @@ describe('test the cplace version detection', () => {
         );
 
         CplaceVersion.initialize(mainRepoPath, '', true);
-        assertCplaceVersion(23, 1, 7, true);
+        assertCplaceVersion(23, 1, 7, 'SNAPSHOT');
+    });
+
+    test('cplace RC version in curentVerison of version file', () => {
+        generateVersionGradle(
+            mainRepoPath,
+            'release/23.1',
+            '23.1',
+            '23.1.7-RC.1'
+        );
+
+        CplaceVersion.initialize(mainRepoPath, '', true);
+        assertCplaceVersion(23, 1, 7, 'RC.1');
     });
 
     test('cplace no curentVerison in version file', () => {
         generateVersionGradle(mainRepoPath, 'release/23.1', '23.1');
 
         CplaceVersion.initialize(mainRepoPath, '', true);
-        assertCplaceVersion(23, 1, 0, false);
+        assertCplaceVersion(23, 1, 0, '');
     });
 
     test('cplace only createdOnBranch in version file', () => {
         generateVersionGradle(mainRepoPath, 'release/23.2');
 
         CplaceVersion.initialize(mainRepoPath, '', true);
-        assertCplaceVersion(23, 2, 0, false);
+        assertCplaceVersion(23, 2, 0, '');
     });
 
     test('cplace customer version in currentVersion in version file', () => {
@@ -79,7 +91,7 @@ describe('test the cplace version detection', () => {
         );
 
         CplaceVersion.initialize(mainRepoPath, '', true);
-        assertCplaceVersion(3, 12, 116, true);
+        assertCplaceVersion(3, 12, 116, 'SNAPSHOT');
     });
 
     test('cplace no versions in version file', () => {
@@ -104,11 +116,11 @@ describe('test the cplace version detection', () => {
         major: number,
         minor: number,
         patch: number,
-        snapshot: boolean
+        appendix: string
     ) {
         expect(CplaceVersion.get().major).toBe(major);
         expect(CplaceVersion.get().minor).toBe(minor);
         expect(CplaceVersion.get().patch).toBe(patch);
-        expect(CplaceVersion.get().snapshot).toBe(snapshot);
+        expect(CplaceVersion.get().appendix).toBe(appendix);
     }
 });
