@@ -165,7 +165,10 @@ export class CplaceVersion {
     }
 
     public isSnapshot() {
-        return this.appendix != null && this.appendix.toLowerCase().indexOf('snapshot') != -1;
+        return (
+            this.appendix != null &&
+            this.appendix.toLowerCase().indexOf('snapshot') != -1
+        );
     }
 
     public static toString(): string {
