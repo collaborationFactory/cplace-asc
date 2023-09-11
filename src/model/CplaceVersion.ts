@@ -165,7 +165,10 @@ export class CplaceVersion {
     }
 
     public static toString(): string {
-        let version = `${this._currentVersion?.major}.${this._currentVersion?.minor}.${this._currentVersion?.patch}-${this._currentVersion?.appendix}`;
+        let version = `${this._currentVersion?.major}.${this._currentVersion?.minor}.${this._currentVersion?.patch}`;
+        if (this._currentVersion?.appendix) {
+            version += `-${this._currentVersion?.appendix}`;
+        }
 
         return version;
     }
