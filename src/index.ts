@@ -26,8 +26,6 @@ import { NodeVersionUtils } from './utils/NodeUtils';
 import * as fs from 'fs';
 import meow = require('meow');
 
-const cplaceVersion: CplaceVersion = CplaceVersion.initialize(process.cwd());
-checkNodeVersion();
 checkForUpdate()
     .then((details) => run(details))
     .catch(() => run());
@@ -51,6 +49,7 @@ function run(updateDetails?: IUpdateDetails) {
         --withYaml, -y          Generates TypeScript files from the OpenAPI YAML specification
         --verbose, -v           Enable verbose logging
         --production, -P        Enable production mode (ignores test dependencies and E2E)
+        --cplaceversion, -V     Explicitly specify the current cplace version
 
 `,
         {
@@ -110,9 +109,17 @@ function run(updateDetails?: IUpdateDetails) {
                     alias: 'P',
                     default: false,
                 },
+                cplaceversion: {
+                    type: 'string',
+                    alias: 'V',
+                    default: '',
+                },
             },
         }
     );
+
+    CplaceVersion.initialize(process.cwd(), cli.flags.cplaceversion);
+    checkNodeVersion();
 
     if (cli.flags.plugin !== null && !cli.flags.plugin) {
         console.error(cerr`Missing value for --plugin|-p argument`);
@@ -182,8 +189,9 @@ function run(updateDetails?: IUpdateDetails) {
     if (
         !path.basename(process.cwd()).includes('main') &&
         fs.existsSync(path.join(process.cwd(), 'node_modules')) &&
-        (cplaceVersion.major < 23 ||
-            (cplaceVersion.major === 23 && cplaceVersion.minor === 1))
+        (CplaceVersion.get().major < 23 ||
+            (CplaceVersion.get().major === 23 &&
+                CplaceVersion.get().minor === 1))
     ) {
         console.error(cerr`Please remove node_modules folder from your project root. \n
         node_modules folder is not allowed in repos that are not main/cplace below release 23.2 \n 
@@ -208,6 +216,7 @@ function run(updateDetails?: IUpdateDetails) {
             withYaml: cli.flags.withYaml,
             noParents: cli.flags.noparents || cli.flags.noParents,
             packagejson: cli.flags.packagejson,
+            cplaceversion: cli.flags.cplaceversion,
         };
 
         console.log(getAvailableStats());
@@ -253,7 +262,7 @@ function run(updateDetails?: IUpdateDetails) {
 function checkNodeVersion(): void {
     const nodeVersionUtils = new NodeVersionUtils();
 
-    if (cplaceVersion.major <= 5 && cplaceVersion.minor <= 18) {
+    if (CplaceVersion.get().major <= 5 && CplaceVersion.get().minor <= 18) {
         console.log(
             `⟲ cplaceVersion ${CplaceVersion.toString()} is less or equal to 5.18.0 -> assuming node version is correct`
         );
