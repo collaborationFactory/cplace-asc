@@ -38,7 +38,7 @@ describe('test generating a package.json file in repo root', () => {
         fs.mkdirSync(mainRepoPath, {
             recursive: true,
         });
-        generateVersionGradle(mainRepoPath, '22.4.0');
+        generateVersionGradle(mainRepoPath, 'release/22.4', '22.4', '22.4.0');
         platformPath = path.resolve(mainRepoPath, 'cf.cplace.platform');
         fs.mkdirSync(platformPath);
         fs.mkdirSync(path.resolve(platformPath, 'src'));
@@ -75,7 +75,7 @@ describe('test generating a package.json file in repo root', () => {
             recursive: true,
         });
         generateParentRepos(otherRepoPath, ['main']);
-        generateVersionGradle(otherRepoPath, '22.4.0');
+        generateVersionGradle(otherRepoPath, 'release/22.4', '22.4', '22.4.0');
 
         const repo2Plugin1Path = path.resolve(
             otherRepoPath,
@@ -137,6 +137,7 @@ describe('test generating a package.json file in repo root', () => {
             production: false,
             noParents: false,
             packagejson: true,
+            cplaceversion: '',
             withYaml: false,
         };
 

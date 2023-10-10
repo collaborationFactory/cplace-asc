@@ -71,6 +71,11 @@ export interface IAssetsCompilerConfiguration {
      * Indicates that package.json files will be created in the root and each plugin that has assets.
      */
     packagejson: boolean;
+
+    /**
+     * Explicitly sets the current cplace version.
+     */
+    cplaceversion: string;
 }
 
 /**
@@ -123,7 +128,7 @@ export class AssetsCompiler {
         const isAtLeast23_2 =
             (version.major === 23 && version.minor >= 2) || version.major > 23;
         const is23_1Snapshot =
-            version.major === 23 && version.minor === 1 && version.snapshot;
+            version.major === 23 && version.minor === 1 && version.isSnapshot();
         return isAtLeast23_2 || is23_1Snapshot;
     }
 
