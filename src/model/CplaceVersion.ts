@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { cerr, cwarn } from '../utils';
+import { cerr, cgreen, cwarn } from '../utils';
 import * as path from 'path';
 
 export class CplaceVersion {
@@ -87,13 +87,16 @@ export class CplaceVersion {
             );
         }
 
-        if (this._currentVersion == undefined) {
-            if (this._cplaceVersion) {
-                this._currentVersion = this._cplaceVersion;
-            } else {
-                this._currentVersion = this._createdOnBranch;
-            }
+        if (this._cplaceVersion !== undefined) {
+            this._currentVersion = this._cplaceVersion;
+        } else if (this._createdOnBranch !== undefined) {
+            this._currentVersion = this._createdOnBranch;
         }
+
+        console.log(
+            cgreen`⇢`,
+            `current cplace version: ${CplaceVersion.toString()}`
+        );
     }
 
     private static readVersionStringFromFile(
@@ -119,8 +122,8 @@ export class CplaceVersion {
     ): CplaceVersion | undefined {
         const match = versionString.match(versionPattern);
         if (!match) {
-            console.error(
-                cerr`[CplaceVersion] provided version string does not match the provided pattern`
+            console.log(
+                cwarn`[CplaceVersion] provided version string '${versionString}' does not match the expected format`
             );
             return undefined;
         }

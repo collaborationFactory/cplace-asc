@@ -53,7 +53,7 @@ describe('test the cplace version detection', () => {
         );
 
         CplaceVersion.initialize(mainRepoPath, '', true);
-        assertCplaceVersion(23, 1, 7, 'SNAPSHOT');
+        assertCplaceVersion(23, 1, 0, '');
     });
 
     test('cplace RC version in curentVerison of version file', () => {
@@ -65,7 +65,7 @@ describe('test the cplace version detection', () => {
         );
 
         CplaceVersion.initialize(mainRepoPath, '', true);
-        assertCplaceVersion(23, 1, 7, 'RC.1');
+        assertCplaceVersion(23, 1, 0, '');
     });
 
     test('cplace no curentVerison in version file', () => {
@@ -91,7 +91,7 @@ describe('test the cplace version detection', () => {
         );
 
         CplaceVersion.initialize(mainRepoPath, '', true);
-        assertCplaceVersion(3, 12, 116, 'SNAPSHOT');
+        assertCplaceVersion(23, 2, 0, '');
     });
 
     test('cplace no versions in version file', () => {
