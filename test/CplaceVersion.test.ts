@@ -33,15 +33,18 @@ describe('test the cplace version detection', () => {
     });
 
     test('cplace release version provided as parameter', () => {
-        CplaceVersion.initialize(mainRepoPath, '23.1.5', true);
+        generateVersionGradle(mainRepoPath, 'release/23.1', '23.1');
 
-        assertCplaceVersion(23, 1, 5, '');
+        CplaceVersion.initialize(mainRepoPath, '23.1.5', true);
+        expect(CplaceVersion.getCurrentVersion()).toBe('23.1.5');
     });
 
     test('cplace snapshot version provided as parameter', () => {
+        generateVersionGradle(mainRepoPath, 'release/23.1', '23.1');
+
         CplaceVersion.initialize(mainRepoPath, '23.1.5-SNAPSHOT', true);
 
-        assertCplaceVersion(23, 1, 5, 'SNAPSHOT');
+        expect(CplaceVersion.getCurrentVersion()).toBe('23.1.5-SNAPSHOT');
     });
 
     test('cplace snapshot version in curentVerison of version file', () => {
