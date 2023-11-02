@@ -15,8 +15,8 @@ const NODE_MODULES_IGNORE_LINE = 'node_modules/';
 const CPLACE_ASC_LOCAL_PKG_NAME = '@cplace/asc-local';
 const CPLACE_ASC_LOCAL_PKG_VERSION = '^2.0.7';
 const PACKAGES_TO_REMOVE = ['typescript'];
-const NODE_VERSION = '18.11.0';
-const NPM_VERSION = '8.19.2';
+const NODE_VERSION = '18.18.2';
+const NPM_VERSION = '9.8.1';
 const NVMRC_PATH = resolve(WORKSPACE_ROOT, '.nvmrc');
 const TOOL_VERSIONS_PATH = resolve(WORKSPACE_ROOT, '.tool-versions');
 const TOOL_VERSIONS_CONTENT = `nodejs ${NODE_VERSION}`;
@@ -180,7 +180,7 @@ function logChecklist() {
   Please do the following:\n
   - Check the changed/generated files
   - Install NVM (https://github.com/nvm-sh/nvm) or ASDF (https://asdf-vm.com/)
-  - Install Node 18.11.0 and 14.16.0 using NVM or ASDF
+  - Install Node 18.18.2 and 14.16.0 using NVM or ASDF
   - Use the Node version written in .nvmrc file (run "nvm use"). If you are using ASDF, it will automatically detect version from .tool-versions file
   - Run "npm install"
   - Create cplace-asc alias in your ~/.bash_profile like it is described here: https://www.npmjs.com/package/@cplace/asc-local
