@@ -12,6 +12,7 @@ import {
     generatePackageJson,
     generateParentRepos,
     generateSimplePluginDescriptor,
+    generateVersionGradle,
 } from './helper/TestHelpers';
 import { CplaceVersion } from '../src/model/CplaceVersion';
 
@@ -48,6 +49,7 @@ describe('test the handling of plugin descriptor', () => {
 
         generateBuildGradleFile(platformPath, []);
         generatePackageJson(mainRepoPath, 'cplace', '3.0.0');
+        generateVersionGradle(mainRepoPath, 'release/23.1', '23.1');
 
         // generate other repo and plugin
         fs.mkdirSync(otherRepoPath, {
@@ -59,6 +61,7 @@ describe('test the handling of plugin descriptor', () => {
         fs.mkdirSync(path.resolve(otherRepoPath, 'cf.cplace.plugin', 'assets'));
         generateBuildGradleFile(pluginPath, ['cf.cplace.platform']);
         generateParentRepos(otherRepoPath, ['main']);
+        generateVersionGradle(otherRepoPath, 'release/23.1', '23.1');
 
         currentCwd = process.cwd();
         process.chdir(otherRepoPath);
