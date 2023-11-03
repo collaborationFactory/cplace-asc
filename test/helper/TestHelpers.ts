@@ -8,7 +8,7 @@ export function generateBuildGradleFile(
     let content = '';
     content += 'dependencies {\n';
     pluginDependencies.forEach((dependency) => {
-        content += `    cpalcePlugin ${dependency}\n`;
+        content += `    cplacePlugin ${dependency}\n`;
     });
 
     content += '}\n';
