@@ -1,6 +1,6 @@
 {
     "name": "@cplace/asc-local",
-    "version": "2.0.17",
+    "version": "2.1.0",
     "description": "cplace assets compiler",
     "repository": "https://github.com/collaborationFactory/cplace-asc",
     "homepage": "https://github.com/collaborationFactory/cplace-asc",
@@ -66,7 +66,7 @@
         "@types/jest": "^27.0.3",
         "@types/less": "^3.0.3",
         "@types/minimist": "^1.2.2",
-        "@types/node": "^18.11.0",
+        "@types/node": "^18.18.2",
         "@types/vinyl": "^2.0.6",
         "jest": "^27.5.1",
         "prettier": "2.5.1",
