@@ -40,11 +40,6 @@ export class CplaceVersion {
 
         this.parseVersionsFromVersionFile(currentRepo);
 
-        // If cplaceVersion was not specified in version.gradle, use createOnBranch as fallback
-        if (this._cplaceVersion == undefined) {
-            this._cplaceVersion = this._createdOnBranch;
-        }
-
         // Override current version if it was provided as a command line argument
         if (providedCurrentVersion) {
             this._currentVersion = new CplaceVersion(
@@ -54,6 +49,16 @@ export class CplaceVersion {
                 0,
                 ''
             );
+        }
+
+        // If cplaceVersion was not specified in version.gradle, use createOnBranch as fallback
+        if (this._cplaceVersion == undefined) {
+            this._cplaceVersion = this._createdOnBranch;
+        }
+
+        // If cplaceVersion is still not set, use currentVersion as fallback
+        if (this._cplaceVersion == undefined) {
+            this._cplaceVersion = this._currentVersion;
         }
 
         // If currentVersion is not in the version file and is not provided, use cplaceVersion as fallback
@@ -77,8 +82,8 @@ export class CplaceVersion {
         console.log(
             cgreen`⇢`,
             `current version: ${CplaceVersion.getCurrentVersion()}, cplace version: ${
-                this._cplaceVersion!.rawVersion
-            }`
+                this._cplaceVersion!.major
+            }.${this._cplaceVersion!.minor}`
         );
     }
 
@@ -114,9 +119,12 @@ export class CplaceVersion {
                 'createdOnBranch'
             );
 
-            this.parseCreatedOnBranch(createdOnBranchString as string);
-            this.parseCurrentVersion(currentVersionString as string);
             this.parseCplaceVersion(cplaceVersionString as string);
+            this.parseCreatedOnBranch(createdOnBranchString as string);
+            this.parseCurrentVersion(
+                currentVersionString as string,
+                this._cplaceVersion == undefined
+            );
         }
     }
 
@@ -158,15 +166,27 @@ export class CplaceVersion {
         );
     }
 
-    private static parseCurrentVersion(currentVersion: string): void {
+    private static parseCurrentVersion(
+        currentVersion: string,
+        asCplaceVersion: boolean
+    ): void {
         if (currentVersion) {
-            this._currentVersion = new CplaceVersion(
-                currentVersion,
-                0,
-                0,
-                0,
-                ''
-            );
+            if (asCplaceVersion) {
+                const versionPattern =
+                    /([0-9]+)\.([0-9]+).([0-9]+)-?(SNAPSHOT|RC\.[0-9]+)?/;
+                this._currentVersion = this.parseVersion(
+                    currentVersion,
+                    versionPattern
+                );
+            } else {
+                this._currentVersion = new CplaceVersion(
+                    currentVersion,
+                    0,
+                    0,
+                    0,
+                    ''
+                );
+            }
         }
     }
 
