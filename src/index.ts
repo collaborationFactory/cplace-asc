@@ -11,12 +11,10 @@ import {
 import {
     cerr,
     cgreen,
-    checkForUpdate,
     cwarn,
     debug,
     enableDebug,
     isDebugEnabled,
-    IUpdateDetails,
 } from './utils';
 import * as os from 'os';
 import * as path from 'path';
@@ -26,13 +24,11 @@ import * as meow from 'meow';
 import { NodeVersionUtils } from './utils/NodeUtils';
 
 checkNodeVersion();
-checkForUpdate()
-    .then((details) => run(details))
-    .catch(() => run());
+run();
 
-function run(updateDetails?: IUpdateDetails) {
+function run() {
     const cli = meow(
-        `
+      `
     Usage:
         Go to the root folder of your cplace project. Then you can start cplace-asc: 
         $ ./node_modules/.bin/cplace-asc
@@ -218,17 +214,17 @@ function run(updateDetails?: IUpdateDetails) {
         });
 
         // Timeout to ensure flush of stdout
-        assetsCompiler.start(updateDetails).then(
-            () => {
-                setTimeout(() => process.exit(0), 200);
-            },
-            (reason: any) => {
-                const message =
-                    reason instanceof Error ? reason.message : reason;
-                console.error(
-                    cerr`Failed to start assets compiler: ${message}`
-                );
-                if (isDebugEnabled()) {
+        assetsCompiler.start().then(
+          () => {
+              setTimeout(() => process.exit(0), 200);
+          },
+          (reason: any) => {
+              const message =
+                reason instanceof Error ? reason.message : reason;
+              console.error(
+                cerr`Failed to start assets compiler: ${message}`
+              );
+              if (isDebugEnabled()) {
                     console.error(reason);
                 }
                 setTimeout(() => process.exit(1), 200);

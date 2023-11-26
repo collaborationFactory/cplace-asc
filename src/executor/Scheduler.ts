@@ -12,9 +12,7 @@ import {
     cerr,
     csucc,
     debug,
-    isDebugEnabled,
-    IUpdateDetails,
-    printUpdateDetails,
+    isDebugEnabled
 } from '../utils';
 import { CompilationResult, ICompileRequest } from '../compiler/interfaces';
 import Timeout = NodeJS.Timeout;
@@ -66,15 +64,14 @@ export class Scheduler {
      * @param updateDetails Details of a potentially available version update
      */
     constructor(
-        private readonly executor: ExecutorService,
-        private readonly plugins: Map<string, CplacePlugin>,
-        private readonly rootRepository: string,
-        private readonly mainRepoDir: string,
-        private readonly isProduction: boolean,
-        private readonly noParents: boolean,
-        private readonly watchFiles: boolean,
-        private readonly withYaml: boolean,
-        private readonly updateDetails?: IUpdateDetails
+      private readonly executor: ExecutorService,
+      private readonly plugins: Map<string, CplacePlugin>,
+      private readonly rootRepository: string,
+      private readonly mainRepoDir: string,
+      private readonly isProduction: boolean,
+      private readonly noParents: boolean,
+      private readonly watchFiles: boolean,
+      private readonly withYaml: boolean
     ) {
         this.vendorJobs = this.createVendorJobTracker();
         this.tsJobs = this.createTsJobTracker();
@@ -187,14 +184,12 @@ export class Scheduler {
             nextCombineJsPlugin === null
         ) {
             if (!this.watchFiles && !this.completed) {
-                printUpdateDetails(this.updateDetails);
                 this.completed = true;
                 this.finishedResolver && this.finishedResolver();
             } else if (this.watchFiles) {
                 console.log();
                 console.log(csucc`Compilation completed - watching files...`);
                 console.log();
-                printUpdateDetails(this.updateDetails);
             }
         } else if (
             nextTsPlugin ||

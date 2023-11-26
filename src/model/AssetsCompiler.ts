@@ -12,8 +12,7 @@ import {
     csucc,
     cwarn,
     debug,
-    formatDuration,
-    IUpdateDetails,
+    formatDuration
 } from '../utils';
 import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
@@ -132,15 +131,15 @@ export class AssetsCompiler {
         return isAtLeast23_2 || is23_1Snapshot;
     }
 
-    public async start(updateDetails?: IUpdateDetails): Promise<void> {
+    public async start(): Promise<void> {
         if (!this.projects.size) {
             console.log(cgreen`->`, 'Nothing to do, no plugins detected...');
             return new Promise<void>((resolve) => resolve());
         }
 
         const mainRepoPath = AssetsCompiler.getMainRepoPath(
-            this.repositoryDir,
-            this.runConfig.localOnly
+          this.repositoryDir,
+          this.runConfig.localOnly
         );
         if (mainRepoPath === null) {
             debug(`(AssetsCompiler) Main repo cannot be found...`);
@@ -189,8 +188,7 @@ export class AssetsCompiler {
             this.runConfig.production,
             this.runConfig.noParents,
             this.runConfig.watchFiles,
-            this.runConfig.withYaml,
-            updateDetails
+          this.runConfig.withYaml
         );
 
         debug(`(AssetsCompiler) starting scheduler for compilation tasks...`);
