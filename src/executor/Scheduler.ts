@@ -8,12 +8,7 @@ import { JobDetails, JobTracker } from './JobTracker';
 import * as path from 'path';
 import * as chokidar from 'chokidar';
 import { FSWatcher } from 'chokidar';
-import {
-    cerr,
-    csucc,
-    debug,
-    isDebugEnabled
-} from '../utils';
+import { cerr, csucc, debug, isDebugEnabled } from '../utils';
 import { CompilationResult, ICompileRequest } from '../compiler/interfaces';
 import Timeout = NodeJS.Timeout;
 import { PluginDescriptor } from '../model/PluginDescriptor';
@@ -64,14 +59,14 @@ export class Scheduler {
      * @param updateDetails Details of a potentially available version update
      */
     constructor(
-      private readonly executor: ExecutorService,
-      private readonly plugins: Map<string, CplacePlugin>,
-      private readonly rootRepository: string,
-      private readonly mainRepoDir: string,
-      private readonly isProduction: boolean,
-      private readonly noParents: boolean,
-      private readonly watchFiles: boolean,
-      private readonly withYaml: boolean
+        private readonly executor: ExecutorService,
+        private readonly plugins: Map<string, CplacePlugin>,
+        private readonly rootRepository: string,
+        private readonly mainRepoDir: string,
+        private readonly isProduction: boolean,
+        private readonly noParents: boolean,
+        private readonly watchFiles: boolean,
+        private readonly withYaml: boolean
     ) {
         this.vendorJobs = this.createVendorJobTracker();
         this.tsJobs = this.createTsJobTracker();

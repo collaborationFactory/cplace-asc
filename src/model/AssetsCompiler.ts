@@ -6,17 +6,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import CplacePlugin from './CplacePlugin';
 import { ExecutorService, Scheduler } from '../executor';
-import {
-    cerr,
-    cgreen,
-    csucc,
-    cwarn,
-    debug,
-    formatDuration
-} from '../utils';
+import { cerr, cgreen, csucc, cwarn, debug, formatDuration } from '../utils';
 import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
-import { isFileTracked } from './utils';
 import { CplaceVersion } from './CplaceVersion';
 
 export interface IAssetsCompilerConfiguration {
@@ -138,8 +130,8 @@ export class AssetsCompiler {
         }
 
         const mainRepoPath = AssetsCompiler.getMainRepoPath(
-          this.repositoryDir,
-          this.runConfig.localOnly
+            this.repositoryDir,
+            this.runConfig.localOnly
         );
         if (mainRepoPath === null) {
             debug(`(AssetsCompiler) Main repo cannot be found...`);
@@ -188,7 +180,7 @@ export class AssetsCompiler {
             this.runConfig.production,
             this.runConfig.noParents,
             this.runConfig.watchFiles,
-          this.runConfig.withYaml
+            this.runConfig.withYaml
         );
 
         debug(`(AssetsCompiler) starting scheduler for compilation tasks...`);

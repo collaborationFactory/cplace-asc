@@ -28,7 +28,7 @@ run();
 
 function run() {
     const cli = meow(
-      `
+        `
     Usage:
         Go to the root folder of your cplace project. Then you can start cplace-asc: 
         $ ./node_modules/.bin/cplace-asc
@@ -215,16 +215,16 @@ function run() {
 
         // Timeout to ensure flush of stdout
         assetsCompiler.start().then(
-          () => {
-              setTimeout(() => process.exit(0), 200);
-          },
-          (reason: any) => {
-              const message =
-                reason instanceof Error ? reason.message : reason;
-              console.error(
-                cerr`Failed to start assets compiler: ${message}`
-              );
-              if (isDebugEnabled()) {
+            () => {
+                setTimeout(() => process.exit(0), 200);
+            },
+            (reason: any) => {
+                const message =
+                    reason instanceof Error ? reason.message : reason;
+                console.error(
+                    cerr`Failed to start assets compiler: ${message}`
+                );
+                if (isDebugEnabled()) {
                     console.error(reason);
                 }
                 setTimeout(() => process.exit(1), 200);
