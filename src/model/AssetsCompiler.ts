@@ -6,18 +6,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import CplacePlugin from './CplacePlugin';
 import { ExecutorService, Scheduler } from '../executor';
-import {
-    cerr,
-    cgreen,
-    csucc,
-    cwarn,
-    debug,
-    formatDuration,
-    IUpdateDetails,
-} from '../utils';
+import { cerr, cgreen, csucc, cwarn, debug, formatDuration } from '../utils';
 import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
-import { isFileTracked } from './utils';
 import { CplaceVersion } from './CplaceVersion';
 
 export interface IAssetsCompilerConfiguration {
@@ -132,7 +123,7 @@ export class AssetsCompiler {
         return isAtLeast23_2 || is23_1Snapshot;
     }
 
-    public async start(updateDetails?: IUpdateDetails): Promise<void> {
+    public async start(): Promise<void> {
         if (!this.projects.size) {
             console.log(cgreen`->`, 'Nothing to do, no plugins detected...');
             return new Promise<void>((resolve) => resolve());
@@ -189,8 +180,7 @@ export class AssetsCompiler {
             this.runConfig.production,
             this.runConfig.noParents,
             this.runConfig.watchFiles,
-            this.runConfig.withYaml,
-            updateDetails
+            this.runConfig.withYaml
         );
 
         debug(`(AssetsCompiler) starting scheduler for compilation tasks...`);

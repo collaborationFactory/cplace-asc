@@ -11,12 +11,10 @@ import {
 import {
     cerr,
     cgreen,
-    checkForUpdate,
     cwarn,
     debug,
     enableDebug,
     isDebugEnabled,
-    IUpdateDetails,
 } from './utils';
 import * as os from 'os';
 import * as path from 'path';
@@ -26,11 +24,9 @@ import * as meow from 'meow';
 import { NodeVersionUtils } from './utils/NodeUtils';
 
 checkNodeVersion();
-checkForUpdate()
-    .then((details) => run(details))
-    .catch(() => run());
+run();
 
-function run(updateDetails?: IUpdateDetails) {
+function run() {
     const cli = meow(
         `
     Usage:
@@ -218,7 +214,7 @@ function run(updateDetails?: IUpdateDetails) {
         });
 
         // Timeout to ensure flush of stdout
-        assetsCompiler.start(updateDetails).then(
+        assetsCompiler.start().then(
             () => {
                 setTimeout(() => process.exit(0), 200);
             },
