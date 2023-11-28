@@ -62,6 +62,7 @@ jobs:
               uses: actions/checkout@v3
               with:
                   repository: collaborationFactory/cplace
+                  ref: 'release/23.4'
                   path: main
                   token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
@@ -69,6 +70,7 @@ jobs:
               uses: actions/checkout@v3
               with:
                   repository: collaborationFactory/cplace-project-planning
+                  ref: 'release/23.4'
                   path: cplace-project-planning
                   token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
@@ -76,6 +78,7 @@ jobs:
               uses: actions/checkout@v3
               with:
                   repository: collaborationFactory/cplace-paw
+                  ref: 'release/23.4'
                   path: cplace-paw
                   token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
