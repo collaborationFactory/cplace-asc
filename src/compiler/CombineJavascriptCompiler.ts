@@ -10,6 +10,7 @@ import {
     getCplaceAscNodeModulesPath,
     getProjectNodeModulesPath,
 } from '../model/utils';
+import { createLibraryLicenseInfos } from '../utils/LicenseInfos';
 
 export class CombineJavascriptCompiler implements ICompiler {
     public static readonly OUTPUT_DIR = '_generated_';
@@ -79,6 +80,19 @@ export class CombineJavascriptCompiler implements ICompiler {
                             end - start
                         )})`
                     );
+                    const licenseInfos = createLibraryLicenseInfos(
+                        this.assetsPath
+                    );
+                    const pathToCompressedJs = path.join(
+                        this.assetsPath,
+                        CombineJavascriptCompiler.OUTPUT_DIR,
+                        CombineJavascriptCompiler.OUTPUT_FILE_NAME
+                    );
+                    let compressedJs = fs
+                        .readFileSync(pathToCompressedJs)
+                        .toString();
+                    compressedJs = licenseInfos + compressedJs;
+                    fs.writeFileSync(pathToCompressedJs, compressedJs);
                     return resolve(CompilationResult.CHANGED);
                 })
                 .catch((err) => {
