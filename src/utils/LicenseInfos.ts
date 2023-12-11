@@ -36,10 +36,10 @@ export function createLibraryLicenseInfos(pathToAssetsFolder: string): string {
                     .toString();
             }
         } else {
-            console.error(
-                'Expected License File does not exist: ' +
-                    libraryLicenseInfo.licenseFile
-            );
+            if (!(libraryLicenseInfo.license.toLowerCase().includes('commercial license') && libraryLicenseInfo.license.toLowerCase().includes('collaboration factory')))
+                console.log(
+                  `Expected License File for ${libraryLicenseInfo.product} ${libraryLicenseInfo.component} does not exist ${libraryLicenseInfo.licenseFile}`
+                );
         }
     });
 
