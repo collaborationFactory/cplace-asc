@@ -49,11 +49,18 @@ export function createLibraryLicenseInfos(pathToAssetsFolder: string): string {
         if (libraryLicenseInfo.license.toLowerCase().includes('lgpl')) {
             includesLgpl = true;
         }
-        libraryLicenseInfo.additionalLicenses.forEach((additionalLicense) => {
-            if (additionalLicense.toLowerCase().includes('lgpl')) {
-                includesLgpl = true;
-            }
-        });
+        if (
+            libraryLicenseInfo.additionalLicenses &&
+            libraryLicenseInfo.additionalLicenses.length > 0
+        ) {
+            libraryLicenseInfo.additionalLicenses.forEach(
+                (additionalLicense) => {
+                    if (additionalLicense.toLowerCase().includes('lgpl')) {
+                        includesLgpl = true;
+                    }
+                }
+            );
+        }
         if (includesLgpl) {
             licenseTexts = licenseTexts.concat(ADDITIONAL_LGPL_TEXT + '\n');
         }
