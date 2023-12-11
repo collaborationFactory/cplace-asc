@@ -36,9 +36,18 @@ export function createLibraryLicenseInfos(pathToAssetsFolder: string): string {
                     .toString();
             }
         } else {
-            if (!(libraryLicenseInfo.license.toLowerCase().includes('commercial license') && libraryLicenseInfo.license.toLowerCase().includes('collaboration factory')))
+            if (
+                !(
+                    libraryLicenseInfo.license
+                        .toLowerCase()
+                        .includes('commercial license') &&
+                    libraryLicenseInfo.license
+                        .toLowerCase()
+                        .includes('collaboration factory')
+                )
+            )
                 console.log(
-                  `Expected License File for ${libraryLicenseInfo.product} ${libraryLicenseInfo.component} does not exist ${libraryLicenseInfo.licenseFile}`
+                    `Expected License File for ${libraryLicenseInfo.product} ${libraryLicenseInfo.component} does not exist ${libraryLicenseInfo.licenseFile}`
                 );
         }
     });
