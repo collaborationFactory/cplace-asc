@@ -104,10 +104,9 @@ export class CombineJavascriptCompiler implements ICompiler {
                         fs.writeFileSync(pathToCompressedJs, compressedJs);
                     } else {
                         console.log(
-                            'No License Infos were found in' +
+                            '⟲  No License Infos were found in ' +
                                 pathToLibraryInfos
                         );
-                        return '';
                     }
                     return resolve(CompilationResult.CHANGED);
                 })
