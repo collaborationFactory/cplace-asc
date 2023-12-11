@@ -10,7 +10,10 @@ import {
     getCplaceAscNodeModulesPath,
     getProjectNodeModulesPath,
 } from '../model/utils';
-import { createLibraryLicenseInfos } from '../utils/LicenseInfos';
+import {
+    createLibraryLicenseInfos,
+    LIBRARY_LICENSE_INFOS_NAME,
+} from '../utils/LicenseInfos';
 
 export class CombineJavascriptCompiler implements ICompiler {
     public static readonly OUTPUT_DIR = '_generated_';
@@ -80,19 +83,32 @@ export class CombineJavascriptCompiler implements ICompiler {
                             end - start
                         )})`
                     );
-                    const licenseInfos = createLibraryLicenseInfos(
-                        this.assetsPath
-                    );
-                    const pathToCompressedJs = path.join(
+
+                    const pathToLibraryInfos = path.join(
                         this.assetsPath,
-                        CombineJavascriptCompiler.OUTPUT_DIR,
-                        CombineJavascriptCompiler.OUTPUT_FILE_NAME
+                        LIBRARY_LICENSE_INFOS_NAME
                     );
-                    let compressedJs = fs
-                        .readFileSync(pathToCompressedJs)
-                        .toString();
-                    compressedJs = licenseInfos + compressedJs;
-                    fs.writeFileSync(pathToCompressedJs, compressedJs);
+                    if (fs.existsSync(pathToLibraryInfos)) {
+                        const licenseInfos = createLibraryLicenseInfos(
+                            this.assetsPath
+                        );
+                        const pathToCompressedJs = path.join(
+                            this.assetsPath,
+                            CombineJavascriptCompiler.OUTPUT_DIR,
+                            CombineJavascriptCompiler.OUTPUT_FILE_NAME
+                        );
+                        let compressedJs = fs
+                            .readFileSync(pathToCompressedJs)
+                            .toString();
+                        compressedJs = licenseInfos + compressedJs;
+                        fs.writeFileSync(pathToCompressedJs, compressedJs);
+                    } else {
+                        console.log(
+                            'No License Infos were found in' +
+                                pathToLibraryInfos
+                        );
+                        return '';
+                    }
                     return resolve(CompilationResult.CHANGED);
                 })
                 .catch((err) => {
