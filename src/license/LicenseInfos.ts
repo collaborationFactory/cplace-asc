@@ -38,7 +38,10 @@ export abstract class LicenseInfo {
             this._licenseText = this._licenseText.concat(
                 'License: ' + this.libraryLicenseInfo.license + '    '
             );
-            if (this.libraryLicenseInfo.additionalLicenses.length > 0) {
+            if (
+                this.libraryLicenseInfo.additionalLicenses &&
+                this.libraryLicenseInfo.additionalLicenses.length > 0
+            ) {
                 this._licenseText = this._licenseText.concat(
                     'Additional Licenses: ' +
                         this.libraryLicenseInfo.additionalLicenses.join(', ') +
