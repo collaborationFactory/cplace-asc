@@ -10,10 +10,7 @@ import {
     getCplaceAscNodeModulesPath,
     getProjectNodeModulesPath,
 } from '../model/utils';
-import {
-    createLibraryLicenseInfos,
-    LIBRARY_LICENSE_INFOS_NAME,
-} from '../utils/LicenseInfos';
+import { createLibraryLicenseInfos, LIBRARY_LICENSE_INFOS_NAME } from "../license/LicenseInfoService";
 
 export class CombineJavascriptCompiler implements ICompiler {
     public static readonly OUTPUT_DIR = '_generated_';

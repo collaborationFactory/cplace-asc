@@ -1,5 +1,3 @@
-import * as fs from 'fs';
-import * as path from 'path';
 
 export interface LibraryLicenseInfo {
   product: string;
@@ -12,98 +10,36 @@ export interface LibraryLicenseInfo {
 }
 
 export abstract class LicenseInfo {
-  public readonly LIBRARY_LICENSE_INFOS_NAME = 'libraryLicenseInfos.json';
-
-  public readonly ADDITIONAL_LGPL_TEXT =
-    'Modifications of the proprietary software in your product for your own and reverse engineering to debug such modifications are hereby permitted to the extent that such software components are linked to program libraries under the GNU Lesser General Public License (LGPL). However, you may not pass on to third parties the knowledge gained from reverse engineering or debugging, the information gained from re-engineering or the modified software itself. Please note that any modification is at your own risk and any warranty for defects resulting from the modification is void. In addition, the product may not be suitable for the intended use. This provision takes precedence over all other contractual provisions between you and collaboration Factory AG, Arnulfstr. 34, 80335 München.';
-
-  private pathToAssetsFolder: string = '';
-
-  constructor(pathToAssetsFolder: string) {
-    this.pathToAssetsFolder = pathToAssetsFolder;
+  get licenseText(): string {
+    return this._licenseText;
   }
 
-  private createLibraryLicenseInfos(): string {
-    let libraryLicenseInfos = this.initLicenseInfos();
-    return this.generateLicenseTexts(libraryLicenseInfos);
+  private _licenseText = '';
+  private libraryLicenseInfo: LibraryLicenseInfo | undefined;
+
+  protected abstract getTextLicenseTextToPrepend(): string;
+
+  constructor(libraryLicenseInfo: LibraryLicenseInfo) {
+    this.libraryLicenseInfo = libraryLicenseInfo;
+    this.generateLicenseTexts();
   }
 
-  private generateLicenseTexts(libraryLicenseInfos: LibraryLicenseInfo[]) {
-    let licenseTexts = '';
-    libraryLicenseInfos.forEach((libraryLicenseInfo: LibraryLicenseInfo) => {
-      let includesLgpl = false;
-      if (libraryLicenseInfo.license.toLowerCase().includes('lgpl')) {
-        includesLgpl = true;
-      }
-      if (
-        libraryLicenseInfo.additionalLicenses &&
-        libraryLicenseInfo.additionalLicenses.length > 0
-      ) {
-        libraryLicenseInfo.additionalLicenses.forEach(
-          (additionalLicense) => {
-            if (additionalLicense.toLowerCase().includes('lgpl')) {
-              includesLgpl = true;
-            }
-          }
-        );
-      }
-      if (includesLgpl) {
-        licenseTexts = licenseTexts.concat(this.ADDITIONAL_LGPL_TEXT + '\n');
-      }
-
-      licenseTexts = licenseTexts.concat(
-        'Component: ' +
-        libraryLicenseInfo.product +
+  public generateLicenseTexts(): void {
+    if (this.libraryLicenseInfo) {
+      this._licenseText = this._licenseText.concat(
+        '// Component: ' +
+        this.libraryLicenseInfo.product +
         ' ' +
-        libraryLicenseInfo.component +
-        '\n'
+        this.libraryLicenseInfo.component + '    '
       );
-      licenseTexts = licenseTexts.concat(
-        'Copyright: ' + libraryLicenseInfo.copyright + '\n'
+      this._licenseText = this._licenseText.concat(
+        'Copyright: ' + this.libraryLicenseInfo.copyright + '    '
       );
-      licenseTexts = licenseTexts.concat(
-        'License Text: ' + libraryLicenseInfo.licenseText + '\n'
+      this._licenseText = this._licenseText.concat(this.getTextLicenseTextToPrepend());
+      this._licenseText = this._licenseText.concat(
+        'License Text: ' + this.libraryLicenseInfo.licenseText + '    '
       );
-    });
-    return licenseTexts;
-  }
-
-  private initLicenseInfos() {
-    let libraryLicenseInfos: LibraryLicenseInfo[] = JSON.parse(
-      fs
-        .readFileSync(
-          path.join(this.pathToAssetsFolder, this.LIBRARY_LICENSE_INFOS_NAME)
-        )
-        .toString()
-    );
-    libraryLicenseInfos.forEach((libraryLicenseInfo: LibraryLicenseInfo) => {
-      if (libraryLicenseInfo.licenseFile) {
-        const pathToLicenseFile = path.join(
-          this.pathToAssetsFolder,
-          libraryLicenseInfo.licenseFile
-        );
-        if (fs.existsSync(pathToLicenseFile)) {
-          libraryLicenseInfo.licenseText = fs
-            .readFileSync(pathToLicenseFile)
-            .toString();
-        }
-      } else {
-        if (
-          !(
-            libraryLicenseInfo.license
-              .toLowerCase()
-              .includes('commercial license') &&
-            libraryLicenseInfo.license
-              .toLowerCase()
-              .includes('collaboration factory')
-          )
-        )
-          console.log(
-            `Expected License File for ${libraryLicenseInfo.product} ${libraryLicenseInfo.component} does not exist ${libraryLicenseInfo.licenseFile}`
-          );
-      }
-    });
-    return libraryLicenseInfos;
+    }
   }
 }
 
