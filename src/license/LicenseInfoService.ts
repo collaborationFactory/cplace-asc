@@ -1,9 +1,9 @@
-import { LGPLLicense } from './LGPLLicenseInfos';
-import { LibraryLicenseInfo, LicenseInfo } from './LicenseInfos';
 import * as fs from 'fs';
 import * as path from 'node:path';
-import { CCBY25LicenseInfo } from './CCBY25LicenseInfos';
-import { MPLLicenseInfo } from './MPLLicenseInfos';
+import { LibraryLicenseInfo, LicenseInfo } from './licenseInfos/LicenseInfos';
+import { LGPLLicense } from './licenseInfos/LGPLLicenseInfos';
+import { MPLLicenseInfo } from './licenseInfos/MPLLicenseInfos';
+import { CCBY25LicenseInfo } from './licenseInfos/CCBY25LicenseInfos';
 
 export const LIBRARY_LICENSE_INFOS_NAME = 'libraryLicenseInfos.json';
 
@@ -27,10 +27,6 @@ function handleLibraryLicenceInfo(
                 .toString()
                 .replace(/(\r\n|\n|\r)/gm, '');
         }
-    } else {
-        console.log(
-            `Expected License File for ${libraryLicenseInfo.product} ${libraryLicenseInfo.component} does not exist ${libraryLicenseInfo.licenseFile}`
-        );
     }
 
     if (isIncludedInLicense(libraryLicenseInfo, LGPL)) {
