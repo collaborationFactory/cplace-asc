@@ -1,11 +1,15 @@
 import { LGPLLicense } from './LGPLLicenseInfos';
 import { LibraryLicenseInfo, LicenseInfo } from './LicenseInfos';
-import { CplaceLicense } from './CplaceLicense';
 import * as fs from 'fs';
 import * as path from 'node:path';
-import { OtherLicense } from './OtherLicense';
+import { CCBY25LicenseInfo } from './CCBY25LicenseInfos';
+import { MPLLicenseInfo } from './MPLLicenseInfos';
 
 export const LIBRARY_LICENSE_INFOS_NAME = 'libraryLicenseInfos.json';
+
+export const LGPL = 'LGPL';
+export const MPL = 'MPL';
+export const CCBY25 = 'CC-BY-2.5';
 
 function handleLibraryLicenceInfo(
     libraryLicenseInfo: LibraryLicenseInfo,
@@ -29,40 +33,52 @@ function handleLibraryLicenceInfo(
         );
     }
 
-    if (
-        libraryLicenseInfo.license
-            .toLowerCase()
-            .includes('commercial license') &&
-        libraryLicenseInfo.license
-            .toLowerCase()
-            .includes('collaboration factory')
-    ) {
-        licenseInfos.push(new CplaceLicense(libraryLicenseInfo));
-    } else if (isLgpl(libraryLicenseInfo)) {
+    if (isIncludedInLicense(libraryLicenseInfo, LGPL)) {
         licenseInfos.push(new LGPLLicense(libraryLicenseInfo));
-    } else {
-        licenseInfos.push(new OtherLicense(libraryLicenseInfo));
+    } else if (isIncludedInLicense(libraryLicenseInfo, MPL)) {
+        licenseInfos.push(new MPLLicenseInfo(libraryLicenseInfo));
+    } else if (isIncludedInLicense(libraryLicenseInfo, CCBY25)) {
+        licenseInfos.push(new CCBY25LicenseInfo(libraryLicenseInfo));
     }
 }
 
-export function isLgpl(libraryLicenseInfo: LibraryLicenseInfo): boolean {
-    let includesLgpl = false;
-    if (libraryLicenseInfo.license.toLowerCase().includes('lgpl')) {
-        includesLgpl = true;
+export function isIncludedInLicense(
+    libraryLicenseInfo: LibraryLicenseInfo,
+    licenseType: string
+): boolean {
+    let includesLicenseType = false;
+    if (
+        libraryLicenseInfo.license
+            .toLowerCase()
+            .includes(licenseType.toLowerCase())
+    ) {
+        includesLicenseType = true;
     }
+    return includesLicenseType;
+}
+
+export function isIncludedInAdditionalLicenses(
+    libraryLicenseInfo: LibraryLicenseInfo,
+    licenseType: string
+): boolean {
+    let includesLicenseType = false;
     if (
         libraryLicenseInfo.additionalLicenses &&
         libraryLicenseInfo.additionalLicenses.length > 0
     ) {
         libraryLicenseInfo.additionalLicenses.forEach(
             (additionalLicense: string) => {
-                if (additionalLicense.toLowerCase().includes('lgpl')) {
-                    includesLgpl = true;
+                if (
+                    additionalLicense
+                        .toLowerCase()
+                        .includes(licenseType.toLowerCase())
+                ) {
+                    includesLicenseType = true;
                 }
             }
         );
     }
-    return includesLgpl;
+    return includesLicenseType;
 }
 
 export function createLibraryLicenseInfos(pathToAssetsFolder: string) {

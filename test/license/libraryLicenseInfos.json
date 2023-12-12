@@ -65,5 +65,20 @@
         "sourcesForDownload": [
             "/3rdParty/modified/daisydiff/js/tooltip/wz_tooltip.js"
         ]
+    },
+    {
+        "product": "Lightbox",
+        "component": "lightbox",
+        "version": "2.7.1",
+        "copyright": "Copyright (c) 2015 Lokesh Dhakar",
+        "projectUrl": "http://lokeshdhakar.com/projects/lightbox2/",
+        "repoUrl": "https://github.com/lokesh/lightbox2",
+        "license": "CC-BY-2.5 (Creative Commons Attribution 2.5)",
+        "additionalLicenses": [],
+        "licenseUrl": "https://github.com/lokesh/lightbox2/blob/2.7.1/package.json",
+        "licenseFile": "license/lightbox.license.txt",
+        "modified": true,
+        "libraryFileNames": ["/3rdParty/modified/lightbox2/lightbox.js"],
+        "sourcesForDownload": []
     }
 ]
