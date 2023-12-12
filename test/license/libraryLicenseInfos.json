@@ -37,10 +37,7 @@
         "projectUrl": "https://ckeditor.com/",
         "repoUrl": "https://github.com/ckeditor/ckeditor4",
         "license": "MPL-2.0",
-        "additionalLicenses": [
-            "GPL-2",
-            "LGPL-2.1"
-        ],
+        "additionalLicenses": ["GPL-2", "LGPL-2.1"],
         "licenseUrl": "https://github.com/ckeditor/ckeditor4/blob/4.19.0/LICENSE.md",
         "licenseFile": "license/ckeditor.license.txt",
         "modified": true,
@@ -48,9 +45,7 @@
             "/3rdParty/modified/ckeditor/ckeditor.js",
             "/js/bootstrap-ckeditor-fix.js"
         ],
-        "sourcesForDownload": [
-            "/3rdParty/modified/ckeditor/ckeditor.js"
-        ]
+        "sourcesForDownload": ["/3rdParty/modified/ckeditor/ckeditor.js"]
     },
     {
         "product": "JavaScript, DHTML Tooltips",

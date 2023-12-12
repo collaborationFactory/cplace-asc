@@ -1,14 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { LicenseInfo } from "./LicenseInfos";
-
+import { LicenseInfo } from './LicenseInfos';
 
 export class CplaceLicense extends LicenseInfo {
-  protected getTextLicenseTextToPrepend(): string {
-    return "";
-  }
-
+    protected getTextLicenseTextToPrepend(): string {
+        return '';
+    }
 }
-
-
-
