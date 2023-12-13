@@ -53,30 +53,6 @@ export function isIncludedInLicense(
     return includesLicenseType;
 }
 
-export function isIncludedInAdditionalLicenses(
-    libraryLicenseInfo: LibraryLicenseInfo,
-    licenseType: string
-): boolean {
-    let includesLicenseType = false;
-    if (
-        libraryLicenseInfo.additionalLicenses &&
-        libraryLicenseInfo.additionalLicenses.length > 0
-    ) {
-        libraryLicenseInfo.additionalLicenses.forEach(
-            (additionalLicense: string) => {
-                if (
-                    additionalLicense
-                        .toLowerCase()
-                        .includes(licenseType.toLowerCase())
-                ) {
-                    includesLicenseType = true;
-                }
-            }
-        );
-    }
-    return includesLicenseType;
-}
-
 export function createLibraryLicenseInfos(pathToAssetsFolder: string) {
     let libraryLicenseInfos: LibraryLicenseInfo[] = JSON.parse(
         fs

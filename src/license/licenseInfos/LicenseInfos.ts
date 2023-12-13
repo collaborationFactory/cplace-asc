@@ -16,7 +16,7 @@ export abstract class LicenseInfo {
     private _licenseText = '';
     private libraryLicenseInfo: LibraryLicenseInfo | undefined;
 
-    protected abstract getTextLicenseTextToPrepend(): string;
+    protected abstract getTextLicenseTextToAppend(): string;
 
     constructor(libraryLicenseInfo: LibraryLicenseInfo) {
         this.libraryLicenseInfo = libraryLicenseInfo;
@@ -26,34 +26,36 @@ export abstract class LicenseInfo {
     public generateLicenseTexts(): void {
         if (this.libraryLicenseInfo) {
             this._licenseText = this._licenseText.concat(
-                '// Component: ' +
+                '// [Component] ' +
                     this.libraryLicenseInfo.product +
                     ' ' +
                     this.libraryLicenseInfo.component +
                     '    '
             );
             this._licenseText = this._licenseText.concat(
-                'Copyright: ' + this.libraryLicenseInfo.copyright + '    '
+                '[Copyright] ' + this.libraryLicenseInfo.copyright + '    '
             );
             this._licenseText = this._licenseText.concat(
-                'License: ' + this.libraryLicenseInfo.license + '    '
+                '[License] ' + this.libraryLicenseInfo.license + '    '
             );
             if (
                 this.libraryLicenseInfo.additionalLicenses &&
                 this.libraryLicenseInfo.additionalLicenses.length > 0
             ) {
                 this._licenseText = this._licenseText.concat(
-                    'Additional Licenses: ' +
+                    '[Additional Licenses] ' +
                         this.libraryLicenseInfo.additionalLicenses.join(', ') +
                         '    '
                 );
             }
             this._licenseText = this._licenseText.concat(
-                this.getTextLicenseTextToPrepend()
+                '[License Text] ' + this.libraryLicenseInfo.licenseText + '    '
             );
-            this._licenseText = this._licenseText.concat(
-                'License Text: ' + this.libraryLicenseInfo.licenseText + '    '
-            );
+            if (this.getTextLicenseTextToAppend()) {
+                this._licenseText = this._licenseText.concat(
+                    '[Disclaimer] ' + this.getTextLicenseTextToAppend()
+                );
+            }
         }
     }
 }
