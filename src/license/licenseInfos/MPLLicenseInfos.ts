@@ -3,7 +3,7 @@ import * as path from 'path';
 import { LicenseInfo } from './LicenseInfos';
 
 export class MPLLicenseInfo extends LicenseInfo {
-    getTextLicenseTextToAppend() {
+    getLicenseDisclaimer() {
         return '';
     }
 }

@@ -16,7 +16,7 @@ export abstract class LicenseInfo {
     private _licenseText = '';
     private libraryLicenseInfo: LibraryLicenseInfo | undefined;
 
-    protected abstract getTextLicenseTextToAppend(): string;
+  protected abstract getLicenseDisclaimer(): string;
 
     constructor(libraryLicenseInfo: LibraryLicenseInfo) {
         this.libraryLicenseInfo = libraryLicenseInfo;
@@ -51,9 +51,9 @@ export abstract class LicenseInfo {
             this._licenseText = this._licenseText.concat(
                 '[License Text] ' + this.libraryLicenseInfo.licenseText + '    '
             );
-            if (this.getTextLicenseTextToAppend()) {
+          if (this.getLicenseDisclaimer()) {
                 this._licenseText = this._licenseText.concat(
-                    '[Disclaimer] ' + this.getTextLicenseTextToAppend()
+                  '[Disclaimer] ' + this.getLicenseDisclaimer()
                 );
             }
         }
