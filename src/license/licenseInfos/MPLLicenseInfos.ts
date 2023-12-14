@@ -2,8 +2,4 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { LicenseInfo } from './LicenseInfos';
 
-export class MPLLicenseInfo extends LicenseInfo {
-    getLicenseDisclaimer() {
-        return '';
-    }
-}
+export class MPLLicenseInfo extends LicenseInfo {}

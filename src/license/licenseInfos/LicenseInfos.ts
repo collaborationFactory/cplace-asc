@@ -16,8 +16,6 @@ export abstract class LicenseInfo {
     private _licenseText = '';
     private libraryLicenseInfo: LibraryLicenseInfo | undefined;
 
-    protected abstract getLicenseDisclaimer(): string;
-
     constructor(libraryLicenseInfo: LibraryLicenseInfo) {
         this.libraryLicenseInfo = libraryLicenseInfo;
         this.generateLicenseTexts();
@@ -41,11 +39,6 @@ export abstract class LicenseInfo {
             this._licenseText = this._licenseText.concat(
                 '[License Text] ' + this.libraryLicenseInfo.licenseText + '    '
             );
-            if (this.getLicenseDisclaimer()) {
-                this._licenseText = this._licenseText.concat(
-                    '[Disclaimer] ' + this.getLicenseDisclaimer()
-                );
-            }
         }
     }
 }
