@@ -25,7 +25,8 @@ function handleLibraryLicenceInfo(
             libraryLicenseInfo.licenseText = fs
                 .readFileSync(pathToLicenseFile)
                 .toString()
-                .replace(/(\r\n|\n|\r)/gm, ' ');
+                .replace(/(\r\n|\n|\r)/gm, ' ')
+                .replace(/  +/g, ' ');
         }
     }
 
