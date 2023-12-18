@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import * as path from 'node:path';
+import * as path from 'path';
 import { LibraryLicenseInfo, LicenseInfo } from './licenseInfos/LicenseInfos';
 import { LGPLLicense } from './licenseInfos/LGPLLicenseInfos';
 import { MPLLicenseInfo } from './licenseInfos/MPLLicenseInfos';
