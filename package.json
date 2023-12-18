@@ -66,7 +66,7 @@
         "@types/jest": "^27.0.3",
         "@types/less": "^3.0.3",
         "@types/minimist": "^1.2.2",
-        "@types/node": "^18.18.2",
+        "@types/node": "^18.11.0",
         "@types/vinyl": "^2.0.6",
         "jest": "^27.5.1",
         "prettier": "2.5.1",

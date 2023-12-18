@@ -1,0 +1,84 @@
+[
+    {
+        "product": "Angular Digest HUD",
+        "component": "digest-hud",
+        "version": "0.1.14",
+        "copyright": "Copyright (c) 2015 Piotr Kaminski",
+        "projectUrl": "https://github.com/pixiddesign/angular-digest-hud",
+        "repoUrl": "https://github.com/pixiddesign/angular-digest-hud",
+        "license": "MIT",
+        "additionalLicenses": [],
+        "licenseUrl": "https://github.com/pixiddesign/angular-digest-hud/blob/0.1.14/LICENSE",
+        "licenseFile": "license/digest-hud.license.txt",
+        "modified": false,
+        "libraryFileNames": ["angular/digest-hud.js"],
+        "sourcesForDownload": []
+    },
+    {
+        "product": "AngularJS",
+        "component": "angular-js",
+        "version": "1.8.2",
+        "copyright": "Copyright (c) 2010-2020 Google LLC. http://angularjs.org",
+        "projectUrl": "https://angularjs.org/",
+        "repoUrl": "https://github.com/angular/angular.js",
+        "license": "MIT",
+        "additionalLicenses": [],
+        "licenseUrl": "https://github.com/angular/angular.js/blob/v1.8.2/LICENSE",
+        "licenseFile": "license/angular.license.txt",
+        "modified": true,
+        "libraryFileNames": ["/3rdParty/modified/angular/angular.js"],
+        "sourcesForDownload": []
+    },
+    {
+        "product": "CK-Editor",
+        "component": "ck-editor",
+        "version": "4.19.0",
+        "copyright": "Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.",
+        "projectUrl": "https://ckeditor.com/",
+        "repoUrl": "https://github.com/ckeditor/ckeditor4",
+        "license": "MPL-2.0",
+        "additionalLicenses": ["GPL-2", "LGPL-2.1"],
+        "licenseUrl": "https://github.com/ckeditor/ckeditor4/blob/4.19.0/LICENSE.md",
+        "licenseFile": "license/ckeditor.license.txt",
+        "modified": true,
+        "libraryFileNames": [
+            "/3rdParty/modified/ckeditor/ckeditor.js",
+            "/js/bootstrap-ckeditor-fix.js"
+        ],
+        "sourcesForDownload": ["/3rdParty/modified/ckeditor/ckeditor.js"]
+    },
+    {
+        "product": "JavaScript, DHTML Tooltips",
+        "component": "wz-tooltip",
+        "version": "4.12",
+        "copyright": "Copyright (C) 2002-2008 Walter Zorn",
+        "projectUrl": "http://www.walterzorn.de/tooltip/tooltip.htm",
+        "repoUrl": "",
+        "license": "LGPL-2.1",
+        "additionalLicenses": [],
+        "licenseUrl": "file://software/cf.cplace.platform/assets/3rdParty/modified/daisydiff/js/tooltip/wz_tooltip.js",
+        "licenseFile": "license/wz_tooltip.license.txt",
+        "modified": true,
+        "libraryFileNames": [
+            "/3rdParty/modified/daisydiff/js/tooltip/wz_tooltip.js"
+        ],
+        "sourcesForDownload": [
+            "/3rdParty/modified/daisydiff/js/tooltip/wz_tooltip.js"
+        ]
+    },
+    {
+        "product": "Lightbox",
+        "component": "lightbox",
+        "version": "2.7.1",
+        "copyright": "Copyright (c) 2015 Lokesh Dhakar",
+        "projectUrl": "http://lokeshdhakar.com/projects/lightbox2/",
+        "repoUrl": "https://github.com/lokesh/lightbox2",
+        "license": "CC-BY-2.5 (Creative Commons Attribution 2.5)",
+        "additionalLicenses": [],
+        "licenseUrl": "https://github.com/lokesh/lightbox2/blob/2.7.1/package.json",
+        "licenseFile": "license/lightbox.license.txt",
+        "modified": true,
+        "libraryFileNames": ["/3rdParty/modified/lightbox2/lightbox.js"],
+        "sourcesForDownload": []
+    }
+]
