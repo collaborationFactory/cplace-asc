@@ -104,8 +104,8 @@ export class CombineJavascriptsCompiler implements ICompiler {
             const licenseInfos = createLibraryLicenseInfos(this.assetsPath);
             const pathToCompressedJs = path.join(
                 this.assetsPath,
-              CombineJavascriptsCompiler.OUTPUT_DIR,
-              CombineJavascriptsCompiler.OUTPUT_FILE_NAME
+                CombineJavascriptsCompiler.OUTPUT_DIR,
+                CombineJavascriptsCompiler.OUTPUT_FILE_NAME
             );
             let compressedJs = fs.readFileSync(pathToCompressedJs).toString();
             compressedJs = licenseInfos + compressedJs;
