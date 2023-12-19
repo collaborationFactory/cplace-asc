@@ -7,6 +7,10 @@ import rimraf = require('rimraf');
 import * as webpack from 'webpack';
 import { Configuration } from 'webpack';
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+import {
+    createLibraryLicenseInfos,
+    LIBRARY_LICENSE_INFOS_NAME,
+} from '../license/LicenseInfoService';
 
 export class CombineJavascriptsCompiler implements ICompiler {
     public static readonly OUTPUT_DIR = '_generated_';
@@ -76,6 +80,8 @@ export class CombineJavascriptsCompiler implements ICompiler {
                             end - start
                         )})`
                     );
+
+                    this.generateLicenseInfos();
                     return resolve(CompilationResult.CHANGED);
                 })
                 .catch((err) => {
@@ -87,6 +93,28 @@ export class CombineJavascriptsCompiler implements ICompiler {
         }).catch((err) => {
             throw Error(err);
         });
+    }
+
+    private generateLicenseInfos() {
+        const pathToLibraryInfos = path.join(
+            this.assetsPath,
+            LIBRARY_LICENSE_INFOS_NAME
+        );
+        if (fs.existsSync(pathToLibraryInfos)) {
+            const licenseInfos = createLibraryLicenseInfos(this.assetsPath);
+            const pathToCompressedJs = path.join(
+                this.assetsPath,
+                CombineJavascriptsCompiler.OUTPUT_DIR,
+                CombineJavascriptsCompiler.OUTPUT_FILE_NAME
+            );
+            let compressedJs = fs.readFileSync(pathToCompressedJs).toString();
+            compressedJs = licenseInfos + compressedJs;
+            fs.writeFileSync(pathToCompressedJs, compressedJs);
+        } else {
+            console.log(
+                '⟲  No License Infos were found in ' + pathToLibraryInfos
+            );
+        }
     }
 
     public static getOutputDir(assetsPath: string): string {
