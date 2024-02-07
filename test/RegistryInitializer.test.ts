@@ -195,7 +195,7 @@ describe('configuring jfrog credentials', () => {
         );
         expect(console.info).toBeCalledTimes(2);
         expect(console.info).toHaveBeenLastCalledWith(
-            '⟲ Using private npm jfrog registry \'private-registry-fe\' from environment variables'
+            "⟲ Using private npm jfrog registry 'private-registry-fe' from environment variables"
         );
     });
 
