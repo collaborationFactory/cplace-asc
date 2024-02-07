@@ -27,6 +27,7 @@ export class RegistryInitializer {
     private npmrcUser: string = '';
     private npmrcBasicAuthToken: string = '';
     private npmrcPath: string = '';
+    private npmRegistry: string = RegistryInitializer.JROG_CPLACE_NPM_REGISTRY;
 
     constructor() {}
 
@@ -39,6 +40,7 @@ export class RegistryInitializer {
             if (!this.extractTokenFromEnvironment()) {
                 this.extractTokenFromGradleProps();
             }
+            this.extractNpmRegistryFromEnvironment();
 
             if (!existsSync(this.npmrcPath)) {
                 RegistryInitializer.createEmptyNmprc(this.npmrcPath);
@@ -72,6 +74,19 @@ export class RegistryInitializer {
             return true;
         }
         return false;
+    }
+
+    private extractNpmRegistryFromEnvironment(): void {
+        if (process.env.ENV_PRIVATE_NPM_REGISTRY) {
+            this.npmRegistry = process.env.ENV_PRIVATE_NPM_REGISTRY;
+            console.info(
+                `⟲ Using private npm jfrog registry '${this.npmRegistry}' from environment variables`
+            );
+        } else {
+            console.info(
+                `⟲ Using default npm jfrog registry '${this.npmRegistry}'`
+            );
+        }
     }
 
     private static getGradlePropsPath(): string {
@@ -252,19 +267,19 @@ export class RegistryInitializer {
         return [
             this.getRegistryInfo(
                 RegistryInitializer.JROG_REGISTRY_URL,
-                RegistryInitializer.JROG_CPLACE_NPM_REGISTRY
+                this.npmRegistry
             ),
             this.getAuthInfo(
                 RegistryInitializer.JROG_REGISTRY_URL,
-                RegistryInitializer.JROG_CPLACE_NPM_REGISTRY
+                this.npmRegistry
             ),
             this.getAlwaysAuthInfo(
                 RegistryInitializer.JROG_REGISTRY_URL,
-                RegistryInitializer.JROG_CPLACE_NPM_REGISTRY
+                this.npmRegistry
             ),
             this.getEmailInfo(
                 RegistryInitializer.JROG_REGISTRY_URL,
-                RegistryInitializer.JROG_CPLACE_NPM_REGISTRY
+                this.npmRegistry
             ),
         ];
     }
