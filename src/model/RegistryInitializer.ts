@@ -6,20 +6,20 @@ import * as os from 'os';
 import { existsSync } from 'fs';
 
 export class RegistryInitializer {
-    public static readonly JROG_CPLACE_NPM_REGISTRY = 'cplace-npm';
-    public static readonly JROG_CPLACE_NPM_LOCAL_REGISTRY = 'cplace-npm-local';
-    public static readonly JROG_CPLACE_ASSETS_NPM_REGISTRY =
+    public static readonly JFROG_CPLACE_NPM_REGISTRY = 'cplace-npm';
+    public static readonly JFROG_CPLACE_NPM_LOCAL_REGISTRY = 'cplace-npm-local';
+    public static readonly JFROG_CPLACE_ASSETS_NPM_REGISTRY =
         'cplace-assets-npm';
-    public static readonly JROG_REGISTRY_URL =
+    public static readonly JFROG_REGISTRY_URL =
         '//cplace.jfrog.io/artifactory/api/npm/';
     public static readonly PUBLIC_NPM_REGISTRY = 'registry.npmjs.org';
     public static readonly GRADLE_HOME = '.gradle';
     public static readonly GRADLE_PROPERTIES = 'gradle.properties';
 
     private static readonly REGISTRY_LIST = [
-        RegistryInitializer.JROG_CPLACE_NPM_REGISTRY,
-        RegistryInitializer.JROG_CPLACE_NPM_LOCAL_REGISTRY,
-        RegistryInitializer.JROG_CPLACE_ASSETS_NPM_REGISTRY,
+        RegistryInitializer.JFROG_CPLACE_NPM_REGISTRY,
+        RegistryInitializer.JFROG_CPLACE_NPM_LOCAL_REGISTRY,
+        RegistryInitializer.JFROG_CPLACE_ASSETS_NPM_REGISTRY,
         RegistryInitializer.PUBLIC_NPM_REGISTRY,
     ];
 
@@ -27,7 +27,7 @@ export class RegistryInitializer {
     private npmrcUser: string = '';
     private npmrcBasicAuthToken: string = '';
     private npmrcPath: string = '';
-    private npmRegistry: string = RegistryInitializer.JROG_CPLACE_NPM_REGISTRY;
+    private npmRegistry: string = RegistryInitializer.JFROG_CPLACE_NPM_REGISTRY;
 
     constructor() {}
 
@@ -266,19 +266,19 @@ export class RegistryInitializer {
     private getDefaultRegistryConfigItems(): string[] {
         return [
             this.getRegistryInfo(
-                RegistryInitializer.JROG_REGISTRY_URL,
+                RegistryInitializer.JFROG_REGISTRY_URL,
                 this.npmRegistry
             ),
             this.getAuthInfo(
-                RegistryInitializer.JROG_REGISTRY_URL,
+                RegistryInitializer.JFROG_REGISTRY_URL,
                 this.npmRegistry
             ),
             this.getAlwaysAuthInfo(
-                RegistryInitializer.JROG_REGISTRY_URL,
+                RegistryInitializer.JFROG_REGISTRY_URL,
                 this.npmRegistry
             ),
             this.getEmailInfo(
-                RegistryInitializer.JROG_REGISTRY_URL,
+                RegistryInitializer.JFROG_REGISTRY_URL,
                 this.npmRegistry
             ),
         ];
