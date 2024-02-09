@@ -175,6 +175,30 @@ describe('configuring jfrog credentials', () => {
         );
     });
 
+    test('auth token and a private npm registry can be extracted from the environment', () => {
+        process.env.ENV_CPLACE_ARTIFACTORY_ACTOR =
+            'mathilde.musterfrau@cplace.de';
+        process.env.ENV_CPLACE_ARTIFACTORY_TOKEN = 'token';
+        process.env.ENV_PRIVATE_NPM_REGISTRY = 'private-registry-fe';
+
+        const registryInitializerPrototype = setupRegistryInitializerMock();
+        jest.spyOn(console, 'info').mockImplementation();
+
+        registryInitializerPrototype.extractTokenFromEnvironment();
+        registryInitializerPrototype.extractNpmRegistryFromEnvironment();
+
+        expect(registryInitializerPrototype.npmrcUser).toEqual(
+            'mathilde.musterfrau@cplace.de'
+        );
+        expect(registryInitializerPrototype.npmrcBasicAuthToken).toEqual(
+            'bWF0aGlsZGUubXVzdGVyZnJhdUBjcGxhY2UuZGU6dG9rZW4='
+        );
+        expect(console.info).toBeCalledTimes(2);
+        expect(console.info).toHaveBeenLastCalledWith(
+            "⟲ Using private npm jfrog registry 'private-registry-fe' from environment variables"
+        );
+    });
+
     function setupRegistryInitializerMock(
         createNpmrc: boolean = true,
         createGradleProperties: boolean = true
@@ -199,6 +223,7 @@ describe('configuring jfrog credentials', () => {
             Object.getPrototypeOf(registryInitializer);
         registryInitializerPrototype.npmrcPath = npmrcPath;
         registryInitializerPrototype.mainRepo = '';
+        registryInitializerPrototype.npmRegistry = 'cplace-npm';
         return registryInitializerPrototype;
     }
 });
