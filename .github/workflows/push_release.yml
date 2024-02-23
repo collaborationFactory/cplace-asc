@@ -4,6 +4,8 @@ on:
         branches:
             - '*.*.*'
 
+permissions: write-all
+
 jobs:
     tag:
         runs-on: ubuntu-latest
