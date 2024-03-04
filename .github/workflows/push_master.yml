@@ -34,6 +34,11 @@ jobs:
               if: steps.npm-cache.outputs.cache-hit != 'true'
               run: npm ci
 
+            - name: Configure git user
+              run: |
+                  git config user.name ${{ github.actor }}
+                  git config user.email "cplace@github.com"
+
             - name: Tag
               run: npx ts-node tools/scripts/tag.ts
               env:
