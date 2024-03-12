@@ -49,7 +49,7 @@ jobs:
               id: tag
               uses: dawidd6/action-get-tag@v1
 
-              - name: Publish
+            - name: Publish
               run: npx ts-node tools/scripts/publish.ts
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
