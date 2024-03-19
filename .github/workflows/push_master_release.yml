@@ -1,8 +1,9 @@
-name: 'Master CI'
+name: 'Master/Release CI'
 on:
     push:
         branches:
             - 'master'
+            - '*.*.*'
 
 permissions: write-all
 
@@ -43,3 +44,13 @@ jobs:
               run: npx ts-node tools/scripts/tag.ts
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Get tag
+              id: tag
+              uses: dawidd6/action-get-tag@v1
+
+            - name: Publish
+              run: npx ts-node tools/scripts/publish.ts
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+                  TAG: ${{ steps.tag.outputs.tag }}
