@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
 
 import * as rootPackageJSON from '../../package.json';
+import * as core from '@actions/core';
 
 const branch = execSync('git branch --show-current').toString().trim();
 let version = rootPackageJSON.version;
@@ -34,3 +35,4 @@ const cmd = `git tag -m "version ${tag}" -a ${tag}`;
 
 console.log(execSync(cmd).toString());
 console.log(execSync(`git push origin ${tag}`).toString());
+core.setOutput('createdTag', tag);
