@@ -41,16 +41,13 @@ jobs:
                   git config user.email "cplace@github.com"
 
             - name: Tag
+              id: tag
               run: npx ts-node tools/scripts/tag.ts
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-            - name: Get tag
-              id: tag
-              uses: dawidd6/action-get-tag@v1
 
             - name: Publish
               run: npx ts-node tools/scripts/publish.ts
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-                  TAG: ${{ steps.tag.outputs.tag }}
+                  TAG: ${{ steps.tag.outputs.createdTag }}
