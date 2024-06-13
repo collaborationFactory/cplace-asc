@@ -74,6 +74,10 @@ export function getCplaceAscNodeModulesPath(): string {
     return resolve(getCplaceAscPath(), 'node_modules');
 }
 
+export function getCplaceAscNodeModulesBinPath(): string {
+    return resolve(getCplaceAscNodeModulesPath(), '.bin');
+}
+
 export function getProjectNodeModulesBinPath(): string {
     return resolve(getProjectNodeModulesPath(), '.bin');
 }
