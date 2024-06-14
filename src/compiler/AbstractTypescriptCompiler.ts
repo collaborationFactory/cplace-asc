@@ -15,7 +15,13 @@ import {
 } from '../utils';
 import * as fs from 'fs';
 import * as glob from 'glob';
-import { getProjectNodeModulesBinPath } from '../model/utils';
+import {
+    getCplaceAscNodeModulesBinPath,
+    getCplaceAscNodeModulesPath,
+    getProjectNodeModulesBinPath,
+} from '../model/utils';
+import { existsSync } from 'fs';
+import { execSync } from 'child_process';
 
 export abstract class AbstractTypescriptCompiler implements ICompiler {
     private static readonly HASH_FILE = 'typings.hash';
@@ -102,6 +108,12 @@ export abstract class AbstractTypescriptCompiler implements ICompiler {
         });
 
         debug(
+            `(TypescriptCompiler) Using TypeScript version: ${execSync(
+                `${tscExecutable} --version`
+            )}`
+        );
+
+        debug(
             `(TypescriptCompiler) [${this.pluginName}] tsc return code: ${result.status}`
         );
         if (result.status !== 0) {
@@ -112,7 +124,18 @@ export abstract class AbstractTypescriptCompiler implements ICompiler {
     }
 
     private getTscExecutable(): string {
-        return path.resolve(getProjectNodeModulesBinPath(), 'tsc');
+        const localTSBin = path.resolve(
+            getCplaceAscNodeModulesBinPath(),
+            'tsc'
+        );
+        const projectTSBin = path.resolve(
+            getProjectNodeModulesBinPath(),
+            'tsc'
+        );
+        if (existsSync(localTSBin)) {
+            return localTSBin;
+        }
+        return projectTSBin;
     }
 
     private getHashFilePath(): string {
