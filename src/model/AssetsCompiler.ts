@@ -393,6 +393,10 @@ export class AssetsCompiler {
 
         projects.set(pluginName, project);
 
+        if (!project.pluginDescriptor.dependencies) {
+            throw `No dependencies found for plugin ${pluginName} in ${pluginPath}`;
+        }
+
         project.pluginDescriptor.dependencies.forEach((pluginDescriptor) => {
             if (projects.has(pluginDescriptor.name)) {
                 return;
