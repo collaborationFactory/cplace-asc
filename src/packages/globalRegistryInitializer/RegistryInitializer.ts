@@ -1,6 +1,5 @@
 import { execSync } from 'child_process';
 import * as path from 'path';
-import { cgreen, cred, debug } from '../utils';
 import * as fs from 'fs';
 import * as os from 'os';
 import { existsSync } from 'fs';
@@ -28,8 +27,23 @@ export class RegistryInitializer {
     private npmrcBasicAuthToken: string = '';
     private npmrcPath: string = '';
     private npmRegistry: string = RegistryInitializer.JFROG_CPLACE_NPM_REGISTRY;
+    private DEBUG_ENABLED: boolean = false;
 
     constructor() {}
+
+    private debug(content: any): void {
+        if (this.DEBUG_ENABLED) {
+            if (typeof content === 'string') {
+                console.debug(`\x1b[37m✹ ${content}\x1b[0m`);
+            } else {
+                console.debug(content);
+            }
+        }
+    }
+    
+    public enableDebug(debugEnabled = true): void {
+        this.DEBUG_ENABLED = debugEnabled;
+    }
 
     public initRegistry(): void {
         console.info('⟲ Initialising cplace jfrog registry for NPM');
@@ -51,7 +65,6 @@ export class RegistryInitializer {
             this.addDefaultRegistryCredentialsToNpmrc();
         } catch (e: any) {
             console.error(
-                cred`✗`,
                 e.message,
                 'You can ignore this for cplace versions before 5.16.'
             );
@@ -89,9 +102,9 @@ export class RegistryInitializer {
         }
     }
 
-    private static getGradlePropsPath(): string {
+    private getGradlePropsPath(): string {
         const gradleHome = RegistryInitializer.getGradleHome();
-        debug(`.gradle location: ${gradleHome}`);
+        this.debug(`.gradle location: ${gradleHome}`);
         if (!fs.existsSync(gradleHome)) {
             throw Error(
                 `.gradle at location ${gradleHome} does not exist. Please use the default (${os.homedir()}/${
@@ -104,7 +117,7 @@ export class RegistryInitializer {
             RegistryInitializer.GRADLE_PROPERTIES
         );
 
-        debug(`gradle.properties location: ${gradleProperties}`);
+        this.debug(`gradle.properties location: ${gradleProperties}`);
         if (!fs.existsSync(gradleProperties)) {
             throw Error(
                 `gradle.properties at location ${gradleProperties} do not exist!`
@@ -123,7 +136,6 @@ export class RegistryInitializer {
     private static createEmptyNmprc(npmrcPath: string) {
         fs.writeFileSync(npmrcPath, '');
         console.info(
-            cgreen`✓`,
             `Created empty .npmrc at location ${npmrcPath}`
         );
     }
@@ -136,7 +148,7 @@ export class RegistryInitializer {
 
     private setNpmrcPath() {
         const npmConfig: string = execSync('npm config ls -l').toString();
-        debug(`Found user config ${npmConfig}`);
+        this.debug(`Found user config ${npmConfig}`);
 
         const npmrcPath: string | undefined = (npmConfig.match(
             /userconfig *= *".*"/gi
@@ -157,7 +169,7 @@ export class RegistryInitializer {
     }
 
     private removeAllRegistryCredentials() {
-        debug(`Cleaning registries jFrog credentials`);
+        this.debug(`Cleaning registries jFrog credentials`);
         if (!this.currentNpmrcConfig) {
             return;
         }
@@ -168,7 +180,7 @@ export class RegistryInitializer {
     }
 
     private removeSingleRegistryCredentials(registry: string): void {
-        debug(`Cleaning ${registry} registry jFrog credentials`);
+        this.debug(`Cleaning ${registry} registry jFrog credentials`);
         const linesToRemove = this.currentNpmrcConfig
             .split('\n')
             .filter((configLine) => configLine.includes(registry));
@@ -236,7 +248,7 @@ export class RegistryInitializer {
         console.info(
             '⟲ Configuring npm jfrog registry via the gradle properties'
         );
-        const gradleProps = RegistryInitializer.getGradlePropsPath();
+        const gradleProps = this.getGradlePropsPath();
 
         const token: string | undefined = (gradleProps.match(
             /repo\.cplace\.apiToken *= *([a-z0-9]+)/gi
@@ -293,6 +305,6 @@ export class RegistryInitializer {
             .concat(`${defaultRegistryConfigurationItems[2]}\n`)
             .concat(`${defaultRegistryConfigurationItems[3]}\n`);
         fs.writeFileSync(this.npmrcPath, npmrc, { encoding: 'utf-8' });
-        console.log(cgreen`✓`, 'Updated config in: ', this.npmrcPath);
+        console.log('Updated config in: ', this.npmrcPath);
     }
 }

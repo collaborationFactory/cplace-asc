@@ -5,10 +5,6 @@
     "repository": "https://github.com/collaborationFactory/cplace-asc",
     "homepage": "https://github.com/collaborationFactory/cplace-asc",
     "main": "./index.js",
-    "publishConfig": {
-        "registry": "https://registry.npmjs.org/",
-        "access": "public"
-    },
     "scripts": {
         "test": "jest",
         "test-build": "npx ts-node tools/scripts/build.ts 0.0.0-SNAPSHOT && npm pack ./dist --pack-destination ./dist",
@@ -31,6 +27,7 @@
     "author": "collaboration Factory AG",
     "license": "ISC",
     "dependencies": {
+        "@cplace/global-registry-initializer": "2.1.x",
         "@openapitools/openapi-generator-cli": "2.5.2",
         "chokidar": "3.5.3",
         "clean-css": "5.3.2",
@@ -73,5 +70,8 @@
         "prettier": "2.5.1",
         "tmp": "0.2.1",
         "ts-jest": "27.1.5"
-    }
+    },
+    "workspaces": [
+        "./src/packages/globalRegistryInitializer"
+    ]
 }
