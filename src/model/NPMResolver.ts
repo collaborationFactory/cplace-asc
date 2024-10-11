@@ -7,8 +7,8 @@ import * as process from 'process';
 import * as fs from 'fs';
 import * as spawn from 'cross-spawn';
 import * as crypto from 'crypto';
-import { cgreen, cwarn, debug } from '../utils';
-import { RegistryInitializer } from './RegistryInitializer';
+import { cgreen, cwarn, debug, isDebugEnabled } from '../utils';
+import { RegistryInitializer } from '@cplace/global-registry-initializer';
 
 export class NPMResolver {
     private static readonly PACKAGE_JSON = 'package.json';
@@ -241,6 +241,7 @@ export class NPMResolver {
 
     public init(): void {
         const registryInitializer = new RegistryInitializer();
+        registryInitializer.enableDebug(isDebugEnabled())
         registryInitializer.initRegistry();
     }
 }
