@@ -1,6 +1,6 @@
 {
     "name": "@cplace/global-registry-initializer",
-    "version": "2.1.0",
+    "version": "0.0.0",
     "description": "",
     "main": "index.js",
     "bin": {
