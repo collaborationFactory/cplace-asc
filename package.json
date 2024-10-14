@@ -1,13 +1,17 @@
 {
     "name": "@cplace/asc-local",
-    "version": "2.1.6",
+    "version": "2.1.7",
     "description": "cplace assets compiler",
     "repository": "https://github.com/collaborationFactory/cplace-asc",
     "homepage": "https://github.com/collaborationFactory/cplace-asc",
     "main": "./index.js",
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org/",
+        "access": "public"
+    },
     "scripts": {
         "test": "jest",
-        "test-build": "npx ts-node tools/scripts/build.ts 0.0.0-SNAPSHOT && npm pack ./dist --pack-destination ./dist",
+        "test-build": "npx ts-node tools/scripts/build.ts 0.0.0-SNAPSHOT && cd dist && npm pack --workspaces --include-workspace-root",
         "prettier-check": "prettier --check .",
         "prettier-write": "prettier --write ."
     },
