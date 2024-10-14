@@ -241,7 +241,7 @@ export class NPMResolver {
 
     public init(): void {
         const registryInitializer = new RegistryInitializer();
-        registryInitializer.enableDebug(isDebugEnabled())
+        registryInitializer.enableDebug(isDebugEnabled());
         registryInitializer.initRegistry();
     }
 }
