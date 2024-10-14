@@ -69,7 +69,7 @@ for (const workspace of rootPackageJSON.workspaces) {
 console.log(`Creating package.json for version ${version}...`);
 writeFileSync(
     PACKAGE_JSON_DIST,
-    JSON.stringify({ ...newPackageJSON, version: version, workspaces: distWorskpaces })
+    JSON.stringify({ ...newPackageJSON, version: version, workspaces: distWorskpaces, dependencies: { ...newPackageJSON["dependencies"], "@cplace/global-registry-initializer": version }})
 );
 console.log('package.json CREATED!');
 
