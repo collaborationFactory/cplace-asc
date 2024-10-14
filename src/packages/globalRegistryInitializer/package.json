@@ -1,0 +1,13 @@
+{
+    "name": "@cplace/global-registry-initializer",
+    "version": "0.0.0",
+    "description": "",
+    "main": "index.js",
+    "bin": {
+        "cplace-reginit": "./index.js"
+    },
+    "repository": "git+https://github.com/collaborationFactory/cplace-asc.git",
+    "author": "",
+    "license": "ISC",
+    "homepage": "https://github.com/collaborationFactory/cplace-asc#readme"
+}

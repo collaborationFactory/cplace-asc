@@ -13,7 +13,7 @@
         "outDir": "./dist",
         "resolveJsonModule": true
     },
-    "include": ["src/**/*"],
+    "include": ["src/**/*", "packages/**/*"],
     "exclude": ["**/*.spec.ts"],
     "compileOnSave": true
 }
