@@ -40,7 +40,7 @@ export class RegistryInitializer {
             }
         }
     }
-    
+
     public enableDebug(debugEnabled = true): void {
         this.DEBUG_ENABLED = debugEnabled;
     }
@@ -135,9 +135,7 @@ export class RegistryInitializer {
 
     private static createEmptyNmprc(npmrcPath: string) {
         fs.writeFileSync(npmrcPath, '');
-        console.info(
-            `Created empty .npmrc at location ${npmrcPath}`
-        );
+        console.info(`Created empty .npmrc at location ${npmrcPath}`);
     }
 
     private setCurrentNpmrcConfig() {
