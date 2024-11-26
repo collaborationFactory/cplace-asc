@@ -429,7 +429,8 @@ export class AssetsCompiler {
                     ? 'main'
                     : pluginDescriptor.repoName;
             if (
-                !AssetsCompiler.knownRepoDependencies.includes(pluginsRepoName)
+                !AssetsCompiler.knownRepoDependencies.includes(pluginsRepoName) &&
+                pluginsRepoName !== project.repo
             ) {
                 // plugins from this repository should be used as npm artifacts from node_modules
                 const pluginPackageName = `@cplace-assets/${
