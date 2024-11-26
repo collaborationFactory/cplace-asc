@@ -241,6 +241,29 @@ export class NPMResolver {
     /**
      * Check if the assets of a specified repository are published to the npm registry
      */
+    public static isRepositoryAssetsPublished(repoName: string): boolean {
+        const realRepoName = repoName === 'main' ? 'cplace' : repoName;
+
+        debug(
+            `⟲ (NPM) checking if assets from repo ${realRepoName} are published...`
+        );
+        let res;
+        res = spawn.sync('npm', ['view', `@cplace-assets/${realRepoName}`], {
+            encoding: 'utf-8',
+        });
+
+        if (res.status !== 0) {
+            debug(`⟲ (NPM) assets from repo ${realRepoName} are not published`);
+            return false;
+        }
+
+        debug(`✓ (NPM) assets from repo ${realRepoName} are published`);
+        return true;
+    }
+
+    /**
+     * Check if the assets of a specified repository are published to the npm registry
+     */
     public static async isRepositoryAssetsPublished(
         repoName: string
     ): Promise<boolean> {

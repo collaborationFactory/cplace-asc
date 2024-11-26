@@ -5,7 +5,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as glob from 'glob';
-import { CplaceTSConfigGenerator } from './CplaceTSConfigGenerator';
 import { cerr, cgreen, cwarn, debug, GREEN_CHECK } from '../utils';
 import { CplaceTypescriptCompiler } from '../compiler/CplaceTypescriptCompiler';
 import { CompressCssCompiler } from '../compiler/CompressCssCompiler';
@@ -14,6 +13,8 @@ import { PluginDescriptor } from './PluginDescriptor';
 import { getDescriptorParser } from './DescriptorParser';
 import { PluginPackageJsonGenerator } from './PluginPackageJsonGenerator';
 import { CombineJavascriptCompiler } from '../compiler/CombineJavascriptCompiler';
+import { TsConfigGeneratorFactory } from './TSConfigGeneratorFactory';
+import { isArtifactsOnlyBuild } from './utils';
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined;
@@ -173,12 +174,13 @@ export default class CplacePlugin {
                 (p) => p != undefined && p.hasTypeScriptAssets
             ) as CplacePlugin[];
 
-        const tsConfigGenerator = new CplaceTSConfigGenerator(
-            this,
-            dependenciesWithTypeScript,
-            localOnly,
-            isProduction
-        );
+        const tsConfigGenerator =
+            TsConfigGeneratorFactory.getTSConfigGeneratorInstance(
+                this,
+                dependenciesWithTypeScript,
+                localOnly,
+                isProduction
+            );
         const tsconfigPath = tsConfigGenerator.createConfigAndGetPath();
 
         if (!fs.existsSync(tsconfigPath)) {

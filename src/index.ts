@@ -3,7 +3,7 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 
-import { getAvailableStats } from './model/utils';
+import { getAvailableStats, isArtifactsOnlyBuild } from './model/utils';
 import {
     AssetsCompiler,
     IAssetsCompilerConfiguration,

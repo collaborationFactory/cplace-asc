@@ -13,6 +13,8 @@ import { ImlParser } from './ImlParser';
 import { CplaceVersion } from './CplaceVersion';
 import { PluginDescriptor } from './PluginDescriptor';
 import { error } from 'console';
+import { isArtifactsOnlyBuild } from './utils';
+import { check } from 'prettier';
 
 export interface IAssetsCompilerConfiguration {
     /**
