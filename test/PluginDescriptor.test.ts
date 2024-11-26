@@ -90,7 +90,7 @@ describe('test the handling of plugin descriptor', () => {
             noParents: false,
             withYaml: false,
             packagejson: false,
-            cplaceversion: '23.1'
+            cplaceversion: '23.1',
         };
 
         PackageVersion.initialize(mainRepoPath);
@@ -119,7 +119,13 @@ describe('test the handling of plugin descriptor', () => {
             'cf.cplace.plugin',
             'cf.cplace',
             'cplace-paw',
-            [{ name: 'cf.cplace.platform', group: 'cf.cplace', repoName: 'cplace' }]
+            [
+                {
+                    name: 'cf.cplace.platform',
+                    group: 'cf.cplace',
+                    repoName: 'cplace',
+                },
+            ]
         );
 
         const config: IAssetsCompilerConfiguration = {
@@ -133,7 +139,7 @@ describe('test the handling of plugin descriptor', () => {
             noParents: false,
             withYaml: false,
             packagejson: false,
-            cplaceversion: '23.1'
+            cplaceversion: '23.1',
         };
 
         CplaceVersion.initialize(otherRepoPath);
