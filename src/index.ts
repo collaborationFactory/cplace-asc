@@ -3,7 +3,7 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 
-import { getAvailableStats } from './model/utils';
+import { getAvailableStats, isArtifactsOnlyBuild } from './model/utils';
 import {
     AssetsCompiler,
     IAssetsCompilerConfiguration,
@@ -168,6 +168,7 @@ function run() {
         return;
     } else if (
         path.basename(mainRepoPath) !== 'main' &&
+        !isArtifactsOnlyBuild() &&
         !cli.flags.onlypre &&
         !cli.flags.localonly
     ) {
