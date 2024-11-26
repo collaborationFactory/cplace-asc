@@ -16,12 +16,6 @@ export class NPMResolver {
     private static readonly PACKAGE_LOCK_JSON = 'package-lock.json';
     private static readonly NODE_MODULES = 'node_modules';
 
-    private readonly mainRepo: string;
-
-    constructor(mainRepo: string) {
-        this.mainRepo = mainRepo;
-    }
-
     /**
      * Installs plugin dependencies and create hash
      * @param pluginName Plugin name
@@ -236,6 +230,29 @@ export class NPMResolver {
             );
             return false;
         }
+        return true;
+    }
+
+    /**
+     * Check if the assets of a specified repository are published to the npm registry
+     */
+    public static isRepositoryAssetsPublished(repoName: string): boolean {
+        const realRepoName = repoName === 'main' ? 'cplace' : repoName;
+
+        debug(
+            `⟲ (NPM) checking if assets from repo ${realRepoName} are published...`
+        );
+        let res;
+        res = spawn.sync('npm', ['view', `@cplace-assets/${realRepoName}`], {
+            encoding: 'utf-8',
+        });
+
+        if (res.status !== 0) {
+            debug(`⟲ (NPM) assets from repo ${realRepoName} are not published`);
+            return false;
+        }
+
+        debug(`✓ (NPM) assets from repo ${realRepoName} are published`);
         return true;
     }
 
