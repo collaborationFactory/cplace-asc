@@ -90,7 +90,7 @@ describe('test generating a package.json file in repo root', () => {
             'cf.cplace.plugin',
             'cf.cplace',
             'cplace-paw',
-            [{ name: 'cf.cplace.platform', group: 'cf.cplace' }]
+            [{ name: 'cf.cplace.platform', group: 'cf.cplace', repoName: 'cplace' }]
         );
 
         const repo2Plugin2Path = path.resolve(
@@ -111,9 +111,9 @@ describe('test generating a package.json file in repo root', () => {
             'cf.cplace',
             'cplace-paw',
             [
-                { name: 'cf.cplace.platform', group: 'cf.cplace' },
-                { name: 'cf.cplace.common', group: 'cf.cplace' },
-                { name: 'cf.cplace.plugin', group: 'cf.cplace' },
+                { name: 'cf.cplace.platform', group: 'cf.cplace', repoName: 'cplace' },
+                { name: 'cf.cplace.common', group: 'cf.cplace', repoName: 'cplace' },
+                { name: 'cf.cplace.plugin', group: 'cf.cplace', repoName: 'cplace-paw' },
             ]
         );
 

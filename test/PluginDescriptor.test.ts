@@ -72,7 +72,8 @@ describe('test the handling of plugin descriptor', () => {
         tmpTestFolder.removeCallback();
     });
 
-    test('test assets compiler with simple plugin descriptors', () => {
+    // simple plugin descriptors are not in use anymore
+    test.skip('test assets compiler with simple plugin descriptors', () => {
         generateSimplePluginDescriptor(platformPath, 'cf.cplace.platform', []);
         generateSimplePluginDescriptor(pluginPath, 'cf.cplace.plugin', [
             'cf.cplace.platform',
@@ -89,6 +90,7 @@ describe('test the handling of plugin descriptor', () => {
             noParents: false,
             withYaml: false,
             packagejson: false,
+            cplaceversion: '23.1'
         };
 
         PackageVersion.initialize(mainRepoPath);
@@ -117,7 +119,7 @@ describe('test the handling of plugin descriptor', () => {
             'cf.cplace.plugin',
             'cf.cplace',
             'cplace-paw',
-            [{ name: 'cf.cplace.platform', group: 'cf.cplace' }]
+            [{ name: 'cf.cplace.platform', group: 'cf.cplace', repoName: 'cplace' }]
         );
 
         const config: IAssetsCompilerConfiguration = {
@@ -131,8 +133,11 @@ describe('test the handling of plugin descriptor', () => {
             noParents: false,
             withYaml: false,
             packagejson: false,
+            cplaceversion: '23.1'
         };
 
+        CplaceVersion.initialize(otherRepoPath);
+        PackageVersion.initialize(mainRepoPath);
         const assetsCompiler = new AssetsCompiler(config, otherRepoPath);
         assetsCompiler.start().then(
             () => {
