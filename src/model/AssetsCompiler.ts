@@ -10,6 +10,9 @@ import { cerr, cgreen, csucc, cwarn, debug, formatDuration } from '../utils';
 import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
 import { CplaceVersion } from './CplaceVersion';
+import { isArtifactsOnlyBuild } from './utils';
+import { PluginDescriptor } from './PluginDescriptor';
+import { check } from 'prettier';
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -69,6 +72,23 @@ export interface IAssetsCompilerConfiguration {
     cplaceversion: string;
 }
 
+export interface ParentRepo {
+    /**
+     * Name of the parent repository.
+     */
+    name: string;
+
+    /**
+     * URL of the parent repository.
+     */
+    url: string;
+
+    /**
+     * Branch of the parent repository.
+     */
+    branch: string;
+}
+
 /**
  * This represents the main execution logic for the whole compilation process
  */
@@ -96,6 +116,11 @@ export class AssetsCompiler {
     private scheduler: Scheduler | null = null;
 
     /**
+     * List of all parent repos which are not used as npm artifacts
+     */
+    public static knownRepoDependencies: string[] = [];
+
+    /**
      * NPMResolver to manage node_modules
      */
     private npmResolver: NPMResolver | null = null;
@@ -111,6 +136,10 @@ export class AssetsCompiler {
             );
         }
         this.repositoryName = path.basename(repositoryDir);
+
+        this.npmResolver = new NPMResolver();
+        this.npmResolver.init();
+
         this.projects = this.setupProjects();
     }
 
@@ -160,9 +189,6 @@ export class AssetsCompiler {
                 }
             }
         }
-
-        this.npmResolver = new NPMResolver(mainRepoPath);
-        this.npmResolver.init();
 
         if (this.runConfig.onlyPreprocessing) {
             console.log();
@@ -236,18 +262,15 @@ export class AssetsCompiler {
     }
 
     private setupProjects(): Map<string, CplacePlugin> {
-        let knownRepoDependencies: string[];
         if (this.runConfig.localOnly) {
-            knownRepoDependencies = [];
             debug(
                 `(AssetsCompiler) Ignoring repo dependencies since localOnly execution...`
             );
         } else {
-            knownRepoDependencies = AssetsCompiler.getRepoDependencies(
-                this.repositoryDir
-            );
+            AssetsCompiler.knownRepoDependencies =
+                AssetsCompiler.getRepoDependencies(this.repositoryDir);
             debug(
-                `(AssetsCompiler) Detected repo dependencies: ${knownRepoDependencies.join(
+                `(AssetsCompiler) Detected repo dependencies: ${AssetsCompiler.knownRepoDependencies.join(
                     ', '
                 )}`
             );
@@ -273,7 +296,7 @@ export class AssetsCompiler {
                     AssetsCompiler.addProjectDependenciesRecursively(
                         this.repositoryDir,
                         projects,
-                        knownRepoDependencies,
+                        this.repositoryName,
                         potentialPluginName,
                         filePath,
                         this.runConfig
@@ -310,7 +333,7 @@ export class AssetsCompiler {
         localonly: boolean
     ): string | null {
         let mainRepoPath = '';
-        if (localonly) {
+        if (localonly || isArtifactsOnlyBuild()) {
             debug(
                 `(AssetsCompiler) Resolving main repo path [localonly] as: "${repositoryDir}"`
             );
@@ -347,6 +370,8 @@ export class AssetsCompiler {
 
         debug(`(AssetsCompiler) main repo resolved to: "${mainRepoPath}"`);
         if (
+            !localonly &&
+            !isArtifactsOnlyBuild() &&
             !fs.existsSync(
                 path.join(mainRepoPath, AssetsCompiler.PLATFORM_PLUGIN_NAME)
             )
@@ -376,7 +401,7 @@ export class AssetsCompiler {
     private static addProjectDependenciesRecursively(
         repositoryDir: string,
         projects: Map<string, CplacePlugin>,
-        repoDependencies: string[],
+        repoName: string,
         pluginName: string,
         pluginPath: string,
         runConfig: IAssetsCompilerConfiguration
@@ -386,8 +411,10 @@ export class AssetsCompiler {
         }
 
         const project = new CplacePlugin(
+            repoName,
             pluginName,
             pluginPath,
+            false,
             runConfig.production
         );
 
@@ -397,20 +424,103 @@ export class AssetsCompiler {
             if (projects.has(pluginDescriptor.name)) {
                 return;
             }
+            const pluginsRepoName =
+                pluginDescriptor.repoName === 'cplace'
+                    ? 'main'
+                    : pluginDescriptor.repoName;
+            if (
+                !AssetsCompiler.knownRepoDependencies.includes(pluginsRepoName)
+            ) {
+                // plugins from this repository should be used as npm artifacts from node_modules
+                const pluginPackageName = `@cplace-assets/${
+                    pluginDescriptor.repoName
+                }_${pluginDescriptor.name.replaceAll('.', '-').toLowerCase()}`;
+                const pathToPluginInNodeModules = path.resolve(
+                    repositoryDir,
+                    'node_modules',
+                    pluginPackageName
+                );
+
+                AssetsCompiler.checkIfPluginExistsAsNpmArtifact(
+                    repositoryDir,
+                    pluginDescriptor
+                );
+
+                // this is a plugin from a repository that is publishing assets.
+                // The plugin should be looked up in node_modules and it should not continue to look for its dependencies
+                if (!projects.has(pluginDescriptor.name)) {
+                    const project = new CplacePlugin(
+                        pluginDescriptor.repoName,
+                        pluginDescriptor.name,
+                        pathToPluginInNodeModules,
+                        true,
+                        runConfig.production
+                    );
+                    projects.set(pluginDescriptor.name, project);
+                }
+                return;
+            }
+
             const pluginPath = this.findPluginPath(
                 repositoryDir,
                 pluginDescriptor.name,
-                repoDependencies
+                AssetsCompiler.knownRepoDependencies
             );
             this.addProjectDependenciesRecursively(
                 repositoryDir,
                 projects,
-                repoDependencies,
+                pluginDescriptor.repoName,
                 pluginDescriptor.name,
                 pluginPath,
                 runConfig
             );
         });
+    }
+
+    private static checkIfPluginExistsAsNpmArtifact(
+        repositoryDir: string,
+        pluginDescriptor: PluginDescriptor
+    ): void {
+        // validate that the repo npm package exists in the node_modules
+        const pathToRepoInNodeModules = path.resolve(
+            repositoryDir,
+            'node_modules',
+            '@cplace-assets',
+            `${pluginDescriptor.repoName}`
+        );
+        if (!fs.existsSync(pathToRepoInNodeModules)) {
+            throw Error(
+                `[${pluginDescriptor.repoName}] repository npm package should be resolved in node_modules, but it's missing`
+            );
+        }
+
+        // check if the npm artifact for the plugin should exist in the node_modules
+        const packageJsonPath = path.resolve(
+            pathToRepoInNodeModules,
+            'package.json'
+        );
+        const packageJson = JSON.parse(
+            fs.readFileSync(packageJsonPath, 'utf8')
+        );
+
+        const pluginPackageName = `@cplace-assets/${
+            pluginDescriptor.repoName
+        }_${pluginDescriptor.name.replaceAll('.', '-').toLowerCase()}`;
+        const pathToPluginInNodeModules = path.resolve(
+            repositoryDir,
+            'node_modules',
+            pluginPackageName
+        );
+
+        if (
+            packageJson.dependencies &&
+            packageJson.dependencies[pluginPackageName] &&
+            !fs.existsSync(pathToPluginInNodeModules)
+        ) {
+            throw Error(
+                `[${pluginDescriptor.name}] plugin npm package should be resolved in node_modules, but it's missing`
+            );
+        }
     }
 
     private static setDependents(projects: Map<string, CplacePlugin>) {
@@ -425,6 +535,10 @@ export class AssetsCompiler {
         }
     }
 
+    /**
+     * Collect the names of the parent repositories.
+     * If the build is artifacts only build, collect only the names of repositories that are not on release/master/main branches and that are not published to npm.
+     */
     private static getRepoDependencies(repositoryDir: string): string[] {
         if (
             path.basename(repositoryDir) === 'main' ||
@@ -442,8 +556,24 @@ export class AssetsCompiler {
         }
         const parentReposContent = fs.readFileSync(parentReposPath, 'utf8');
         try {
-            const parentRepos = JSON.parse(parentReposContent);
-            return Object.keys(parentRepos);
+            const parentRepos: ParentRepo[] = JSON.parse(parentReposContent);
+            return Object.keys(parentRepos).filter((repoName) => {
+                const parentRepo = parentRepos[repoName];
+                if (!isArtifactsOnlyBuild()) {
+                    return true;
+                } else {
+                    // check if parentRepo.branch matches a release, main or master branch
+                    if (
+                        (!parentRepo.branch.match(/release\/\d+\.\d+/) &&
+                            parentRepo.branch !== 'main' &&
+                            parentRepo.branch !== 'master') ||
+                        !NPMResolver.isRepositoryAssetsPublished(repoName)
+                    ) {
+                        return true;
+                    }
+                }
+                return false;
+            });
         } catch (err) {
             console.error(
                 cerr`Failed to parse parent-repos.json: ${parentReposPath}`
@@ -493,6 +623,9 @@ export class AssetsCompiler {
     }
 
     private isInCompilationScope(plugin: CplacePlugin): boolean {
+        if (isArtifactsOnlyBuild() && plugin.isArtifactPlugin) {
+            return false;
+        }
         return !this.runConfig.noParents || plugin.repo === this.repositoryName;
     }
 }

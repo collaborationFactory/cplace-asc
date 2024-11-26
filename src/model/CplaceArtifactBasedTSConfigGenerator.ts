@@ -7,13 +7,14 @@ import * as fs from 'fs';
 import CplacePlugin from './CplacePlugin';
 import { AbstractTSConfigGenerator } from './AbstractTSConfigGenerator';
 import { debug } from 'console';
+import { AssetsCompiler } from './AssetsCompiler';
 
-export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
+export class CplaceArtifactBasedTSConfigGenerator extends AbstractTSConfigGenerator {
     constructor(
-        plugin: CplacePlugin,
-        dependencies: CplacePlugin[],
-        localOnly: boolean,
-        isProduction: boolean
+        protected readonly plugin: CplacePlugin,
+        protected readonly dependencies: CplacePlugin[],
+        protected readonly localOnly: boolean,
+        protected readonly isProduction: boolean
     ) {
         super(plugin, dependencies, localOnly, isProduction, 'ts');
     }
@@ -23,6 +24,14 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
         repo: string,
         relRepoRootPrefix: string
     ) {
+        if (
+            !AssetsCompiler.knownRepoDependencies.includes('main') &&
+            !AssetsCompiler.knownRepoDependencies.includes('cplace')
+        ) {
+            // no main folder found, as the plugins are taken from node_modules
+            return path.join(relRepoRootPrefix, '.');
+        }
+
         let workingDir: string = process.cwd();
         workingDir = path.resolve(workingDir);
         if (
@@ -52,23 +61,50 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
     }
 
     public getRelativePathToPlatform(): string {
-        return path.join(
-            this.relRepoRootPrefix,
-            CplacePlugin.getPluginPathRelativeToRepo(
-                this.plugin.repo,
-                this.platformPluginName,
-                this.mainFolderName,
-                this.localOnly
-            )
-        );
+        if (
+            !AssetsCompiler.knownRepoDependencies.includes('main') &&
+            !AssetsCompiler.knownRepoDependencies.includes('cplace')
+        ) {
+            // no main repo, platform plugin is in node_modules
+            return path.join(
+                this.relRepoRootPrefix,
+                'node_modules',
+                '@cplace-assets',
+                `cplace_${this.platformPluginName
+                    .replaceAll('.', '-')
+                    .toLowerCase()}`
+            );
+        } else {
+            return path.join(
+                this.relRepoRootPrefix,
+                CplacePlugin.getPluginPathRelativeToRepo(
+                    this.plugin.repo,
+                    this.platformPluginName,
+                    this.mainFolderName,
+                    this.localOnly
+                )
+            );
+        }
     }
 
     public getRelativePathToPlatformAssets(): string {
-        return path.join(this.relPathToPlatform, 'assets');
+        if (
+            !AssetsCompiler.knownRepoDependencies.includes('main') &&
+            !AssetsCompiler.knownRepoDependencies.includes('cplace')
+        ) {
+            return this.relPathToPlatform;
+        } else {
+            return path.join(this.relPathToPlatform, 'assets');
+        }
     }
 
     public getRelativePathToPlatformSources(): string {
-        return path.join(this.relPathToPlatform, 'assets', this.srcFolderName);
+        return path.join(
+            this.relPathToPlatformAssets,
+            this.platformPlugin?.isArtifactPlugin
+                ? this.DEST_DIR
+                : this.srcFolderName
+        );
     }
 
     public getPathsAndRefs(): {
@@ -83,13 +119,17 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
             '*': ['*'],
         };
 
+        let defaultRefs = [{ path: this.relPathToPlatformSources }];
+        if (
+            this.platformPlugin === undefined ||
+            this.platformPlugin.isArtifactPlugin
+        ) {
+            defaultRefs = [];
+        }
+
         const defaultPathsAndRefs = {
             paths: defaultPaths,
-            refs: [
-                {
-                    path: this.relPathToPlatformSources,
-                },
-            ],
+            refs: defaultRefs,
         };
 
         return this.dependencies.reduce((acc, dependency) => {
@@ -105,29 +145,34 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
                     this.localOnly
                 )
             );
-            const relPathToDependencyTs = path.join(
+            const relPathToDependencySources = path.join(
                 relPathToDependency,
-                'assets',
-                this.srcFolderName
+                dependency.isArtifactPlugin ? '' : 'assets',
+                dependency.isArtifactPlugin ? this.DEST_DIR : this.srcFolderName
             );
 
             const newPath = AbstractTSConfigGenerator.getPathDependency(
                 dependency.pluginName,
-                relPathToDependencyTs
+                relPathToDependencySources
             );
-            const newRef = { path: relPathToDependencyTs };
+            const newRef = { path: relPathToDependencySources };
 
+            // if the dependency plugin is an artifact plugin, do not add the references, since it's not a real project
+            let newRefs = [...acc.refs, newRef];
+            if (dependency.isArtifactPlugin) {
+                newRefs = [...acc.refs];
+            }
             return {
                 paths: {
                     ...acc.paths,
                     ...newPath,
                 },
-                refs: [...acc.refs, newRef],
+                refs: newRefs,
             };
         }, defaultPathsAndRefs);
     }
 
     public getTsConfigBasePath(): string {
-        return path.join(this.pathToMain, 'tsconfig.base.json');
+        return path.join(this.relPathToPlatformAssets, 'tsconfig.base.json');
     }
 }
