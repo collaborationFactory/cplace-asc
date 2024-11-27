@@ -299,6 +299,7 @@ export class AssetsCompiler {
                         this.repositoryName,
                         potentialPluginName,
                         filePath,
+                        false,
                         this.runConfig
                     );
                 }
@@ -404,21 +405,24 @@ export class AssetsCompiler {
         repoName: string,
         pluginName: string,
         pluginPath: string,
+        isArtifactPlugin: boolean,
         runConfig: IAssetsCompilerConfiguration
     ) {
-        if (projects.has(pluginName)) {
-            return;
-        }
-
         const project = new CplacePlugin(
             repoName,
             pluginName,
             pluginPath,
-            false,
+            isArtifactPlugin,
             runConfig.production
         );
 
         projects.set(pluginName, project);
+
+        // this is a plugin from a repository that is publishing assets.
+        // The plugin should be looked up in node_modules and it should not continue to look for its dependencies
+        if (isArtifactPlugin) {
+            return;
+        }
 
         project.pluginDescriptor.dependencies.forEach((pluginDescriptor) => {
             if (projects.has(pluginDescriptor.name)) {
@@ -434,49 +438,44 @@ export class AssetsCompiler {
                 ) &&
                 pluginsRepoName !== project.repo
             ) {
-                // plugins from this repository should be used as npm artifacts from node_modules
-                const pluginPackageName = `@cplace-assets/${
-                    pluginDescriptor.repoName
-                }_${pluginDescriptor.name.replaceAll('.', '-').toLowerCase()}`;
-                const pathToPluginInNodeModules = path.resolve(
-                    repositoryDir,
-                    'node_modules',
-                    pluginPackageName
-                );
-
                 AssetsCompiler.checkIfPluginExistsAsNpmArtifact(
                     repositoryDir,
                     pluginDescriptor
                 );
 
-                // this is a plugin from a repository that is publishing assets.
-                // The plugin should be looked up in node_modules and it should not continue to look for its dependencies
-                if (!projects.has(pluginDescriptor.name)) {
-                    const project = new CplacePlugin(
-                        pluginDescriptor.repoName,
-                        pluginDescriptor.name,
-                        pathToPluginInNodeModules,
-                        true,
-                        runConfig.production
-                    );
-                    projects.set(pluginDescriptor.name, project);
-                }
-                return;
-            }
+                // plugins from this repository should be used as npm artifacts from node_modules
+                const pluginPathInNodeModules = path.resolve(
+                    repositoryDir,
+                    'node_modules',
+                    '@cplace-assets',
+                    `${pluginDescriptor.repoName}_${pluginDescriptor.name.replaceAll('.', '-').toLowerCase()}`
+                );
 
-            const pluginPath = this.findPluginPath(
-                repositoryDir,
-                pluginDescriptor.name,
-                AssetsCompiler.knownRepoDependencies
-            );
-            this.addProjectDependenciesRecursively(
-                repositoryDir,
-                projects,
-                pluginDescriptor.repoName,
-                pluginDescriptor.name,
-                pluginPath,
-                runConfig
-            );
+                this.addProjectDependenciesRecursively(
+                    repositoryDir,
+                    projects,
+                    pluginDescriptor.repoName,
+                    pluginDescriptor.name,
+                    pluginPathInNodeModules,
+                    true,
+                    runConfig
+                );
+            } else {
+                const pluginPath = this.findPluginPath(
+                    repositoryDir,
+                    pluginDescriptor.name,
+                    AssetsCompiler.knownRepoDependencies
+                );
+                this.addProjectDependenciesRecursively(
+                    repositoryDir,
+                    projects,
+                    pluginDescriptor.repoName,
+                    pluginDescriptor.name,
+                    pluginPath,
+                    false,
+                    runConfig
+                );
+            }
         });
     }
 
@@ -497,7 +496,7 @@ export class AssetsCompiler {
             );
         }
 
-        // check if the npm artifact for the plugin should exist in the node_modules
+        // check the package.json file of the repo npm package to see if the plugin was published and should exist as an npm artifact
         const packageJsonPath = path.resolve(
             pathToRepoInNodeModules,
             'package.json'
