@@ -448,7 +448,9 @@ export class AssetsCompiler {
                     repositoryDir,
                     'node_modules',
                     '@cplace-assets',
-                    `${pluginDescriptor.repoName}_${pluginDescriptor.name.replaceAll('.', '-').toLowerCase()}`
+                    `${pluginDescriptor.repoName}_${pluginDescriptor.name
+                        .replaceAll('.', '-')
+                        .toLowerCase()}`
                 );
 
                 this.addProjectDependenciesRecursively(
