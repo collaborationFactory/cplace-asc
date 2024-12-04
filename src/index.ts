@@ -26,7 +26,7 @@ import { NodeVersionUtils } from './utils/NodeUtils';
 checkNodeVersion();
 run();
 
-function run() {
+async function run() {
     const cli = meow(
         `
     Usage:
@@ -202,6 +202,7 @@ function run() {
 
         console.log(getAvailableStats());
         const assetsCompiler = new AssetsCompiler(config, process.cwd());
+        await assetsCompiler.setupProjects();
         process.on('SIGTERM', () => {
             debug('Shutting down...');
             assetsCompiler.shutdown().then(
