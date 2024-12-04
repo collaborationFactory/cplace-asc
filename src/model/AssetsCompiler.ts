@@ -13,8 +13,6 @@ import { ImlParser } from './ImlParser';
 import { CplaceVersion } from './CplaceVersion';
 import { PluginDescriptor } from './PluginDescriptor';
 import { error } from 'console';
-import { isArtifactsOnlyBuild } from './utils';
-import { check } from 'prettier';
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -731,6 +729,15 @@ export class AssetsCompiler {
             AssetsCompiler.repoDependencies[repoName]?.pluginsAreArtifacts !==
                 true
         );
+    }
+
+    /**
+     * Check if the given parent repository is used as a local repository.
+     * If the repository is in the list of known dependencies, it is used as a local parent repository.
+     * Otherwise, the plugins from this repository will be looked up in the node_modules.
+     */
+    public static isLocalParentRepo(repoName: string): boolean {
+        return AssetsCompiler.knownRepoDependencies.includes(repoName);
     }
 
     public static findPluginPath(

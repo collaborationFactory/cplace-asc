@@ -202,5 +202,6 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
         } else {
             return path.join(this.pathToMain, 'tsconfig.base.json');
         }
+        return path.join(this.relPathToPlatformAssets, 'tsconfig.base.json');
     }
 }
