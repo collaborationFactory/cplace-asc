@@ -24,6 +24,9 @@
                 "diagnostics": false
             }
         },
+        "moduleNameMapper": {
+            "^axios$": "axios/dist/node/axios.cjs"
+        },
         "preset": "ts-jest",
         "rootDir": "test",
         "verbose": true
