@@ -162,6 +162,7 @@ describe('test generating a package.json file in repo root', () => {
         PackageVersion.initialize(mainRepoPath);
         CplaceVersion.initialize(mainRepoPath);
         const assetsCompiler = new AssetsCompiler(config, otherRepoPath);
+        await assetsCompiler.setupProjects();
         await assetsCompiler.start();
 
         const pluginPackageJson = path.resolve(
