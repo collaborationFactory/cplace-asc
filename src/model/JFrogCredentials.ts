@@ -4,7 +4,7 @@
 export class JFrogCredentials {
     private constructor() {}
 
-    private static credentials: { username: string; token: string };
+    private static credentials: { username: string; token: string } = { username: '', token: '' };
 
     public static setCredentials(username: string, token: string): void {
         JFrogCredentials.credentials = { username, token };
