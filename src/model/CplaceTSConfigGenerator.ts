@@ -8,6 +8,7 @@ import CplacePlugin from './CplacePlugin';
 import { AbstractTSConfigGenerator } from './AbstractTSConfigGenerator';
 import { debug } from 'console';
 import { AssetsCompiler } from './AssetsCompiler';
+import { isArtifactsOnlyBuild } from './utils';
 
 export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
     constructor(
@@ -167,6 +168,8 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
     }
 
     public getTsConfigBasePath(): string {
-        return path.join(this.relPathToPlatformAssets, 'tsconfig.base.json');
+        return isArtifactsOnlyBuild()
+            ? path.join(this.relPathToPlatformAssets, 'tsconfig.base.json')
+            : path.join(this.pathToMain, 'tsconfig.base.json');
     }
 }
