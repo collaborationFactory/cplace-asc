@@ -435,17 +435,15 @@ export class AssetsCompiler {
                     ? 'main'
                     : pluginDescriptor.repoName;
             if (
-                !AssetsCompiler.knownRepoDependencies.includes(
-                    pluginsRepoName
-                ) &&
+                !AssetsCompiler.isLocalParentRepo(pluginsRepoName) &&
                 pluginsRepoName !== project.repo
             ) {
+                // the dependency plugin is not from a local repository. It should be used as npm artifact from node_modules
                 AssetsCompiler.checkIfPluginExistsAsNpmArtifact(
                     repositoryDir,
                     pluginDescriptor
                 );
 
-                // plugins from this repository should be used as npm artifacts from node_modules
                 const pluginPathInNodeModules = path.resolve(
                     repositoryDir,
                     'node_modules',
