@@ -28,7 +28,8 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
         if (
             !AssetsCompiler.isLocalParentRepo('main') &&
             !AssetsCompiler.isLocalParentRepo('cplace') &&
-            repo !== 'main' && repo !== 'cplace'
+            repo !== 'main' &&
+            repo !== 'cplace'
         ) {
             // the main repo is not used as a local parent repo, so the 'main' folder will not be used
             return path.join(relRepoRootPrefix, '.');
