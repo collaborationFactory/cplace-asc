@@ -6,8 +6,8 @@ import * as fs from 'fs';
 
 jest.mock('../src/model/AssetsCompiler', () => ({
     AssetsCompiler: {
-        isLocalParentRepo: jest.fn()
-    }
+        isLocalParentRepo: jest.fn(),
+    },
 }));
 jest.mock('fs');
 
@@ -15,19 +15,19 @@ describe('CplaceTSConfigGenerator', () => {
     const mockPlugin: CplacePlugin = {
         pluginName: 'cf.cplace.test',
         repo: 'test-repo',
-        isArtifactPlugin: false
+        isArtifactPlugin: false,
     } as CplacePlugin;
 
     const mockPlatformPlugin: CplacePlugin = {
         pluginName: 'cf.cplace.platform',
         repo: 'main',
-        isArtifactPlugin: false
+        isArtifactPlugin: false,
     } as CplacePlugin;
 
     const mockArtifactPlugin: CplacePlugin = {
         pluginName: 'cf.cplace.artifactPlugin',
         repo: 'other-repo',
-        isArtifactPlugin: true
+        isArtifactPlugin: true,
     } as CplacePlugin;
 
     beforeEach(() => {
@@ -37,7 +37,9 @@ describe('CplaceTSConfigGenerator', () => {
     describe('getRelativePathToMain', () => {
         it('should return correct path when main repo is local and plugin is in main', () => {
             process.cwd = jest.fn().mockReturnValue('/path/to/main');
-            (AssetsCompiler.isLocalParentRepo as jest.Mock).mockReturnValue(true);
+            (AssetsCompiler.isLocalParentRepo as jest.Mock).mockReturnValue(
+                true
+            );
             const generator = new CplaceTSConfigGenerator(
                 { ...mockPlugin, repo: 'main' } as CplacePlugin,
                 [mockPlatformPlugin],
@@ -45,14 +47,20 @@ describe('CplaceTSConfigGenerator', () => {
                 false
             );
 
-            const result = generator.getRelativePathToMain(false, 'main', '../../..');
+            const result = generator.getRelativePathToMain(
+                false,
+                'main',
+                '../../..'
+            );
             expect(result).toBe('..\\..\\..');
         });
 
         it('should return correct path when main repo is local and plugin is in different repo', () => {
             process.cwd = jest.fn().mockReturnValue('/path/to/test-repo');
             (fs.existsSync as jest.Mock).mockReturnValue(true);
-            (AssetsCompiler.isLocalParentRepo as jest.Mock).mockReturnValue(true);
+            (AssetsCompiler.isLocalParentRepo as jest.Mock).mockReturnValue(
+                true
+            );
             const generator = new CplaceTSConfigGenerator(
                 mockPlugin,
                 [mockPlatformPlugin],
@@ -60,12 +68,18 @@ describe('CplaceTSConfigGenerator', () => {
                 false
             );
 
-            const result = generator.getRelativePathToMain(false, 'test-repo', '../../..');
+            const result = generator.getRelativePathToMain(
+                false,
+                'test-repo',
+                '../../..'
+            );
             expect(result).toBe('..\\..\\..\\..\\main');
         });
 
         it('should return base path when main repo is not local', () => {
-            (AssetsCompiler.isLocalParentRepo as jest.Mock).mockReturnValue(false);
+            (AssetsCompiler.isLocalParentRepo as jest.Mock).mockReturnValue(
+                false
+            );
             const generator = new CplaceTSConfigGenerator(
                 mockPlugin,
                 [mockPlatformPlugin],
@@ -73,7 +87,11 @@ describe('CplaceTSConfigGenerator', () => {
                 false
             );
 
-            const result = generator.getRelativePathToMain(false, 'test-repo', '../../..');
+            const result = generator.getRelativePathToMain(
+                false,
+                'test-repo',
+                '../../..'
+            );
             expect(result).toBe('..\\..\\..');
         });
     });
@@ -82,19 +100,28 @@ describe('CplaceTSConfigGenerator', () => {
         it('should return platform path in node_modules when platform is an artifact', () => {
             const generator = new CplaceTSConfigGenerator(
                 mockPlugin,
-                [{ ...mockPlatformPlugin, isArtifactPlugin: true } as CplacePlugin],
+                [
+                    {
+                        ...mockPlatformPlugin,
+                        isArtifactPlugin: true,
+                    } as CplacePlugin,
+                ],
                 false,
                 false
             );
 
             const result = generator.getRelativePathToPlatform();
-            expect(result).toBe('..\\..\\..\\node_modules\\@cplace-assets\\cplace_cf-cplace-platform');
+            expect(result).toBe(
+                '..\\..\\..\\node_modules\\@cplace-assets\\cplace_cf-cplace-platform'
+            );
         });
 
         it('should return regular path when platform is not an artifact', () => {
             process.cwd = jest.fn().mockReturnValue('/path/to/test-repo');
             (fs.existsSync as jest.Mock).mockReturnValue(true);
-            (AssetsCompiler.isLocalParentRepo as jest.Mock).mockReturnValue(true);
+            (AssetsCompiler.isLocalParentRepo as jest.Mock).mockReturnValue(
+                true
+            );
 
             const generator = new CplaceTSConfigGenerator(
                 mockPlugin,
@@ -127,7 +154,9 @@ describe('CplaceTSConfigGenerator', () => {
             const mockDependency = {
                 ...mockPlugin,
                 pluginName: 'cf.cplace.dependency',
-                getPluginPathRelativeFromRepo: jest.fn().mockReturnValue('dependency-path')
+                getPluginPathRelativeFromRepo: jest
+                    .fn()
+                    .mockReturnValue('dependency-path'),
             } as unknown as CplacePlugin;
 
             const generator = new CplaceTSConfigGenerator(
@@ -167,7 +196,9 @@ describe('CplaceTSConfigGenerator', () => {
             );
 
             const result = generator.getTsConfigBasePath();
-            expect(result).toBe('..\\..\\..\\..\\main\\cf.cplace.platform\\assets\\tsconfig.base.json');
+            expect(result).toBe(
+                '..\\..\\..\\..\\main\\cf.cplace.platform\\assets\\tsconfig.base.json'
+            );
             delete process.env.CPLACE_BUILD_WITHOUT_PARENT_REPOS;
         });
 
