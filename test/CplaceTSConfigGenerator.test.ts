@@ -52,7 +52,7 @@ describe('CplaceTSConfigGenerator', () => {
                 'main',
                 '../../..'
             );
-            expect(result).toBe('..\\..\\..');
+            expect(result).toBe(path.join('../../..'));
         });
 
         it('should return correct path when main repo is local and plugin is in different repo', () => {
@@ -73,7 +73,7 @@ describe('CplaceTSConfigGenerator', () => {
                 'test-repo',
                 '../../..'
             );
-            expect(result).toBe('..\\..\\..\\..\\main');
+            expect(result).toBe(path.join('../../../../main'));
         });
 
         it('should return base path when main repo is not local', () => {
@@ -92,7 +92,7 @@ describe('CplaceTSConfigGenerator', () => {
                 'test-repo',
                 '../../..'
             );
-            expect(result).toBe('..\\..\\..');
+            expect(result).toBe(path.join('../../..'));
         });
     });
 
@@ -112,7 +112,9 @@ describe('CplaceTSConfigGenerator', () => {
 
             const result = generator.getRelativePathToPlatform();
             expect(result).toBe(
-                '..\\..\\..\\node_modules\\@cplace-assets\\cplace_cf-cplace-platform'
+                path.join(
+                    '../../../node_modules/@cplace-assets/cplace_cf-cplace-platform'
+                )
             );
         });
 
@@ -132,7 +134,9 @@ describe('CplaceTSConfigGenerator', () => {
 
             generator.getRelativePathToMain(false, 'test-repo', '../../..');
             const result = generator.getRelativePathToPlatform();
-            expect(result).toBe('..\\..\\..\\..\\main\\cf.cplace.platform');
+            expect(result).toBe(
+                path.join('../../../../main/cf.cplace.platform')
+            );
         });
     });
 
@@ -197,7 +201,9 @@ describe('CplaceTSConfigGenerator', () => {
 
             const result = generator.getTsConfigBasePath();
             expect(result).toBe(
-                '..\\..\\..\\..\\main\\cf.cplace.platform\\assets\\tsconfig.base.json'
+                path.join(
+                    '../../../../main/cf.cplace.platform/assets/tsconfig.base.json'
+                )
             );
             delete process.env.CPLACE_BUILD_WITHOUT_PARENT_REPOS;
         });
@@ -211,7 +217,9 @@ describe('CplaceTSConfigGenerator', () => {
             );
 
             const result = generator.getTsConfigBasePath();
-            expect(result).toBe('..\\..\\..\\..\\main\\tsconfig.base.json');
+            expect(result).toBe(
+                path.join('../../../../main/tsconfig.base.json')
+            );
         });
     });
 });
