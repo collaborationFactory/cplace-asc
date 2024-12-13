@@ -10,8 +10,8 @@ import { cerr, cgreen, csucc, cwarn, debug, formatDuration } from '../utils';
 import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
 import { CplaceVersion } from './CplaceVersion';
+import { isArtifactsOnlyBuild } from './utils';
 import { PluginDescriptor } from './PluginDescriptor';
-import { isArtifactsOnlyBuild } from '..';
 
 export interface IAssetsCompilerConfiguration {
     /**

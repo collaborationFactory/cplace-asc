@@ -8,7 +8,7 @@ import CplacePlugin from './CplacePlugin';
 import { AbstractTSConfigGenerator } from './AbstractTSConfigGenerator';
 import { debug } from 'console';
 import { AssetsCompiler } from './AssetsCompiler';
-import { isArtifactsOnlyBuild } from '..';
+import { isArtifactsOnlyBuild } from './utils';
 
 export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
     constructor(
