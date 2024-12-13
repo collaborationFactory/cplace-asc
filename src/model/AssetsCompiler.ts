@@ -584,10 +584,13 @@ export class AssetsCompiler {
         repositoryDir: string
     ): Map<string, ParentRepo> {
         const parentReposPath = path.join(repositoryDir, 'parent-repos.json');
-        const parentReposContent = fs.readFileSync(parentReposPath, 'utf8');
         let parentRepos: Map<string, ParentRepo> = new Map();
         try {
             if (fs.existsSync(parentReposPath)) {
+                const parentReposContent = fs.readFileSync(
+                    parentReposPath,
+                    'utf8'
+                );
                 parentRepos = JSON.parse(parentReposContent);
             } else {
                 debug(
