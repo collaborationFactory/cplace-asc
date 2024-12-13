@@ -14,7 +14,7 @@ import { PluginDescriptor } from './PluginDescriptor';
 import { getDescriptorParser } from './DescriptorParser';
 import { PluginPackageJsonGenerator } from './PluginPackageJsonGenerator';
 import { CombineJavascriptCompiler } from '../compiler/CombineJavascriptCompiler';
-import { isArtifactsOnlyBuild } from '..';
+import { isArtifactsOnlyBuild } from './utils';
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined;
