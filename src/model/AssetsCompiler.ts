@@ -10,8 +10,8 @@ import { cerr, cgreen, csucc, cwarn, debug, formatDuration } from '../utils';
 import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
 import { CplaceVersion } from './CplaceVersion';
-import { isArtifactsOnlyBuild } from './utils';
 import { PluginDescriptor } from './PluginDescriptor';
+import { isArtifactsOnlyBuild } from '..';
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -61,6 +61,11 @@ export interface IAssetsCompilerConfiguration {
     noParents: boolean;
 
     /**
+     * Indicates that the dependency plugins from parent repos will be used as npm artifacts from node_modules, instead of taking them from the folders of the parent repos
+     */
+    useParentArtifacts: boolean;
+
+    /**
      * Indicates that package.json files will be created in the root and each plugin that has assets.
      */
     packagejson: boolean;
@@ -73,11 +78,6 @@ export interface IAssetsCompilerConfiguration {
 
 export interface ParentRepo {
     /**
-     * Name of the parent repository.
-     */
-    name: string;
-
-    /**
      * URL of the parent repository.
      */
     url: string;
@@ -86,6 +86,12 @@ export interface ParentRepo {
      * Branch of the parent repository.
      */
     branch: string;
+
+    /**
+     * Indicates whether the plugins from this repository are used as local plugins from the file system, or as npm artifacts.
+     * If the value is true, the plugins from this repository will be looked up in the node_modules.
+     */
+    pluginsAreArtifacts: boolean;
 }
 
 /**
@@ -115,9 +121,9 @@ export class AssetsCompiler {
     private scheduler: Scheduler | null = null;
 
     /**
-     * List of all parent repos which are not used as npm artifacts
+     * List of all parent repos
      */
-    public static knownRepoDependencies: string[] = [];
+    private static repoDependencies: Map<string, ParentRepo> = new Map();
 
     /**
      * NPMResolver to manage node_modules
@@ -267,10 +273,12 @@ export class AssetsCompiler {
                 `(AssetsCompiler) Ignoring repo dependencies since localOnly execution...`
             );
         } else {
-            AssetsCompiler.knownRepoDependencies =
+            AssetsCompiler.repoDependencies =
                 await AssetsCompiler.getRepoDependencies(this.repositoryDir);
             debug(
-                `(AssetsCompiler) Detected repo dependencies: ${AssetsCompiler.knownRepoDependencies.join(
+                `(AssetsCompiler) Detected repo dependencies: ${Object.keys(
+                    AssetsCompiler.repoDependencies
+                )}.join(
                     ', '
                 )}`
             );
@@ -435,9 +443,25 @@ export class AssetsCompiler {
                     ? 'main'
                     : pluginDescriptor.repoName;
             if (
-                !AssetsCompiler.isLocalParentRepo(pluginsRepoName) &&
-                pluginsRepoName !== project.repo
+                AssetsCompiler.isLocalParentRepo(pluginsRepoName) ||
+                pluginsRepoName === project.repo
             ) {
+                // the dependency plugin is from a local repository or the repository to be built and should be built from scratch
+                const pluginPath = this.findPluginPath(
+                    repositoryDir,
+                    pluginDescriptor.name,
+                    Object.keys(AssetsCompiler.repoDependencies)
+                );
+                this.addProjectDependenciesRecursively(
+                    repositoryDir,
+                    projects,
+                    pluginDescriptor.repoName,
+                    pluginDescriptor.name,
+                    pluginPath,
+                    false,
+                    runConfig
+                );
+            } else {
                 // the dependency plugin is not from a local repository. It should be used as npm artifact from node_modules
                 AssetsCompiler.checkIfPluginExistsAsNpmArtifact(
                     repositoryDir,
@@ -462,21 +486,6 @@ export class AssetsCompiler {
                     true,
                     runConfig
                 );
-            } else {
-                const pluginPath = this.findPluginPath(
-                    repositoryDir,
-                    pluginDescriptor.name,
-                    AssetsCompiler.knownRepoDependencies
-                );
-                this.addProjectDependenciesRecursively(
-                    repositoryDir,
-                    projects,
-                    pluginDescriptor.repoName,
-                    pluginDescriptor.name,
-                    pluginPath,
-                    false,
-                    runConfig
-                );
             }
         });
     }
@@ -494,7 +503,7 @@ export class AssetsCompiler {
         );
         if (!fs.existsSync(pathToRepoInNodeModules)) {
             throw Error(
-                `[${pluginDescriptor.repoName}] repository npm package should be resolved in node_modules, but it's missing`
+                `[${pluginDescriptor.repoName}] npm package for the repository should exist in node_modules, but it's missing. \nMake sure the package.json file is generated in the "build" folder of the repository and then run "npm install".`
             );
         }
 
@@ -522,7 +531,7 @@ export class AssetsCompiler {
             !fs.existsSync(expectedPathToPluginInNodeModules)
         ) {
             throw Error(
-                `[${pluginDescriptor.name}] plugin npm package should be resolved in node_modules, but it's missing`
+                `[${pluginDescriptor.name}] npm package for the plugin should exist in node_modules, but it's missing. \nMake sure the package.json file is generated in the "build" folder of the repository and then run "npm install".`
             );
         }
     }
@@ -540,68 +549,69 @@ export class AssetsCompiler {
     }
 
     /**
-     * Collect the names of all parent repositories.
-     * If the build is artifacts only build, this will return only names of repos that do not publish the assets as npm packages.
-     * These will be the repositories that are not on release/master/main branches, or repositories that do not published to npm at all.
+     * Parse the parent repositories from paren-repos.json file.
      */
     private static async getRepoDependencies(
         repositoryDir: string
-    ): Promise<string[]> {
-        if (
-            path.basename(repositoryDir) === 'main' ||
-            path.basename(repositoryDir) === 'cplace'
-        ) {
-            return [];
+    ): Promise<Map<string, ParentRepo>> {
+        const parentRepos: Map<string, ParentRepo> =
+            AssetsCompiler.parseParentRepos(repositoryDir);
+
+        if (!isArtifactsOnlyBuild()) {
+            return parentRepos;
         }
 
-        const parentReposPath = path.join(repositoryDir, 'parent-repos.json');
-        if (!fs.existsSync(parentReposPath)) {
-            debug(
-                `(AssetsCompiler) could not find parent-repos.json: ${parentReposPath}`
-            );
-            return [];
-        }
-
-        const parentReposContent = fs.readFileSync(parentReposPath, 'utf8');
-        try {
-            const parentRepos: ParentRepo[] = JSON.parse(parentReposContent);
-            const result: string[] = [];
-            if (!isArtifactsOnlyBuild()) {
-                result.push(...Object.keys(parentRepos));
-            } else {
-                for (const repoName of Object.keys(parentRepos)) {
-                    const parentRepo = parentRepos[repoName];
-                    if (
-                        parentRepo.branch.match(/release\/\d+\.\d+/) ||
-                        parentRepo.branch === 'main' ||
-                        parentRepo.branch === 'master'
-                    ) {
-                        const isRepoPublished =
-                            await NPMResolver.isRepositoryAssetsPublished(
-                                repoName
-                            );
-                        if (!isRepoPublished) {
-                            result.push(repoName);
-                        }
-                    }
+        for (const repoName of Object.keys(parentRepos)) {
+            const parentRepo: ParentRepo = parentRepos[repoName];
+            // if the repo is on a "publishable" branch and there are artifacts published for it, use it as a remote repo
+            if (
+                parentRepo.branch.match(/release\/\d+\.\d+/) ||
+                parentRepo.branch === 'main' ||
+                parentRepo.branch === 'master'
+            ) {
+                const isRepoPublished =
+                    await NPMResolver.isRepositoryAssetsPublished(repoName);
+                if (isRepoPublished) {
+                    parentRepo.pluginsAreArtifacts = true;
                 }
             }
-            return result;
+        }
+
+        return parentRepos;
+    }
+
+    private static parseParentRepos(
+        repositoryDir: string
+    ): Map<string, ParentRepo> {
+        const parentReposPath = path.join(repositoryDir, 'parent-repos.json');
+        const parentReposContent = fs.readFileSync(parentReposPath, 'utf8');
+        let parentRepos: Map<string, ParentRepo> = new Map();
+        try {
+            if (fs.existsSync(parentReposPath)) {
+                parentRepos = JSON.parse(parentReposContent);
+            } else {
+                debug(
+                    `(AssetsCompiler) could not find parent-repos.json: ${parentReposPath}`
+                );
+            }
         } catch (err) {
             console.error(
                 cerr`Failed to parse parent-repos.json: ${parentReposPath}`
             );
             throw err;
         }
+        return parentRepos;
     }
 
     /**
      * Check if the given parent repository is used as a local repository.
-     * If the repository is in the list of known dependencies, it is used as a local parent repository.
-     * Otherwise, the plugins from this repository will be looked up in the node_modules.
      */
     public static isLocalParentRepo(repoName: string): boolean {
-        return AssetsCompiler.knownRepoDependencies.includes(repoName);
+        return (
+            AssetsCompiler.repoDependencies[repoName] &&
+            AssetsCompiler.repoDependencies[repoName]?.pluginsAreArtifacts !==
+                true
+        );
     }
 
     public static findPluginPath(

@@ -8,7 +8,7 @@ import CplacePlugin from './CplacePlugin';
 import { AbstractTSConfigGenerator } from './AbstractTSConfigGenerator';
 import { debug } from 'console';
 import { AssetsCompiler } from './AssetsCompiler';
-import { isArtifactsOnlyBuild } from './utils';
+import { isArtifactsOnlyBuild } from '..';
 
 export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
     constructor(
@@ -100,7 +100,7 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
         return path.join(
             this.relPathToPlatformAssets,
             this.platformPlugin?.isArtifactPlugin
-                ? this.DEST_DIR
+                ? this.destDir
                 : this.srcFolderName
         );
     }
@@ -144,7 +144,7 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
             const relPathToDependencySources = path.join(
                 relPathToDependency,
                 dependency.isArtifactPlugin ? '' : 'assets',
-                dependency.isArtifactPlugin ? this.DEST_DIR : this.srcFolderName
+                dependency.isArtifactPlugin ? this.destDir : this.srcFolderName
             );
 
             const newPath = AbstractTSConfigGenerator.getPathDependency(

@@ -3,7 +3,7 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 
-import { getAvailableStats, isArtifactsOnlyBuild } from './model/utils';
+import { getAvailableStats } from './model/utils';
 import {
     AssetsCompiler,
     IAssetsCompilerConfiguration,
@@ -23,6 +23,14 @@ import { CplaceVersion } from './model/CplaceVersion';
 import * as meow from 'meow';
 import { NodeVersionUtils } from './utils/NodeUtils';
 
+let configuration: IAssetsCompilerConfiguration;
+export function isArtifactsOnlyBuild(): boolean {
+    return (
+        process.env.CPLACE_BUILD_WITHOUT_PARENT_REPOS === 'true' ||
+        configuration.useParentArtifacts
+    );
+}
+
 checkNodeVersion();
 run();
 
@@ -34,18 +42,19 @@ async function run() {
         $ ./node_modules/.bin/cplace-asc
 
     Options:
-        --plugin, -p <plugins>  Run for specified plugins (and dependencies) - comma separated list of plugin names
-        --watch, -w             Enable watching of source files (continuous compilation)
-        --onlypre, -o           Run only preprocessing steps (like create tsconfig.json files)
-        --clean, -c             Clean generated output folders at the beginning
-        --threads, -t           Maximum number of threads to run in parallel
-        --localonly, -l         Enable to not scan other directories than CWD for plugins
-        --noparents, -x         Enable to only run compilation on plugins in current repository (still scans for other sources to be present)
-        --packagejson, -j       Generate package.json files (if missing) in the root and each plugin that has assets
-        --withYaml, -y          Generates TypeScript files from the OpenAPI YAML specification
-        --verbose, -v           Enable verbose logging
-        --production, -P        Enable production mode (ignores test dependencies)
-        --cplaceversion, -V     Explicitly specify the current cplace version
+        --plugin, -p <plugins>      Run for specified plugins (and dependencies) - comma separated list of plugin names
+        --watch, -w                 Enable watching of source files (continuous compilation)
+        --onlypre, -o               Run only preprocessing steps (like create tsconfig.json files)
+        --clean, -c                 Clean generated output folders at the beginning
+        --threads, -t               Maximum number of threads to run in parallel
+        --localonly, -l             Enable to not scan other directories than CWD for plugins
+        --noparents, -x             Enable to only run compilation on plugins in current repository (still scans for other sources to be present)
+        --useParentArtifacts, -a    Use dependency plugins as npm artifacts from node_modules, instead of taking them from the parent repos
+        --packagejson, -j           Generate package.json files (if missing) in the root and each plugin that has assets
+        --withYaml, -y              Generates TypeScript files from the OpenAPI YAML specification
+        --verbose, -v               Enable verbose logging
+        --production, -P            Enable production mode (ignores test dependencies)
+        --cplaceversion, -V         Explicitly specify the current cplace version
 
 `,
         {
@@ -88,6 +97,11 @@ async function run() {
                 noparents: {
                     type: 'boolean',
                     alias: 'x',
+                    default: false,
+                },
+                useParentArtifacts: {
+                    type: 'boolean',
+                    alias: 'a',
                     default: false,
                 },
                 packagejson: {
@@ -156,31 +170,7 @@ async function run() {
         process.env.CPLACE_ENV = 'production';
     }
 
-    const mainRepoPath = AssetsCompiler.getMainRepoPath(
-        process.cwd(),
-        cli.flags.localonly
-    );
-    if (mainRepoPath === null) {
-        console.error(
-            cerr`Failed to find path to main repository containing cf.cplace.platform plugin... Ensure that you are starting from the root directory of your cplace project.`
-        );
-        process.exit(1);
-        return;
-    } else if (
-        path.basename(mainRepoPath) !== 'main' &&
-        !isArtifactsOnlyBuild() &&
-        !cli.flags.onlypre &&
-        !cli.flags.localonly
-    ) {
-        console.warn(
-            cwarn`Sry main Repository is not called 'main' LESS Compilation might fail, please rename your folder to 'main'`
-        );
-    }
-
     try {
-        PackageVersion.initialize(mainRepoPath);
-        CplaceVersion.initialize(process.cwd(), cli.flags.cplaceversion);
-
         const plugins = cli.flags.plugin
             ? (cli.flags.plugin as string).split(',')
             : [];
@@ -196,9 +186,35 @@ async function run() {
             production: cli.flags.production,
             packagejson: cli.flags.packagejson,
             noParents: cli.flags.noparents,
+            useParentArtifacts: cli.flags.useParentArtifacts,
             withYaml: cli.flags.withYaml,
             cplaceversion: cli.flags.cplaceversion,
         };
+        configuration = config;
+
+        const mainRepoPath = AssetsCompiler.getMainRepoPath(
+            process.cwd(),
+            cli.flags.localonly
+        );
+        if (mainRepoPath === null) {
+            console.error(
+                cerr`Failed to find path to main repository containing cf.cplace.platform plugin... Ensure that you are starting from the root directory of your cplace project.`
+            );
+            process.exit(1);
+            return;
+        } else if (
+            path.basename(mainRepoPath) !== 'main' &&
+            !isArtifactsOnlyBuild() &&
+            !cli.flags.onlypre &&
+            !cli.flags.localonly
+        ) {
+            console.warn(
+                cwarn`Sry main Repository is not called 'main' LESS Compilation might fail, please rename your folder to 'main'`
+            );
+        }
+
+        PackageVersion.initialize(mainRepoPath);
+        CplaceVersion.initialize(process.cwd(), cli.flags.cplaceversion);
 
         console.log(getAvailableStats());
         const assetsCompiler = new AssetsCompiler(config, process.cwd());

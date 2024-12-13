@@ -14,7 +14,7 @@ export abstract class AbstractTSConfigGenerator {
     protected readonly platformPlugin: CplacePlugin | undefined;
     protected readonly tsConfigJson = 'tsconfig.json';
     protected mainFolderName = '';
-    protected readonly DEST_DIR = 'generated_js';
+    protected readonly destDir = 'generated_js';
 
     protected readonly relRepoRootPrefix = '../../..';
     protected readonly pathToMain: string;
@@ -59,7 +59,7 @@ export abstract class AbstractTSConfigGenerator {
             compilerOptions: {
                 rootDir: '.',
                 baseUrl: '.',
-                outDir: `../${this.DEST_DIR}`,
+                outDir: `../${this.destDir}`,
                 sourceMap: !this.isProduction,
                 declarationMap: !this.isProduction,
                 typeRoots: this.getTypeRoots(),
