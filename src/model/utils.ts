@@ -81,3 +81,7 @@ export function getCplaceAscNodeModulesBinPath(): string {
 export function getProjectNodeModulesBinPath(): string {
     return resolve(getProjectNodeModulesPath(), '.bin');
 }
+
+export function isArtifactsOnlyBuild(): boolean {
+    return process.env.CPLACE_BUILD_WITHOUT_PARENT_REPOS === 'true';
+}

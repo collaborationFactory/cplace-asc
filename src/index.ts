@@ -3,7 +3,7 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 
-import { getAvailableStats } from './model/utils';
+import { getAvailableStats, isArtifactsOnlyBuild } from './model/utils';
 import {
     AssetsCompiler,
     IAssetsCompilerConfiguration,
@@ -24,12 +24,6 @@ import * as meow from 'meow';
 import { NodeVersionUtils } from './utils/NodeUtils';
 
 let configuration: IAssetsCompilerConfiguration;
-export function isArtifactsOnlyBuild(): boolean {
-    return (
-        process.env.CPLACE_BUILD_WITHOUT_PARENT_REPOS === 'true' ||
-        configuration.useParentArtifacts
-    );
-}
 
 checkNodeVersion();
 run();
