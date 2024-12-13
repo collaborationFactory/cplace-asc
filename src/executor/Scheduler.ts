@@ -12,7 +12,7 @@ import { cerr, csucc, debug, isDebugEnabled } from '../utils';
 import { CompilationResult, ICompileRequest } from '../compiler/interfaces';
 import Timeout = NodeJS.Timeout;
 import { PluginDescriptor } from '../model/PluginDescriptor';
-import { isArtifactsOnlyBuild } from '../model/utils';
+import { isArtifactsOnlyBuild } from '..';
 
 interface ISchedulingResult {
     scheduledPlugin?: string | null | undefined;
