@@ -182,6 +182,8 @@ async function run() {
             withYaml: cli.flags.withYaml,
             cplaceversion: cli.flags.cplaceversion,
         };
+        CplaceVersion.initialize(process.cwd(), cli.flags.cplaceversion);
+        const assetsCompiler = new AssetsCompiler(config, process.cwd());
 
         const mainRepoPath = AssetsCompiler.getMainRepoPath(
             process.cwd(),
@@ -205,10 +207,8 @@ async function run() {
         }
 
         PackageVersion.initialize(mainRepoPath);
-        CplaceVersion.initialize(process.cwd(), cli.flags.cplaceversion);
 
         console.log(getAvailableStats());
-        const assetsCompiler = new AssetsCompiler(config, process.cwd());
         await assetsCompiler.setupProjects();
         process.on('SIGTERM', () => {
             debug('Shutting down...');
