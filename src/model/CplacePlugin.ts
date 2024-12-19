@@ -143,7 +143,7 @@ export default class CplacePlugin {
         return this.getPluginPathRelativeToRepo(
             sourceRepo,
             this.pluginName,
-            this.repo,
+            this.repo == 'cplace' ? 'main' : this.repo,
             localOnly
         );
     }
