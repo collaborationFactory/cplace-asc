@@ -3,7 +3,7 @@
  * Copyright 2018, collaboration Factory AG. All rights reserved.
  */
 
-import { getAvailableStats, isArtifactsOnlyBuild } from './model/utils';
+import { getAvailableStats } from './model/utils';
 import {
     AssetsCompiler,
     IAssetsCompilerConfiguration,
@@ -22,8 +22,6 @@ import { PackageVersion } from './model/PackageVersion';
 import { CplaceVersion } from './model/CplaceVersion';
 import * as meow from 'meow';
 import { NodeVersionUtils } from './utils/NodeUtils';
-
-let configuration: IAssetsCompilerConfiguration;
 
 checkNodeVersion();
 run();
@@ -184,7 +182,6 @@ async function run() {
             withYaml: cli.flags.withYaml,
             cplaceversion: cli.flags.cplaceversion,
         };
-        configuration = config;
 
         const mainRepoPath = AssetsCompiler.getMainRepoPath(
             process.cwd(),
@@ -198,7 +195,7 @@ async function run() {
             return;
         } else if (
             path.basename(mainRepoPath) !== 'main' &&
-            !isArtifactsOnlyBuild() &&
+            !AssetsCompiler.isArtifactsOnlyBuild() &&
             !cli.flags.onlypre &&
             !cli.flags.localonly
         ) {

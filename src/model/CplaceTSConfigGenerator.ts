@@ -4,11 +4,11 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
+import * as process from 'process';
 import CplacePlugin from './CplacePlugin';
 import { AbstractTSConfigGenerator } from './AbstractTSConfigGenerator';
 import { debug } from 'console';
 import { AssetsCompiler } from './AssetsCompiler';
-import { isArtifactsOnlyBuild } from './utils';
 
 export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
     constructor(
@@ -63,27 +63,18 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
         );
     }
 
+    /**
+     * Retrieves the relative path to the platform plugin, from the current plugin.
+     *
+     * @returns {string} The relative path to the platform.
+     * @throws {Error} If the platform plugin is not found.
+     */
     public getRelativePathToPlatform(): string {
-        if (this.platformPlugin?.isArtifactPlugin) {
-            // if platform is used as npm artifact, it's location is in the node_modules
-            return path.join(
-                this.relRepoRootPrefix,
-                'node_modules',
-                '@cplace-assets',
-                `cplace_${this.platformPluginName
-                    .replaceAll('.', '-')
-                    .toLowerCase()}`
-            );
+        if (this.platformPlugin){
+            const platformPathRelativeFromRepo = this.platformPlugin.getPluginPathRelativeFromRepo(this.plugin.repo, this.localOnly);
+            return path.join(this.relRepoRootPrefix, platformPathRelativeFromRepo);
         } else {
-            return path.join(
-                this.relRepoRootPrefix,
-                CplacePlugin.getPluginPathRelativeToRepo(
-                    this.plugin.repo,
-                    this.platformPluginName,
-                    this.mainFolderName,
-                    this.localOnly
-                )
-            );
+            throw new Error('Platform plugin not found');
         }
     }
 
@@ -170,7 +161,7 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
     }
 
     public getTsConfigBasePath(): string {
-        return isArtifactsOnlyBuild()
+        return AssetsCompiler.isArtifactsOnlyBuild()
             ? path.join(this.relPathToPlatformAssets, 'tsconfig.base.json')
             : path.join(this.pathToMain, 'tsconfig.base.json');
     }
