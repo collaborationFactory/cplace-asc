@@ -670,7 +670,9 @@ export class AssetsCompiler {
     }
 
     public static isArtifactsOnlyBuild(): boolean {
-        return process.env.CPLACE_BUILD_WITHOUT_PARENT_REPOS === 'true' ||
-            AssetsCompiler.configuration.useParentArtifacts;
+        return (
+            process.env.CPLACE_BUILD_WITHOUT_PARENT_REPOS === 'true' ||
+            AssetsCompiler.configuration.useParentArtifacts
+        );
     }
 }
