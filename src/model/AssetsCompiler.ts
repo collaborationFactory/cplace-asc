@@ -10,7 +10,6 @@ import { cerr, cgreen, csucc, cwarn, debug, formatDuration } from '../utils';
 import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
 import { CplaceVersion } from './CplaceVersion';
-import { isArtifactsOnlyBuild } from './utils';
 import { PluginDescriptor } from './PluginDescriptor';
 
 export interface IAssetsCompilerConfiguration {
@@ -130,6 +129,11 @@ export class AssetsCompiler {
      */
     private npmResolver: NPMResolver | null = null;
 
+    /**
+     * Configuration parameters provided by the caller.
+     */
+    private static configuration: IAssetsCompilerConfiguration;
+
     constructor(
         private readonly runConfig: IAssetsCompilerConfiguration,
         private readonly repositoryDir: string
@@ -140,6 +144,7 @@ export class AssetsCompiler {
                 cwarn`@cplace/asc-local should only be used starting from the cplace release 23.2!`
             );
         }
+        AssetsCompiler.configuration = runConfig;
         this.repositoryName = path.basename(repositoryDir);
 
         this.npmResolver = new NPMResolver();
@@ -344,7 +349,7 @@ export class AssetsCompiler {
         localonly: boolean
     ): string | null {
         let mainRepoPath = '';
-        if (localonly || isArtifactsOnlyBuild()) {
+        if (localonly || AssetsCompiler.isArtifactsOnlyBuild()) {
             debug(
                 `(AssetsCompiler) Resolving main repo path [localonly] as: "${repositoryDir}"`
             );
@@ -382,7 +387,7 @@ export class AssetsCompiler {
         debug(`(AssetsCompiler) main repo resolved to: "${mainRepoPath}"`);
         if (
             !localonly &&
-            !isArtifactsOnlyBuild() &&
+            !AssetsCompiler.isArtifactsOnlyBuild() &&
             !fs.existsSync(
                 path.join(mainRepoPath, AssetsCompiler.PLATFORM_PLUGIN_NAME)
             )
@@ -557,7 +562,7 @@ export class AssetsCompiler {
         const parentRepos: Map<string, ParentRepo> =
             AssetsCompiler.parseParentRepos(repositoryDir);
 
-        if (!isArtifactsOnlyBuild()) {
+        if (!AssetsCompiler.isArtifactsOnlyBuild()) {
             return parentRepos;
         }
 
@@ -658,9 +663,14 @@ export class AssetsCompiler {
     }
 
     private isInCompilationScope(plugin: CplacePlugin): boolean {
-        if (isArtifactsOnlyBuild() && plugin.isArtifactPlugin) {
+        if (plugin.isArtifactPlugin) {
             return false;
         }
         return !this.runConfig.noParents || plugin.repo === this.repositoryName;
+    }
+
+    public static isArtifactsOnlyBuild(): boolean {
+        return process.env.CPLACE_BUILD_WITHOUT_PARENT_REPOS === 'true' ||
+            AssetsCompiler.configuration.useParentArtifacts;
     }
 }

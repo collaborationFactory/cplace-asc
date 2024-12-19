@@ -14,7 +14,6 @@ import { PluginDescriptor } from './PluginDescriptor';
 import { getDescriptorParser } from './DescriptorParser';
 import { PluginPackageJsonGenerator } from './PluginPackageJsonGenerator';
 import { CombineJavascriptCompiler } from '../compiler/CombineJavascriptCompiler';
-import { isArtifactsOnlyBuild } from './utils';
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined;
@@ -105,13 +104,13 @@ export default class CplacePlugin {
         pluginDir: string,
         isArtifactPlugin: boolean
     ): string {
-        if (isArtifactsOnlyBuild() && isArtifactPlugin) {
+        if (isArtifactPlugin) {
             return pluginDir;
         }
         return path.resolve(pluginDir, 'assets');
     }
 
-    public static getPluginPathRelativeToRepo(
+    private getPluginPathRelativeToRepo(
         sourceRepo: string,
         targetPluginName: string,
         targetRepo: string,
@@ -124,11 +123,15 @@ export default class CplacePlugin {
         }
     }
 
+    /**
+     * Returns the relative path of the plugin starting from the given source repository.
+     * If the plugin is an artifact plugin, this would be in the node_modules of the repository.
+     */
     public getPluginPathRelativeFromRepo(
         sourceRepo: string,
         localOnly: boolean
     ): string {
-        if (isArtifactsOnlyBuild() && this.isArtifactPlugin) {
+        if (this.isArtifactPlugin) {
             return path.join(
                 'node_modules',
                 '@cplace-assets',
@@ -137,7 +140,7 @@ export default class CplacePlugin {
                     .toLowerCase()}`
             );
         }
-        return CplacePlugin.getPluginPathRelativeToRepo(
+        return this.getPluginPathRelativeToRepo(
             sourceRepo,
             this.pluginName,
             this.repo,
@@ -256,7 +259,7 @@ export default class CplacePlugin {
     public parsePluginDescriptor(
         excludeTestDependencies: boolean = false
     ): PluginDescriptor {
-        if (isArtifactsOnlyBuild() && this.isArtifactPlugin) {
+        if (this.isArtifactPlugin) {
             // no plugin descriptor for plugins in node_modules
             return {
                 name: this.pluginName,

@@ -12,7 +12,6 @@ import { cerr, csucc, debug, isDebugEnabled } from '../utils';
 import { CompilationResult, ICompileRequest } from '../compiler/interfaces';
 import Timeout = NodeJS.Timeout;
 import { PluginDescriptor } from '../model/PluginDescriptor';
-import { isArtifactsOnlyBuild } from '../model/utils';
 
 interface ISchedulingResult {
     scheduledPlugin?: string | null | undefined;
@@ -445,7 +444,7 @@ export class Scheduler {
 
     private isInCompilationScope(plugin: CplacePlugin): boolean {
         // do not compile plugins which are used from the npm artifacts
-        if (isArtifactsOnlyBuild() && plugin.isArtifactPlugin) {
+        if (plugin.isArtifactPlugin) {
             return false;
         }
 
