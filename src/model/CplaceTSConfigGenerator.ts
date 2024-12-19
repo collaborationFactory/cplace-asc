@@ -70,9 +70,16 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
      * @throws {Error} If the platform plugin is not found.
      */
     public getRelativePathToPlatform(): string {
-        if (this.platformPlugin){
-            const platformPathRelativeFromRepo = this.platformPlugin.getPluginPathRelativeFromRepo(this.plugin.repo, this.localOnly);
-            return path.join(this.relRepoRootPrefix, platformPathRelativeFromRepo);
+        if (this.platformPlugin) {
+            const platformPathRelativeFromRepo =
+                this.platformPlugin.getPluginPathRelativeFromRepo(
+                    this.plugin.repo,
+                    this.localOnly
+                );
+            return path.join(
+                this.relRepoRootPrefix,
+                platformPathRelativeFromRepo
+            );
         } else {
             throw new Error('Platform plugin not found');
         }
