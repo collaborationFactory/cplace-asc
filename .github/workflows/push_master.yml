@@ -14,11 +14,11 @@ jobs:
                   access_token: ${{ github.token }}
 
             - name: Checkout cplace-asc
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
               with:
                   token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
-            - uses: actions/setup-node@v1
+            - uses: actions/setup-node@v4
               with:
                   node-version: '18.18.2'
                   registry-url: 'https://registry.npmjs.org'
