@@ -25,7 +25,7 @@ jobs:
 
             - name: Cache Node Modules
               id: npm-cache
-              uses: actions/cache@v2
+              uses: actions/cache@v4
               with:
                   path: '**/node_modules'
                   key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
