@@ -4,6 +4,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { execSync } from 'child_process';
 import CplacePlugin from './CplacePlugin';
 import { ExecutorService, Scheduler } from '../executor';
 import { cerr, cgreen, csucc, cwarn, debug, formatDuration } from '../utils';
@@ -11,6 +12,7 @@ import { NPMResolver } from './NPMResolver';
 import { ImlParser } from './ImlParser';
 import { CplaceVersion } from './CplaceVersion';
 import { PluginDescriptor } from './PluginDescriptor';
+import { error } from 'console';
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -321,6 +323,16 @@ export class AssetsCompiler {
             }
         });
 
+        AssetsCompiler.setDependents(projects);
+
+        // map that indicates which projects should be linked in each of the local repositories
+        const projectsToLink = new Map<string, Set<CplacePlugin>>();
+        if (AssetsCompiler.isArtifactsBuild()) {
+            projects.forEach((project) => {
+                this.collectProjectsToLink(project, projects, projectsToLink);
+            });
+        }
+
         projects.forEach((project) => {
             if (!this.isInCompilationScope(project)) {
                 return;
@@ -340,7 +352,7 @@ export class AssetsCompiler {
             }
         });
 
-        AssetsCompiler.setDependents(projects);
+        this.linkProjectIntoDependentProjects(projectsToLink);
         this.projects = projects;
     }
 
@@ -349,7 +361,7 @@ export class AssetsCompiler {
         localonly: boolean
     ): string | null {
         let mainRepoPath = '';
-        if (localonly || AssetsCompiler.isArtifactsOnlyBuild()) {
+        if (localonly || AssetsCompiler.isArtifactsBuild()) {
             debug(
                 `(AssetsCompiler) Resolving main repo path [localonly] as: "${repositoryDir}"`
             );
@@ -387,7 +399,7 @@ export class AssetsCompiler {
         debug(`(AssetsCompiler) main repo resolved to: "${mainRepoPath}"`);
         if (
             !localonly &&
-            !AssetsCompiler.isArtifactsOnlyBuild() &&
+            !AssetsCompiler.isArtifactsBuild() &&
             !fs.existsSync(
                 path.join(mainRepoPath, AssetsCompiler.PLATFORM_PLUGIN_NAME)
             )
@@ -399,6 +411,75 @@ export class AssetsCompiler {
         }
 
         return mainRepoPath;
+    }
+
+    private collectProjectsToLink(
+        project: CplacePlugin,
+        projects: Map<string, CplacePlugin>,
+        linkingMap: Map<string, Set<CplacePlugin>>
+    ) {
+        console.log(
+            '(AssetsCompiler) Collecting plugins from local repositories to link to dependent plugins...'
+        );
+
+        const projectRepoName =
+            project.repo === 'cplace' ? 'main' : project.repo;
+        if (
+            AssetsCompiler.repoDependencies[projectRepoName]
+                ?.pluginsAreArtifacts
+        ) {
+            // the project is an artifact and should not be linked
+            return;
+        }
+
+        // for a project is from a local repository, this project should be linked in the node_modules of each repo that depends on it
+        project.dependents.forEach((dependent) => {
+            const dependentProject = projects.get(dependent.name);
+
+            if (
+                !!dependentProject &&
+                this.isInCompilationScope(dependentProject)
+            ) {
+                // 'project' should be linked in the repo where the dependent project is located
+                if (!linkingMap.has(dependentProject.repo)) {
+                    linkingMap.set(dependentProject.repo, new Set());
+                }
+                if (dependentProject.repo !== project.repo) {
+                    // only link projects from other repos
+                    linkingMap.get(dependentProject.repo)?.add(project);
+                }
+            }
+        });
+    }
+
+    /**
+     * Each local repo that is part of the compilation should link the projects from other local repos which are dependencies to it's projects.
+     * The linking is done in the root node_modules of each local repo.
+     */
+    private linkProjectIntoDependentProjects(
+        linkingMap: Map<string, Set<CplacePlugin>>
+    ) {
+        linkingMap.forEach((projectsToLink: Set<CplacePlugin>, repoName) => {
+            const pathToProjectsAssets: string[] = Array.from(
+                projectsToLink
+            ).map((project) => project.assetsDir);
+
+            debug(
+                `(AssetsCompiler) Linking projects in ${repoName}: ${pathToProjectsAssets.join(
+                    ', '
+                )}`
+            );
+            try {
+                execSync(`npm link ${pathToProjectsAssets.join(' ')}`, {
+                    cwd: path.resolve(path.join('..', repoName)),
+                });
+            } catch (e) {
+                error(
+                    cerr`Failed to link projects in ${repoName}. If node_modules of repo ${repoName} already contains one of the listed plugins, re-initialize the repo.`
+                );
+                throw e;
+            }
+        });
     }
 
     private static directoryLooksLikePlugin(
@@ -451,7 +532,7 @@ export class AssetsCompiler {
                 AssetsCompiler.isLocalParentRepo(pluginsRepoName) ||
                 pluginsRepoName === project.repo
             ) {
-                // the dependency plugin is from a local repository or the repository to be built and should be built from scratch
+                // the dependency plugin is from a local repository and should be built from scratch
                 const pluginPath = this.findPluginPath(
                     repositoryDir,
                     pluginDescriptor.name,
@@ -541,6 +622,11 @@ export class AssetsCompiler {
         }
     }
 
+    /**
+     * For each plugin, populate the list of dependent plugins, i.e. the plugins that have a dependency to the current plugin.
+     *
+     * @param projects
+     */
     private static setDependents(projects: Map<string, CplacePlugin>) {
         for (const plugin of projects.values()) {
             plugin.pluginDescriptor.dependencies
@@ -562,22 +648,21 @@ export class AssetsCompiler {
         const parentRepos: Map<string, ParentRepo> =
             AssetsCompiler.parseParentRepos(repositoryDir);
 
-        if (!AssetsCompiler.isArtifactsOnlyBuild()) {
-            return parentRepos;
-        }
-
-        for (const repoName of Object.keys(parentRepos)) {
-            const parentRepo: ParentRepo = parentRepos[repoName];
+        if (AssetsCompiler.isArtifactsBuild()) {
             // if the repo is on a "publishable" branch and there are artifacts published for it, use it as a remote repo
-            if (
-                parentRepo.branch.match(/release\/\d+\.\d+/) ||
-                parentRepo.branch === 'main' ||
-                parentRepo.branch === 'master'
-            ) {
-                const isRepoPublished =
-                    await NPMResolver.isRepositoryAssetsPublished(repoName);
-                if (isRepoPublished) {
-                    parentRepo.pluginsAreArtifacts = true;
+            // this is done by setting the pluginsAreArtifacts flag to true for that repo
+            for (const repoName of Object.keys(parentRepos)) {
+                const parentRepo: ParentRepo = parentRepos[repoName];
+                if (
+                    parentRepo.branch.match(/release\/\d+\.\d+/) ||
+                    parentRepo.branch === 'main' ||
+                    parentRepo.branch === 'master'
+                ) {
+                    const isRepoPublished =
+                        await NPMResolver.isRepositoryAssetsPublished(repoName);
+                    if (isRepoPublished) {
+                        parentRepo.pluginsAreArtifacts = true;
+                    }
                 }
             }
         }
@@ -669,7 +754,7 @@ export class AssetsCompiler {
         return !this.runConfig.noParents || plugin.repo === this.repositoryName;
     }
 
-    public static isArtifactsOnlyBuild(): boolean {
+    public static isArtifactsBuild(): boolean {
         return (
             process.env.CPLACE_BUILD_WITHOUT_PARENT_REPOS === 'true' ||
             AssetsCompiler.configuration.useParentArtifacts

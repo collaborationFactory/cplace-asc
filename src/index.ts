@@ -197,7 +197,7 @@ async function run() {
             return;
         } else if (
             path.basename(mainRepoPath) !== 'main' &&
-            !AssetsCompiler.isArtifactsOnlyBuild() &&
+            !AssetsCompiler.isArtifactsBuild() &&
             !cli.flags.onlypre &&
             !cli.flags.localonly
         ) {

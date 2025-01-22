@@ -25,13 +25,8 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
         repo: string,
         relRepoRootPrefix: string
     ) {
-        if (
-            !AssetsCompiler.isLocalParentRepo('main') &&
-            !AssetsCompiler.isLocalParentRepo('cplace') &&
-            repo !== 'main' &&
-            repo !== 'cplace'
-        ) {
-            // the main repo is not used as a local parent repo, so the 'main' folder will not be used
+        if (AssetsCompiler.isArtifactsBuild()) {
+            // for artifacts build, the main folder will not be used in any way
             return path.join(relRepoRootPrefix, '.');
         }
 
@@ -78,7 +73,8 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
             const platformPathRelativeFromRepo =
                 this.platformPlugin.getPluginPathRelativeFromRepo(
                     this.plugin.repo,
-                    this.localOnly
+                    this.localOnly,
+                    AssetsCompiler.isArtifactsBuild()
                 );
             return path.join(
                 this.relRepoRootPrefix,
@@ -90,8 +86,11 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
     }
 
     public getRelativePathToPlatformAssets(): string {
-        if (this.platformPlugin?.isArtifactPlugin) {
-            // if the platform is used as an npm artifact, the content of the npm package is the assets folder itself.
+        if (
+            AssetsCompiler.isArtifactsBuild() &&
+            this.plugin.pluginName !== this.platformPluginName
+        ) {
+            // for artifact builds, the platform location would be in the node_modules and the assets are directly in there
             return this.relPathToPlatform;
         } else {
             return path.join(this.relPathToPlatform, 'assets');
@@ -101,7 +100,7 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
     public getRelativePathToPlatformSources(): string {
         return path.join(
             this.relPathToPlatformAssets,
-            this.platformPlugin?.isArtifactPlugin
+            AssetsCompiler.isArtifactsBuild()
                 ? this.destDir
                 : this.srcFolderName
         );
@@ -120,8 +119,8 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
         };
 
         let defaultRefs = [{ path: this.relPathToPlatformSources }];
-        if (this.platformPlugin?.isArtifactPlugin) {
-            // do not set references to artifact plugins, as they are not really editable projects
+        if (AssetsCompiler.isArtifactsBuild()) {
+            // do not set references to plugins from other repos in artifact build, as they are not really editable projects
             defaultRefs = [];
         }
 
@@ -140,26 +139,42 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
                 this.relRepoRootPrefix,
                 dependency.getPluginPathRelativeFromRepo(
                     this.plugin.repo,
-                    this.localOnly
+                    this.localOnly,
+                    AssetsCompiler.isArtifactsBuild()
                 )
             );
-            const relPathToDependencySources = path.join(
+            // the assets of the dependency plugin are either in the 'assets' folder, if the plugin is from the same repo, or this is not an artifact build
+            // if it's an artifact build, or the dependency plugin is from another repo, then the assets are directly in the npm package inside the node_modules
+            const relPathToDependencyAssets = path.join(
                 relPathToDependency,
-                dependency.isArtifactPlugin ? '' : 'assets',
-                dependency.isArtifactPlugin ? this.destDir : this.srcFolderName
+                !AssetsCompiler.isArtifactsBuild() ||
+                    this.plugin.repo === dependency.repo
+                    ? 'assets'
+                    : ''
+            );
+            const relPathToDependencySources = path.join(
+                relPathToDependencyAssets,
+                this.srcFolderName
+            );
+            const relPathToDependencyOutput = path.join(
+                relPathToDependencyAssets,
+                this.destDir
             );
 
             const newPath = AbstractTSConfigGenerator.getPathDependency(
                 dependency.pluginName,
-                relPathToDependencySources
+                relPathToDependencyOutput
             );
             const newRef = { path: relPathToDependencySources };
 
             // if the dependency plugin is an artifact plugin, do not add the references, since it's not a real project
-            let newRefs = [...acc.refs, newRef];
-            if (dependency.isArtifactPlugin) {
+            let newRefs = [...acc.refs];
+            if (
+                !AssetsCompiler.isArtifactsBuild() ||
+                this.plugin.repo === dependency.repo
+            ) {
                 // do not set references to artifact plugins, as they are not really editable projects
-                newRefs = [...acc.refs];
+                newRefs = [...acc.refs, newRef];
             }
             return {
                 paths: {
@@ -171,8 +186,31 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
         }, defaultPathsAndRefs);
     }
 
+    public getTypeRootsOfLinkedPlugins(): string[] {
+        const typeRoots: string[] = [];
+        return this.dependencies.reduce((acc, dependency) => {
+            const dependencyRepoName =
+                dependency.repo === 'cplace' ? 'main' : dependency.repo;
+            if (
+                dependencyRepoName !== this.plugin.repo &&
+                AssetsCompiler.isLocalParentRepo(dependencyRepoName)
+            ) {
+                const pathToTypes = path.join(
+                    this.relRepoRootPrefix,
+                    '..',
+                    dependencyRepoName,
+                    'node_modules',
+                    '@types'
+                );
+                return [...acc, pathToTypes];
+            }
+
+            return acc;
+        }, typeRoots);
+    }
+
     public getTsConfigBasePath(): string {
-        return AssetsCompiler.isArtifactsOnlyBuild()
+        return AssetsCompiler.isArtifactsBuild()
             ? path.join(this.relPathToPlatformAssets, 'tsconfig.base.json')
             : path.join(this.pathToMain, 'tsconfig.base.json');
     }

@@ -125,13 +125,15 @@ export default class CplacePlugin {
 
     /**
      * Returns the relative path of the plugin starting from the given source repository.
-     * If the plugin is an artifact plugin, this would be in the node_modules of the repository.
+     * For artifacts build, this would be in the node_modules of the repository.
      */
     public getPluginPathRelativeFromRepo(
         sourceRepo: string,
-        localOnly: boolean
+        localOnly: boolean,
+        isArtifactsBuild: boolean
     ): string {
-        if (this.isArtifactPlugin) {
+        // in an artifacts build, all plugins from otherrepos are taken from the node_modules
+        if (isArtifactsBuild && this.repo !== sourceRepo) {
             return path.join(
                 'node_modules',
                 '@cplace-assets',
