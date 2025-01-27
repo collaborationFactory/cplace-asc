@@ -17,7 +17,7 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
         protected readonly localOnly: boolean,
         protected readonly isProduction: boolean
     ) {
-        super(plugin, dependencies, localOnly, isProduction, 'ts');
+        super(plugin, dependencies, localOnly, isProduction, 'ts', AssetsCompiler.isArtifactsBuild());
     }
 
     public getRelativePathToMain(
