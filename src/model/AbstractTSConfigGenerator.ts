@@ -7,7 +7,6 @@ import * as fs from 'fs';
 import CplacePlugin from './CplacePlugin';
 import { debug } from '../utils';
 import { ExtraTypesReader } from './ExtraTypesReader';
-import { AssetsCompiler } from './AssetsCompiler';
 
 export abstract class AbstractTSConfigGenerator {
     protected tsConfig: any;
@@ -28,8 +27,11 @@ export abstract class AbstractTSConfigGenerator {
         protected readonly dependencies: CplacePlugin[],
         protected readonly localOnly: boolean,
         protected readonly isProduction: boolean,
-        protected readonly srcFolderName: string
+        protected readonly srcFolderName: string,
+        protected readonly isArtifactsBuild: boolean
+
     ) {
+        this.isArtifactsBuild = isArtifactsBuild;
         this.tsConfig = {};
         this.platformPlugin = dependencies.find(
             (d) => d.pluginName === this.platformPluginName
@@ -69,7 +71,7 @@ export abstract class AbstractTSConfigGenerator {
         };
 
         if (this.plugin.pluginName !== this.platformPluginName) {
-            if (AssetsCompiler.isArtifactsBuild()) {
+            if (this.isArtifactsBuild) {
                 paths['*'].push(
                     ...this.getTypeRootsOfLinkedPlugins().map((p) =>
                         path.join(p, '*')
@@ -115,7 +117,7 @@ export abstract class AbstractTSConfigGenerator {
 
     protected getTypeRoots(): string[] {
         const typeRoots: string[] = [];
-        if (AssetsCompiler.isArtifactsBuild()) {
+        if (this.isArtifactsBuild) {
             typeRoots.push(...this.getTypeRootsOfLinkedPlugins());
         }
         typeRoots.push(path.join(this.pathToMain, 'node_modules', '@types'));
