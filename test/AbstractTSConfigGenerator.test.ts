@@ -78,7 +78,8 @@ describe('AbstractTSConfigGenerator', () => {
             mockDependencies,
             false, // localOnly
             false, // isProduction
-            'ts' // srcFolderName
+            'ts', // srcFolderName,
+            false
         );
     });
 
@@ -168,7 +169,8 @@ describe('AbstractTSConfigGenerator', () => {
                 mockDependencies,
                 false,
                 true, // isProduction
-                'ts'
+                'ts',
+                false
             );
 
             generator.createConfigAndGetPath();

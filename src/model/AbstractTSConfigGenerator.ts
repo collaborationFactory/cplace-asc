@@ -29,7 +29,6 @@ export abstract class AbstractTSConfigGenerator {
         protected readonly isProduction: boolean,
         protected readonly srcFolderName: string,
         protected readonly isArtifactsBuild: boolean
-
     ) {
         this.isArtifactsBuild = isArtifactsBuild;
         this.tsConfig = {};
