@@ -9,18 +9,17 @@ import * as spawn from 'cross-spawn';
 import * as crypto from 'crypto';
 import { cgreen, cwarn, debug } from '../utils';
 import { RegistryInitializer } from './RegistryInitializer';
+import axios, { AxiosInstance } from 'axios';
+import { JFrogCredentials } from './JFrogCredentials';
 
 export class NPMResolver {
     private static readonly PACKAGE_JSON = 'package.json';
     private static readonly PACKAGE_LOCK_HASH = 'package-lock.hash';
     private static readonly PACKAGE_LOCK_JSON = 'package-lock.json';
     private static readonly NODE_MODULES = 'node_modules';
-
-    private readonly mainRepo: string;
-
-    constructor(mainRepo: string) {
-        this.mainRepo = mainRepo;
-    }
+    private static readonly JFROG_BASE_URL =
+        'https://cplace.jfrog.io/artifactory/';
+    private static jFrogAxioxInstance: AxiosInstance;
 
     /**
      * Installs plugin dependencies and create hash
@@ -239,8 +238,59 @@ export class NPMResolver {
         return true;
     }
 
+    /**
+     * Check if the assets of a specified repository are published to the npm registry
+     */
+    public static async isRepositoryAssetsPublished(
+        repoName: string
+    ): Promise<boolean> {
+        const realRepoName = repoName === 'main' ? 'cplace' : repoName;
+        const artifactPath = `api/storage/cplace-npm-local/@cplace-assets/${realRepoName}/`;
+
+        debug(
+            `⟲ (NPM) checking if assets from repo ${realRepoName} are published as npm package...`
+        );
+
+        try {
+            const response = await NPMResolver.jFrogAxioxInstance.head(
+                `/${artifactPath}`,
+                {
+                    validateStatus: (status_1: number): boolean => {
+                        return status_1 == 200 || status_1 == 404;
+                    },
+                }
+            );
+            debug(`⟲ Response from artifact repo: ${response.status}`);
+            return response.status == 200;
+        } catch (error) {
+            debug(`Failed to find npm package ${artifactPath}!`);
+            debug(error);
+            return false;
+        }
+    }
+
+    private static getJfrogAxiosInstance(
+        baseUrl: string,
+        jfrogUsername,
+        jfrogToken
+    ): AxiosInstance {
+        return axios.create({
+            baseURL: baseUrl,
+            timeout: 5000,
+            auth: {
+                username: jfrogUsername,
+                password: jfrogToken,
+            },
+        });
+    }
+
     public init(): void {
         const registryInitializer = new RegistryInitializer();
         registryInitializer.initRegistry();
+        NPMResolver.jFrogAxioxInstance = NPMResolver.getJfrogAxiosInstance(
+            NPMResolver.JFROG_BASE_URL,
+            JFrogCredentials.getCredentials().username,
+            JFrogCredentials.getCredentials().token
+        );
     }
 }

@@ -10,8 +10,8 @@ import { debug, isDebugEnabled } from '../utils';
 import * as fs from 'fs';
 import * as copyFiles from 'copyfiles';
 import { AbstractTypescriptCompiler } from './AbstractTypescriptCompiler';
-import { CplaceTSConfigGenerator } from '../model/CplaceTSConfigGenerator';
 import * as TerserPlugin from 'terser-webpack-plugin';
+import { ExtraTypesReader } from '../model/ExtraTypesReader';
 
 interface ExternalItemFunctionData {
     context?: string;
@@ -240,7 +240,7 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
         | ExternalItemFunction
     )[] {
         const pluginDir = path.dirname(this.assetsPath);
-        const extraTypes = CplaceTSConfigGenerator.getExtraTypes(
+        const extraTypes = ExtraTypesReader.getExtraTypes(
             pluginDir,
             this.dependencyPaths
         );
