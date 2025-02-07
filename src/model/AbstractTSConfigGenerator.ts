@@ -53,15 +53,14 @@ export abstract class AbstractTSConfigGenerator {
             this.plugin.pluginDir,
             this.dependencies.map((d) => d.pluginDir)
         );
-        const additionalIncludes =
-            extraTypes === null ? [] : extraTypes.definitions;
+        const additionalIncludes = extraTypes?.definitions ?? [];
 
         this.tsConfig = {
             extends: this.getTsConfigBasePath(),
             compilerOptions: {
                 rootDir: '.',
                 baseUrl: '.',
-                outDir: `../${this.destDir}`,
+                outDir: path.join('..', this.destDir),
                 sourceMap: !this.isProduction,
                 declarationMap: !this.isProduction,
                 typeRoots: this.getTypeRoots(),
