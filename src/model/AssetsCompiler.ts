@@ -355,6 +355,13 @@ export class AssetsCompiler {
                     cwarn`[${project.pluginName}] E2E assets are no longer compiled! Starting from the cplace release 23.1 all the E2E tests should be moved into a dedicated E2E repository. In addition, E2E tests must be written using Cypress!`
                 );
             }
+
+            if (project.hasLessAssets) {
+                project.generateCplacePluginsLess(
+                    (p) => projects.get(p),
+                    this.runConfig.localOnly
+                );
+            }
         });
 
         this.linkProjectIntoDependentProjects(projectsToLink);
@@ -576,7 +583,7 @@ export class AssetsCompiler {
                     'node_modules',
                     '@cplace-assets',
                     `${pluginDescriptor.repoName}_${pluginDescriptor.name
-                        .replaceAll('.', '-')
+                        .replace(/\./gi, '-')
                         .toLowerCase()}`
                 );
 

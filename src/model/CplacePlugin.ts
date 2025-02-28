@@ -14,6 +14,7 @@ import { PluginDescriptor } from './PluginDescriptor';
 import { getDescriptorParser } from './DescriptorParser';
 import { PluginPackageJsonGenerator } from './PluginPackageJsonGenerator';
 import { CombineJavascriptCompiler } from '../compiler/CombineJavascriptCompiler';
+import { AssetsCompiler } from './AssetsCompiler';
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined;
@@ -40,7 +41,10 @@ export default class CplacePlugin {
     public readonly hasVendors: boolean;
     public readonly hasCombineJs: boolean;
 
+    public pluginNameKebabCase: string;
     public pluginDescriptor: PluginDescriptor;
+
+    protected readonly relRepoRootPrefix = '../../..';
 
     /**
      * Plugins that depend on this plugin (set explicitly afterwards), i.e. incoming dependencies
@@ -54,6 +58,7 @@ export default class CplacePlugin {
         public readonly isArtifactPlugin: boolean,
         public readonly production: boolean
     ) {
+        this.pluginNameKebabCase = this.pluginName.replace(/\./gi, '-').toLowerCase();
         this.dependents = [];
         this.pluginDescriptor = this.parsePluginDescriptor(production);
 
@@ -137,9 +142,7 @@ export default class CplacePlugin {
             return path.join(
                 'node_modules',
                 '@cplace-assets',
-                `${this.repo}_${this.pluginName
-                    .replaceAll('.', '-')
-                    .toLowerCase()}`
+                `${this.repo}_${this.pluginNameKebabCase}`
             );
         }
         return this.getPluginPathRelativeToRepo(
@@ -189,6 +192,74 @@ export default class CplacePlugin {
         } else {
             console.log(
                 `${GREEN_CHECK} [${this.pluginName}] wrote tsconfig...`
+            );
+        }
+    }
+
+    /**
+     * Generate a less file named 'cplace-pluging.less' in all plugins that have less files.
+     * This file will contain variables with the path to each dependency plugin.
+     * Based on the use case (local build or artifact build) the location to the dependency plugin will be different.
+     * The less files can then reference any file from a dependency plugin through these variables instead of directly with a hardcoded relative path.
+     *
+     * @param pluginResolver
+     * @param localOnly
+     */
+    public generateCplacePluginsLess(
+        pluginResolver: ICplacePluginResolver,
+        localOnly: boolean
+    ): void {
+        if (!this.hasLessAssets) {
+            throw Error(
+                `[${this.pluginName}] plugin does not have Less assets`
+            );
+        }
+
+        const dependenciesWithLess = this.pluginDescriptor.dependencies
+            .map((pluginDescriptor) => {
+                const plugin = pluginResolver(pluginDescriptor.name);
+                if (!plugin) {
+                    cwarn`Plugin ${pluginDescriptor.name} not found in node_modules. Ignoring...`;
+                }
+                return plugin;
+            })
+            .filter(
+                (p) => p != undefined && p.hasLessAssets
+            ) as CplacePlugin[];
+
+        // generate cplace-plugins.less
+        const cplacePluginsLessPath = path.join(this.assetsDir, 'less', 'cplace-plugins.less');
+        const lessFileContent: string[] = [];
+        dependenciesWithLess.forEach((plugin) => {
+            let lessPath = path.join(
+                this.relRepoRootPrefix,
+                plugin.getPluginPathRelativeFromRepo(
+                    this.repo,
+                    localOnly,
+                    AssetsCompiler.isArtifactsBuild()
+                )
+            );
+            // if it's not an artifact build, the less files are in the assets folder of the plugin
+            if (!AssetsCompiler.isArtifactsBuild()) {
+                lessPath = path.join(
+                    lessPath,
+                    'assets'
+                );
+            }
+            lessFileContent.push(
+                `@plugin-path-${plugin.pluginNameKebabCase}: '${lessPath}';`
+            );
+        });
+        fs.writeFileSync(cplacePluginsLessPath, lessFileContent.join('\n'));
+
+        if (!fs.existsSync(cplacePluginsLessPath)) {
+            console.error(
+                cerr`[${this.pluginName}] Could not generate cplace-plugins.less file...`
+            );
+            throw Error(`[${this.pluginName}] cplace-plugins.less generation failed`);
+        } else {
+            console.log(
+                `${GREEN_CHECK} [${this.pluginName}] wrote cplace-plugins.less...`
             );
         }
     }
