@@ -58,7 +58,9 @@ export default class CplacePlugin {
         public readonly isArtifactPlugin: boolean,
         public readonly production: boolean
     ) {
-        this.pluginNameKebabCase = this.pluginName.replace(/\./gi, '-').toLowerCase();
+        this.pluginNameKebabCase = this.pluginName
+            .replace(/\./gi, '-')
+            .toLowerCase();
         this.dependents = [];
         this.pluginDescriptor = this.parsePluginDescriptor(production);
 
@@ -200,7 +202,8 @@ export default class CplacePlugin {
      * Generate a less file named 'cplace-pluging.less' if the plugin has less files.
      * This file will contain a variable for each dependency plugin, pointing to the path to that plugin.
      * Based on the use case (local build or artifact build) the path to the dependency plugin will be different.
-     * The less files can then reference any file from a dependency plugin through these variables instead of directly with a hardcoded relative path.
+     * Any other less file can then reference a file from a dependency plugin through these variables
+     * instead of directly with a hardcoded relative path.
      *
      * @param pluginResolver
      * @param localOnly
@@ -223,12 +226,14 @@ export default class CplacePlugin {
                 }
                 return plugin;
             })
-            .filter(
-                (p) => p != undefined && p.hasLessAssets
-            ) as CplacePlugin[];
+            .filter((p) => p != undefined && p.hasLessAssets) as CplacePlugin[];
 
         // generate cplace-plugins.less
-        const cplacePluginsLessPath = path.join(this.assetsDir, 'less', 'cplace-plugins.less');
+        const cplacePluginsLessPath = path.join(
+            this.assetsDir,
+            'less',
+            'cplace-plugins.less'
+        );
         const lessFileContent: string[] = [];
         dependenciesWithLess.forEach((plugin) => {
             let lessPath = path.join(
@@ -241,10 +246,7 @@ export default class CplacePlugin {
             );
             // if it's not an artifact build, the less files are in the assets folder of the plugin
             if (!AssetsCompiler.isArtifactsBuild()) {
-                lessPath = path.join(
-                    lessPath,
-                    'assets'
-                );
+                lessPath = path.join(lessPath, 'assets');
             }
             lessFileContent.push(
                 `@plugin-path-${plugin.pluginNameKebabCase}: '${lessPath}';`
@@ -256,7 +258,9 @@ export default class CplacePlugin {
             console.error(
                 cerr`[${this.pluginName}] Could not generate cplace-plugins.less file...`
             );
-            throw Error(`[${this.pluginName}] cplace-plugins.less generation failed`);
+            throw Error(
+                `[${this.pluginName}] cplace-plugins.less generation failed`
+            );
         } else {
             console.log(
                 `${GREEN_CHECK} [${this.pluginName}] wrote cplace-plugins.less...`
