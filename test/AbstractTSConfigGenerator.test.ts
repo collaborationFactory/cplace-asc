@@ -154,7 +154,7 @@ describe('AbstractTSConfigGenerator', () => {
                 compilerOptions: {
                     rootDir: '.',
                     baseUrl: '.',
-                    outDir: '..\\generated_js',
+                    outDir: '../generated_js',
                     sourceMap: true,
                     declarationMap: true,
                     typeRoots: expect.any(Array),
