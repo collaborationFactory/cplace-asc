@@ -146,7 +146,8 @@ describe('CplaceTSConfigGenerator', () => {
                 false,
                 false
             );
-            const result = generator.getRelativePathToPlugin(mockPlatformPlugin);
+            const result =
+                generator.getRelativePathToPlugin(mockPlatformPlugin);
             expect(result).toBe(
                 path.join(
                     '../../../node_modules/@cplace-assets/cplace_cf-cplace-platform'
