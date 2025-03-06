@@ -66,47 +66,55 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
     }
 
     /**
-     * Retrieves the relative path to the platform plugin, from the current plugin.
+     * Retrieves the relative path to a plugin, from the current plugin.
      *
-     * @returns {string} The relative path to the platform.
-     * @throws {Error} If the platform plugin is not found.
+     * @returns {string} The relative path to the plugin.
+     * @throws {Error} If the specified plugin is not found.
      */
-    public getRelativePathToPlatform(): string {
-        if (this.plugin.pluginName === this.platformPluginName) {
-            return path.join(this.relRepoRootPrefix, this.platformPluginName);
+    public getRelativePathToPlugin(
+        cplacePlugin: CplacePlugin | undefined
+    ): string {
+        if (!cplacePlugin) {
+            throw new Error(`Plugin cannot be null`);
         }
 
-        if (this.platformPlugin) {
-            const platformPathRelativeFromRepo =
-                this.platformPlugin.getPluginPathRelativeFromRepo(
-                    this.plugin.repo,
-                    this.localOnly,
-                    AssetsCompiler.isArtifactsBuild()
-                );
-            return path.join(
-                this.relRepoRootPrefix,
-                platformPathRelativeFromRepo
-            );
-        } else {
-            throw new Error('Platform plugin not found');
+        if (this.plugin.pluginName === cplacePlugin.pluginName) {
+            return path.join(this.relRepoRootPrefix, cplacePlugin.pluginName);
         }
+
+        const pluginPathRelativeFromRepo =
+            cplacePlugin.getPluginPathRelativeFromRepo(
+                this.plugin.repo,
+                this.localOnly,
+                AssetsCompiler.isArtifactsBuild()
+            );
+        return path.join(this.relRepoRootPrefix, pluginPathRelativeFromRepo);
     }
 
-    public getRelativePathToPlatformAssets(): string {
+    public getRelativePathToPluginAssets(
+        cplacePlugin: CplacePlugin | undefined
+    ): string {
+        if (!cplacePlugin) {
+            throw new Error(`Plugin cannot be null`);
+        }
+
+        const relativePathToPlugin = this.getRelativePathToPlugin(cplacePlugin);
         if (
             AssetsCompiler.isArtifactsBuild() &&
-            this.plugin.pluginName !== this.platformPluginName
+            this.plugin.pluginName !== cplacePlugin.pluginName
         ) {
-            // for artifact builds, the platform location would be in the node_modules and the assets are directly in there
-            return this.relPathToPlatform;
+            // for artifact builds, the location of the plugin would be in the node_modules and the assets are directly in there
+            return relativePathToPlugin;
         } else {
-            return path.join(this.relPathToPlatform, 'assets');
+            return path.join(relativePathToPlugin, 'assets');
         }
     }
 
-    public getRelativePathToPlatformSources(): string {
+    public getRelativePathToPluginSources(
+        cplacePlugin: CplacePlugin | undefined
+    ): string {
         return path.join(
-            this.relPathToPlatformAssets,
+            this.getRelativePathToPluginAssets(cplacePlugin),
             AssetsCompiler.isArtifactsBuild()
                 ? this.destDir
                 : this.srcFolderName
@@ -142,35 +150,12 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
                 return acc;
             }
 
-            const relPathToDependency = path.join(
-                this.relRepoRootPrefix,
-                dependency.getPluginPathRelativeFromRepo(
-                    this.plugin.repo,
-                    this.localOnly,
-                    AssetsCompiler.isArtifactsBuild()
-                )
-            );
-            // the assets of the dependency plugin are either in the 'assets' folder, if the plugin is from the same repo, or this is not an artifact build
-            // if it's an artifact build, or the dependency plugin is from another repo, then the assets are directly in the npm package inside the node_modules
-            const relPathToDependencyAssets = path.join(
-                relPathToDependency,
-                !AssetsCompiler.isArtifactsBuild() ||
-                    this.plugin.repo === dependency.repo
-                    ? 'assets'
-                    : ''
-            );
-            const relPathToDependencySources = path.join(
-                relPathToDependencyAssets,
-                this.srcFolderName
-            );
-            const relPathToDependencyOutput = path.join(
-                relPathToDependencyAssets,
-                this.destDir
-            );
+            const relPathToDependencySources =
+                this.getRelativePathToPluginSources(dependency);
 
             const newPath = AbstractTSConfigGenerator.getPathDependency(
                 dependency.pluginName,
-                relPathToDependencyOutput
+                relPathToDependencySources
             );
             const newRef = { path: relPathToDependencySources };
 
