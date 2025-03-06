@@ -23,15 +23,21 @@ class TestTSConfigGenerator extends AbstractTSConfigGenerator {
         return path.join(relRepoRootPrefix, localOnly ? '' : '../main');
     }
 
-    public getRelativePathToPlugin(cplacePlugin: CplacePlugin | undefined): string {
+    public getRelativePathToPlugin(
+        cplacePlugin: CplacePlugin | undefined
+    ): string {
         return '../../../../main/cf.cplace.platform';
     }
 
-    public getRelativePathToPluginAssets(cplacePlugin: CplacePlugin | undefined): string {
+    public getRelativePathToPluginAssets(
+        cplacePlugin: CplacePlugin | undefined
+    ): string {
         return '../../../../main/cf.cplace.platform/assets';
     }
 
-    public getRelativePathToPluginSources(cplacePlugin: CplacePlugin | undefined): string {
+    public getRelativePathToPluginSources(
+        cplacePlugin: CplacePlugin | undefined
+    ): string {
         return '../../../../main/cf.cplace.platform/assets/ts';
     }
 
