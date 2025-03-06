@@ -32,18 +32,27 @@ export abstract class AbstractTSConfigGenerator {
     ) {
         this.isArtifactsBuild = isArtifactsBuild;
         this.tsConfig = {};
-        this.platformPlugin = dependencies.find(
-            (d) => d.pluginName === this.platformPluginName
-        );
+        this.platformPlugin =
+            this.plugin.pluginName === this.platformPluginName
+                ? this.plugin
+                : this.dependencies.find(
+                      (d) => d.pluginName === this.platformPluginName
+                  );
 
         this.pathToMain = this.getRelativePathToMain(
             this.localOnly,
             this.plugin.repo,
             this.relRepoRootPrefix
         );
-        this.relPathToPlatform = this.getRelativePathToPlatform();
-        this.relPathToPlatformAssets = this.getRelativePathToPlatformAssets();
-        this.relPathToPlatformSources = this.getRelativePathToPlatformSources();
+        this.relPathToPlatform = this.getRelativePathToPlugin(
+            this.platformPlugin
+        );
+        this.relPathToPlatformAssets = this.getRelativePathToPluginAssets(
+            this.platformPlugin
+        );
+        this.relPathToPlatformSources = this.getRelativePathToPluginSources(
+            this.platformPlugin
+        );
     }
 
     public createConfigAndGetPath(): string {
@@ -93,11 +102,17 @@ export abstract class AbstractTSConfigGenerator {
         relRepoRootPrefix: string
     ): string;
 
-    public abstract getRelativePathToPlatform(): string;
+    public abstract getRelativePathToPlugin(
+        cplacePlugin: CplacePlugin | undefined
+    ): string;
 
-    public abstract getRelativePathToPlatformAssets(): string;
+    public abstract getRelativePathToPluginAssets(
+        cplacePlugin: CplacePlugin | undefined
+    ): string;
 
-    public abstract getRelativePathToPlatformSources(): string;
+    public abstract getRelativePathToPluginSources(
+        cplacePlugin: CplacePlugin | undefined
+    ): string;
 
     public abstract getTypeRootsOfLinkedPlugins(): string[];
 
