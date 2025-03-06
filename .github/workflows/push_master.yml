@@ -14,18 +14,18 @@ jobs:
                   access_token: ${{ github.token }}
 
             - name: Checkout cplace-asc
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
               with:
                   token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
-            - uses: actions/setup-node@v1
+            - uses: actions/setup-node@v4
               with:
-                  node-version: '18.18.2'
+                  node-version: '18.19.1'
                   registry-url: 'https://registry.npmjs.org'
 
             - name: Cache Node Modules
               id: npm-cache
-              uses: actions/cache@v2
+              uses: actions/cache@v4
               with:
                   path: '**/node_modules'
                   key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
