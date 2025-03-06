@@ -146,7 +146,7 @@ describe('CplaceTSConfigGenerator', () => {
                 false,
                 false
             );
-            const result = generator.getRelativePathToPlatform();
+            const result = generator.getRelativePathToPlugin(mockPlatformPlugin);
             expect(result).toBe(
                 path.join(
                     '../../../node_modules/@cplace-assets/cplace_cf-cplace-platform'
@@ -157,7 +157,7 @@ describe('CplaceTSConfigGenerator', () => {
         it('should throw error when platform plugin not found', () => {
             expect(
                 () => new CplaceTSConfigGenerator(mockPlugin, [], false, false)
-            ).toThrow('Platform plugin not found');
+            ).toThrow('Plugin cannot be null');
         });
 
         it('should return path in node_modules when platform is an artifact plugin', () => {
@@ -179,7 +179,7 @@ describe('CplaceTSConfigGenerator', () => {
                 false,
                 false
             );
-            const result = generator.getRelativePathToPlatform();
+            const result = generator.getRelativePathToPlugin(artifactPlatform);
             expect(result).toBe(
                 path.join(
                     '../../../node_modules/@cplace-assets/cplace_cf-cplace-platform'
