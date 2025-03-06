@@ -23,15 +23,15 @@ class TestTSConfigGenerator extends AbstractTSConfigGenerator {
         return path.join(relRepoRootPrefix, localOnly ? '' : '../main');
     }
 
-    public getRelativePathToPlatform(): string {
+    public getRelativePathToPlugin(cplacePlugin: CplacePlugin | undefined): string {
         return '../../../../main/cf.cplace.platform';
     }
 
-    public getRelativePathToPlatformAssets(): string {
+    public getRelativePathToPluginAssets(cplacePlugin: CplacePlugin | undefined): string {
         return '../../../../main/cf.cplace.platform/assets';
     }
 
-    public getRelativePathToPlatformSources(): string {
+    public getRelativePathToPluginSources(cplacePlugin: CplacePlugin | undefined): string {
         return '../../../../main/cf.cplace.platform/assets/ts';
     }
 
@@ -148,7 +148,7 @@ describe('AbstractTSConfigGenerator', () => {
                 compilerOptions: {
                     rootDir: '.',
                     baseUrl: '.',
-                    outDir: '../generated_js',
+                    outDir: '..\\generated_js',
                     sourceMap: true,
                     declarationMap: true,
                     typeRoots: expect.any(Array),
