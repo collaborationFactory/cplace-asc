@@ -246,7 +246,10 @@ export default class CplacePlugin {
             );
             // if it's not an artifact build, the less files are in the assets folder of the plugin
             // the same goes for plugins from the same repo during an artifacts build
-            if (!AssetsCompiler.isArtifactsBuild() || dependencyPlugin.repo === this.repo) {
+            if (
+                !AssetsCompiler.isArtifactsBuild() ||
+                dependencyPlugin.repo === this.repo
+            ) {
                 lessPath = path.join(lessPath, 'assets');
             }
             lessFileContent.push(
