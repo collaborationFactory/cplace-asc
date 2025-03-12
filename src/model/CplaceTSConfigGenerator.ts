@@ -101,10 +101,9 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
         const relativePathToPlugin = this.getRelativePathToPlugin(cplacePlugin);
         if (
             AssetsCompiler.isArtifactsBuild() &&
-            cplacePlugin.isArtifactPlugin &&
-            this.plugin.pluginName !== cplacePlugin.pluginName
+            this.plugin.repo !== cplacePlugin.repo
         ) {
-            // for artifact builds, the location of the plugin would be in the node_modules and the assets are directly in there
+            // in artifact builds, plugin from othe rrepositories would be located in the node_modules and the assets are directly in there
             return relativePathToPlugin;
         } else {
             return path.join(relativePathToPlugin, 'assets');
@@ -116,7 +115,7 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
     ): string {
         return path.join(
             this.getRelativePathToPluginAssets(cplacePlugin),
-            AssetsCompiler.isArtifactsBuild() && cplacePlugin?.isArtifactPlugin
+            AssetsCompiler.isArtifactsBuild() && this.plugin.repo !== cplacePlugin?.repo
                 ? this.destDir
                 : this.srcFolderName
         );
