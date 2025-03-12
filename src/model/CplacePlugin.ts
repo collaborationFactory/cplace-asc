@@ -235,21 +235,22 @@ export default class CplacePlugin {
             'cplace-plugins.less'
         );
         const lessFileContent: string[] = [];
-        dependenciesWithLess.forEach((plugin) => {
+        dependenciesWithLess.forEach((dependencyPlugin) => {
             let lessPath = path.join(
                 this.relRepoRootPrefix,
-                plugin.getPluginPathRelativeFromRepo(
+                dependencyPlugin.getPluginPathRelativeFromRepo(
                     this.repo,
                     localOnly,
                     AssetsCompiler.isArtifactsBuild()
                 )
             );
             // if it's not an artifact build, the less files are in the assets folder of the plugin
-            if (!AssetsCompiler.isArtifactsBuild()) {
+            // the same goes for plugins from the same repo during an artifacts build
+            if (!AssetsCompiler.isArtifactsBuild() || dependencyPlugin.repo === this.repo) {
                 lessPath = path.join(lessPath, 'assets');
             }
             lessFileContent.push(
-                `@plugin-path-${plugin.pluginNameKebabCase}: '${lessPath}';`
+                `@plugin-path-${dependencyPlugin.pluginNameKebabCase}: '${lessPath}';`
             );
         });
         fs.writeFileSync(cplacePluginsLessPath, lessFileContent.join('\n'));
