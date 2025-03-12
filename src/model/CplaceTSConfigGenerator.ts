@@ -115,7 +115,8 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
     ): string {
         return path.join(
             this.getRelativePathToPluginAssets(cplacePlugin),
-            AssetsCompiler.isArtifactsBuild() && this.plugin.repo !== cplacePlugin?.repo
+            AssetsCompiler.isArtifactsBuild() &&
+                this.plugin.repo !== cplacePlugin?.repo
                 ? this.destDir
                 : this.srcFolderName
         );
