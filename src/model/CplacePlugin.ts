@@ -218,6 +218,9 @@ export default class CplacePlugin {
             );
         }
 
+        debug(
+            `(CplacePlugin) [${this.pluginName}] Generating cplace-plugins.less...`
+        );
         const dependenciesWithLess = this.pluginDescriptor.dependencies
             .map((pluginDescriptor) => {
                 const plugin = pluginResolver(pluginDescriptor.name);
@@ -256,19 +259,21 @@ export default class CplacePlugin {
                 `@plugin-path-${dependencyPlugin.pluginNameKebabCase}: '${lessPath}';`
             );
         });
-        fs.writeFileSync(cplacePluginsLessPath, lessFileContent.join('\n'));
+        if (lessFileContent.length !== 0) {
+            fs.writeFileSync(cplacePluginsLessPath, lessFileContent.join('\n'));
 
-        if (!fs.existsSync(cplacePluginsLessPath)) {
-            console.error(
-                cerr`[${this.pluginName}] Could not generate cplace-plugins.less file...`
-            );
-            throw Error(
-                `[${this.pluginName}] cplace-plugins.less generation failed`
-            );
-        } else {
-            console.log(
-                `${GREEN_CHECK} [${this.pluginName}] wrote cplace-plugins.less...`
-            );
+            if (!fs.existsSync(cplacePluginsLessPath)) {
+                console.error(
+                    cerr`[${this.pluginName}] Could not generate cplace-plugins.less file...`
+                );
+                throw Error(
+                    `[${this.pluginName}] cplace-plugins.less generation failed`
+                );
+            } else {
+                console.log(
+                    `${GREEN_CHECK} [${this.pluginName}] wrote cplace-plugins.less...`
+                );
+            }
         }
     }
 
