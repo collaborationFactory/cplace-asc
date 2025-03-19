@@ -460,9 +460,9 @@ export class AssetsCompiler {
         linkingMap: Map<string, Set<CplacePlugin>>
     ) {
         linkingMap.forEach((projectsToLink: Set<CplacePlugin>, repoName) => {
-            const pathToProjectsAssets: string[] = Array.from(
-                projectsToLink
-            ).map((project) => project.assetsDir);
+            const pathToProjectsAssets: string[] = Array.from(projectsToLink)
+                .map((project) => project.assetsDir)
+                .filter((assetsDir) => fs.existsSync(assetsDir));
 
             debug(
                 `(AssetsCompiler) Linking projects in ${repoName}: ${pathToProjectsAssets.join(
