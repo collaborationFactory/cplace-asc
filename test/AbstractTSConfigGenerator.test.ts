@@ -8,9 +8,6 @@ jest.mock('fs');
 
 // Create concrete test implementation of abstract class
 class TestTSConfigGenerator extends AbstractTSConfigGenerator {
-    public getTypeRootsOfLinkedPlugins(): string[] {
-        return [];
-    }
     public getTsConfigBasePath(): string {
         return '/base/tsconfig.json';
     }

@@ -179,29 +179,6 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
         }, defaultPathsAndRefs);
     }
 
-    public getTypeRootsOfLinkedPlugins(): string[] {
-        const typeRoots: string[] = [];
-        return this.dependencies.reduce((acc, dependency) => {
-            const dependencyRepoName =
-                dependency.repo === 'cplace' ? 'main' : dependency.repo;
-            if (
-                dependencyRepoName !== this.plugin.repo &&
-                AssetsCompiler.isLocalParentRepo(dependencyRepoName)
-            ) {
-                const pathToTypes = path.join(
-                    this.relRepoRootPrefix,
-                    '..',
-                    dependencyRepoName,
-                    'node_modules',
-                    '@types'
-                );
-                return [...acc, pathToTypes];
-            }
-
-            return acc;
-        }, typeRoots);
-    }
-
     public getTsConfigBasePath(): string {
         return AssetsCompiler.isArtifactsBuild()
             ? path.join(this.relPathToPlatformAssets, 'tsconfig.base.json')
