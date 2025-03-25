@@ -89,6 +89,11 @@ export interface ParentRepo {
     branch: string;
 
     /**
+     * Commit hash of the parent repository to checkout.
+     */
+    commit: string;
+
+    /**
      * Indicates whether the plugins from this repository are used as local plugins from the file system, or as npm artifacts.
      * If the value is true, the plugins from this repository will be looked up in the node_modules.
      */
@@ -413,13 +418,22 @@ export class AssetsCompiler {
         return mainRepoPath;
     }
 
+    /**
+     * Find all plugins, from the loaded plugins, that depend on the given project.
+     * If such found plugin is in compilation scope, then the given project should be linked in the root node_modules of the found plugin's repository.
+     *
+     * @param project plugin to link
+     * @param projects list of all loaded plugins to compile
+     * @param linkingMap map of repos and plugins that should be linked in them
+     * @returns
+     */
     private collectProjectsToLink(
         project: CplacePlugin,
         projects: Map<string, CplacePlugin>,
         linkingMap: Map<string, Set<CplacePlugin>>
     ) {
         console.log(
-            '(AssetsCompiler) Collecting plugins from local repositories to link to dependent plugins...'
+            `(AssetsCompiler) Collecting plugins to link from ${project.pluginName}...`
         );
 
         const projectRepoName =
@@ -429,10 +443,13 @@ export class AssetsCompiler {
                 ?.pluginsAreArtifacts
         ) {
             // the project is an artifact and should not be linked
+            debug(
+                `(AssetsCompiler) Skip linking plugin ${project.pluginName} as it's an artifact plugin`
+            );
             return;
         }
 
-        // for a project is from a local repository, this project should be linked in the node_modules of each repo that depends on it
+        // if a project is from a local repository, this project should be linked in the node_modules of each repo that depends on it
         project.dependents.forEach((dependent) => {
             const dependentProject = projects.get(dependent.name);
 
@@ -654,9 +671,10 @@ export class AssetsCompiler {
             for (const repoName of Object.keys(parentRepos)) {
                 const parentRepo: ParentRepo = parentRepos[repoName];
                 if (
-                    parentRepo.branch.match(/release\/\d+\.\d+/) ||
-                    parentRepo.branch === 'main' ||
-                    parentRepo.branch === 'master'
+                    !parentRepo.commit &&
+                    (parentRepo.branch.match(/release\/\d+\.\d+/) ||
+                        parentRepo.branch === 'main' ||
+                        parentRepo.branch === 'master')
                 ) {
                     const isRepoPublished =
                         await NPMResolver.isRepositoryAssetsPublished(repoName);
