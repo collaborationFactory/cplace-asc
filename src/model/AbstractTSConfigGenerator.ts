@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import CplacePlugin from './CplacePlugin';
 import { debug } from '../utils';
 import { ExtraTypesReader } from './ExtraTypesReader';
+import { AssetsCompiler } from './AssetsCompiler';
 
 export abstract class AbstractTSConfigGenerator {
     protected tsConfig: any;
@@ -113,27 +114,17 @@ export abstract class AbstractTSConfigGenerator {
     };
 
     protected getPathsToMainTypes(): string[] {
-        return [
-            path.join(this.relRepoRootPrefix, 'node_modules', '@types', '*'),
-            path.join(
-                this.getRelativePathToPluginAssets(this.plugin),
-                'node_modules',
-                '@types',
-                '*'
-            ),
-            path.join(this.relPathToPlatformAssets, '@cplaceTypes', '*'),
-            path.join(
-                this.relPathToPlatformAssets,
-                'node_modules',
-                '@types',
-                '*'
-            ),
-        ];
+        return this.getTypeRoots().map((typeRoot) =>
+            path.join(typeRoot, '*')
+        );
     }
 
     /**
-     * Types should be used from the plugins assets, the platform assets and the @cplaceTypes in platform.
-     * Any additional specific types should be added to the plugin directly
+     * Types are used from
+     * - node_modules/@types in the root of the repository
+     * - node_modules/@types in this plugin's assets
+     * - @cplaceTypes from the platform plugin
+     * - node_modules/@types from the platform, or from the main repo (if platform has not types)
      *
      * @returns
      */
@@ -143,17 +134,24 @@ export abstract class AbstractTSConfigGenerator {
         typeRoots.push(
             path.join(this.relRepoRootPrefix, 'node_modules', '@types')
         );
-        typeRoots.push(
-            path.join(
-                this.getRelativePathToPluginAssets(this.plugin),
-                'node_modules',
-                '@types'
-            )
-        );
+        if (this.plugin.pluginName !== this.platformPluginName) {
+            typeRoots.push(
+                path.join(
+                    this.getRelativePathToPluginAssets(this.plugin),
+                    'node_modules',
+                    '@types'
+                )
+            );
+        }
         typeRoots.push(path.join(this.relPathToPlatformAssets, '@cplaceTypes'));
-        typeRoots.push(
-            path.join(this.relPathToPlatformAssets, 'node_modules', '@types')
-        );
+
+        const pathToPlatformTypes = path.join(this.relPathToPlatformAssets, 'node_modules', '@types')
+        const pathToMainTypes = path.join(this.pathToMain, 'node_modules', '@types')
+        if (AssetsCompiler.isArtifactsBuild() || fs.existsSync(path.join(this.plugin.assetsDir, this.srcFolderName, pathToPlatformTypes))) {
+            typeRoots.push(pathToPlatformTypes);
+        } else {
+            typeRoots.push(pathToMainTypes);
+        }
 
         return typeRoots;
     }
