@@ -29,7 +29,12 @@ class TestTSConfigGenerator extends AbstractTSConfigGenerator {
     public getRelativePathToPluginAssets(
         cplacePlugin: CplacePlugin | undefined
     ): string {
-        return '../../../../main/cf.cplace.platform/assets';
+        if (cplacePlugin?.pluginName === 'cf.cplace.platform') {
+            return '../../../../main/cf.cplace.platform/assets';
+        } else if (cplacePlugin?.pluginName === 'cf.cplace.test') {
+            return '../../../cf.cplace.test/assets';
+        }
+        return '';
     }
 
     public getRelativePathToPluginSources(
@@ -89,12 +94,21 @@ describe('AbstractTSConfigGenerator', () => {
     describe('getTypeRoots', () => {
         it('should return correct type roots array', () => {
             const typeRoots = generator['getTypeRoots']();
+
             expect(typeRoots).toEqual([
-                path.join('../../../../main', 'node_modules', '@types'),
+                path.join('../../../', 'node_modules', '@types'),
+                path.join(
+                    '../../../',
+                    'cf.cplace.test',
+                    'assets',
+                    'node_modules',
+                    '@types'
+                ),
                 path.join(
                     '../../../../main/cf.cplace.platform/assets',
                     '@cplaceTypes'
                 ),
+                path.join('../../../../main', 'node_modules', '@types'),
             ]);
         });
     });
@@ -103,12 +117,21 @@ describe('AbstractTSConfigGenerator', () => {
         it('should return correct paths to main types', () => {
             const mainTypes = generator['getPathsToMainTypes']();
             expect(mainTypes).toEqual([
-                path.join('../../../../main', 'node_modules', '@types', '*'),
+                path.join('../../../', 'node_modules', '@types', '*'),
+                path.join(
+                    '../../../',
+                    'cf.cplace.test',
+                    'assets',
+                    'node_modules',
+                    '@types',
+                    '*'
+                ),
                 path.join(
                     '../../../../main/cf.cplace.platform/assets',
                     '@cplaceTypes',
                     '*'
                 ),
+                path.join('../../../../main', 'node_modules', '@types', '*'),
             ]);
         });
     });
@@ -151,7 +174,7 @@ describe('AbstractTSConfigGenerator', () => {
                 compilerOptions: {
                     rootDir: '.',
                     baseUrl: '.',
-                    outDir: '../generated_js',
+                    outDir: path.join('..', 'generated_js'),
                     sourceMap: true,
                     declarationMap: true,
                     typeRoots: expect.any(Array),

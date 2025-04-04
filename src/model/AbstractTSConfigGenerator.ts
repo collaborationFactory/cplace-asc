@@ -7,7 +7,6 @@ import * as fs from 'fs';
 import CplacePlugin from './CplacePlugin';
 import { debug } from '../utils';
 import { ExtraTypesReader } from './ExtraTypesReader';
-import { AssetsCompiler } from './AssetsCompiler';
 
 export abstract class AbstractTSConfigGenerator {
     protected tsConfig: any;
@@ -129,43 +128,49 @@ export abstract class AbstractTSConfigGenerator {
     protected getTypeRoots(): string[] {
         const typeRoots: string[] = [];
 
+        // path to @types in the root of the repository
         typeRoots.push(
             path.join(this.relRepoRootPrefix, 'node_modules', '@types')
         );
-        if (this.plugin.pluginName !== this.platformPluginName) {
-            typeRoots.push(
-                path.join(
-                    this.getRelativePathToPluginAssets(this.plugin),
-                    'node_modules',
-                    '@types'
-                )
-            );
-        }
+
+        // path to @types in the plugin's assets
+        typeRoots.push(
+            path.join(
+                this.getRelativePathToPluginAssets(this.plugin),
+                'node_modules',
+                '@types'
+            )
+        );
+
+        // path to @cplaceTypes in the platform plugin
         typeRoots.push(path.join(this.relPathToPlatformAssets, '@cplaceTypes'));
 
-        const pathToPlatformTypes = path.join(
-            this.relPathToPlatformAssets,
-            'node_modules',
-            '@types'
-        );
-        const pathToMainTypes = path.join(
-            this.pathToMain,
-            'node_modules',
-            '@types'
-        );
-        if (
-            AssetsCompiler.isArtifactsBuild() ||
-            fs.existsSync(
-                path.join(
-                    this.plugin.assetsDir,
-                    this.srcFolderName,
-                    pathToPlatformTypes
+        // for repos other than main repo, add path to @types of main repo root or platform
+        if (this.plugin.repo !== this.platformPlugin?.repo) {
+            const pathToPlatformTypes = path.join(
+                this.relPathToPlatformAssets,
+                'node_modules',
+                '@types'
+            );
+            const pathToMainTypes = path.join(
+                this.pathToMain,
+                'node_modules',
+                '@types'
+            );
+            if (
+                this.isArtifactsBuild ||
+                fs.existsSync(
+                    path.join(
+                        this.plugin.assetsDir,
+                        this.srcFolderName,
+                        pathToPlatformTypes
+                    )
                 )
-            )
-        ) {
-            typeRoots.push(pathToPlatformTypes);
-        } else {
-            typeRoots.push(pathToMainTypes);
+            ) {
+                typeRoots.push(pathToPlatformTypes);
+            } else {
+                typeRoots.push(pathToMainTypes);
+            }
         }
 
         return typeRoots;
