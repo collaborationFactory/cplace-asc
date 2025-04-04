@@ -17,6 +17,7 @@ describe('CplaceTSConfigGenerator', () => {
     let mockPlugin: CplacePlugin;
     let mockArtifactPlugin: CplacePlugin;
     let mockPlatformPlugin: CplacePlugin;
+    let mockLinkedPlatformPlugin: CplacePlugin;
     let mockDependencies: CplacePlugin[];
 
     beforeEach(() => {
@@ -46,6 +47,21 @@ describe('CplaceTSConfigGenerator', () => {
         } as unknown as CplacePlugin;
 
         mockPlatformPlugin = {
+            repo: 'main',
+            pluginName: 'cf.cplace.platform',
+            pluginDir: '/main/cf.cplace.platform',
+            assetsDir: '/main/cf.cplace.platform/assets',
+            isArtifactPlugin: false,
+            getPluginPathRelativeFromRepo: jest
+                .fn()
+                .mockImplementation(
+                    (sourceRepo: string, localOnly: boolean) => {
+                        return '../main/cf.cplace.platform';
+                    }
+                ),
+        } as unknown as CplacePlugin;
+
+        mockLinkedPlatformPlugin = {
             repo: 'main',
             pluginName: 'cf.cplace.platform',
             pluginDir: '/main/cf.cplace.platform',
@@ -139,7 +155,7 @@ describe('CplaceTSConfigGenerator', () => {
     });
 
     describe('getRelativePathToPlatform', () => {
-        it('should return correct platform path for local plugin', () => {
+        it('should return path to platform in main repo for normal builds', () => {
             const generator = new CplaceTSConfigGenerator(
                 mockPlugin,
                 mockDependencies,
@@ -148,6 +164,26 @@ describe('CplaceTSConfigGenerator', () => {
             );
             const result =
                 generator.getRelativePathToPlugin(mockPlatformPlugin);
+            expect(result).toBe(
+                path.join(
+                    '../../../../main/cf.cplace.platform'
+                )
+            );
+        });
+
+        it('should return path to platform in node_modules for artifact build and local platform plugin', () => {
+            (AssetsCompiler.isArtifactsBuild as jest.Mock).mockReturnValue(
+                true
+            );
+
+            const generator = new CplaceTSConfigGenerator(
+                mockPlugin,
+                [mockLinkedPlatformPlugin, mockArtifactPlugin],
+                false,
+                false
+            );
+            const result =
+                generator.getRelativePathToPlugin(mockLinkedPlatformPlugin);
             expect(result).toBe(
                 path.join(
                     '../../../node_modules/@cplace-assets/cplace_cf-cplace-platform'
@@ -301,7 +337,7 @@ describe('CplaceTSConfigGenerator', () => {
 
             const generator = new CplaceTSConfigGenerator(
                 mockPlugin,
-                mockDependencies,
+                [mockLinkedPlatformPlugin, mockArtifactPlugin],
                 false,
                 false
             );
@@ -314,7 +350,7 @@ describe('CplaceTSConfigGenerator', () => {
             );
         });
 
-        it('should return path from main repo for normal build', () => {
+        it('should return path from platform for normal build', () => {
             const generator = new CplaceTSConfigGenerator(
                 mockPlugin,
                 mockDependencies,
@@ -324,7 +360,7 @@ describe('CplaceTSConfigGenerator', () => {
             const result = generator.getTsConfigBasePath();
 
             expect(result).toContain(
-                path.join('../../../../main/tsconfig.base.json')
+                path.join('../../../../main/cf.cplace.platform/assets/tsconfig.base.json')
             );
         });
     });
