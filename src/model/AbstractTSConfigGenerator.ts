@@ -114,9 +114,7 @@ export abstract class AbstractTSConfigGenerator {
     };
 
     protected getPathsToMainTypes(): string[] {
-        return this.getTypeRoots().map((typeRoot) =>
-            path.join(typeRoot, '*')
-        );
+        return this.getTypeRoots().map((typeRoot) => path.join(typeRoot, '*'));
     }
 
     /**
@@ -145,9 +143,26 @@ export abstract class AbstractTSConfigGenerator {
         }
         typeRoots.push(path.join(this.relPathToPlatformAssets, '@cplaceTypes'));
 
-        const pathToPlatformTypes = path.join(this.relPathToPlatformAssets, 'node_modules', '@types')
-        const pathToMainTypes = path.join(this.pathToMain, 'node_modules', '@types')
-        if (AssetsCompiler.isArtifactsBuild() || fs.existsSync(path.join(this.plugin.assetsDir, this.srcFolderName, pathToPlatformTypes))) {
+        const pathToPlatformTypes = path.join(
+            this.relPathToPlatformAssets,
+            'node_modules',
+            '@types'
+        );
+        const pathToMainTypes = path.join(
+            this.pathToMain,
+            'node_modules',
+            '@types'
+        );
+        if (
+            AssetsCompiler.isArtifactsBuild() ||
+            fs.existsSync(
+                path.join(
+                    this.plugin.assetsDir,
+                    this.srcFolderName,
+                    pathToPlatformTypes
+                )
+            )
+        ) {
             typeRoots.push(pathToPlatformTypes);
         } else {
             typeRoots.push(pathToMainTypes);
