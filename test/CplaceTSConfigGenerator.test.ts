@@ -165,9 +165,7 @@ describe('CplaceTSConfigGenerator', () => {
             const result =
                 generator.getRelativePathToPlugin(mockPlatformPlugin);
             expect(result).toBe(
-                path.join(
-                    '../../../../main/cf.cplace.platform'
-                )
+                path.join('../../../../main/cf.cplace.platform')
             );
         });
 
@@ -182,8 +180,9 @@ describe('CplaceTSConfigGenerator', () => {
                 false,
                 false
             );
-            const result =
-                generator.getRelativePathToPlugin(mockLinkedPlatformPlugin);
+            const result = generator.getRelativePathToPlugin(
+                mockLinkedPlatformPlugin
+            );
             expect(result).toBe(
                 path.join(
                     '../../../node_modules/@cplace-assets/cplace_cf-cplace-platform'
@@ -360,7 +359,9 @@ describe('CplaceTSConfigGenerator', () => {
             const result = generator.getTsConfigBasePath();
 
             expect(result).toContain(
-                path.join('../../../../main/cf.cplace.platform/assets/tsconfig.base.json')
+                path.join(
+                    '../../../../main/cf.cplace.platform/assets/tsconfig.base.json'
+                )
             );
         });
     });
