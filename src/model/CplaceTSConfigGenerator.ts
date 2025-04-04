@@ -103,7 +103,7 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
             AssetsCompiler.isArtifactsBuild() &&
             this.plugin.repo !== cplacePlugin.repo
         ) {
-            // in artifact builds, plugin from othe rrepositories would be located in the node_modules and the assets are directly in there
+            // in artifact builds, plugin from other repositories would be located in the node_modules and the assets are directly in there
             return relativePathToPlugin;
         } else {
             return path.join(relativePathToPlugin, 'assets');
