@@ -16,7 +16,7 @@ jobs:
 
             - uses: actions/setup-node@v4
               with:
-                  node-version: 18.19.1
+                  node-version: 22.11.0
 
             - name: Cache Node Modules
               id: npm-cache
@@ -47,7 +47,7 @@ jobs:
                     - macos-latest
                     - windows-latest
                 node_version:
-                    - 18.19.1
+                    - 22.11.0
         name: Node ${{ matrix.node_version }} - ${{ matrix.architecture }} on ${{ matrix.os }}
         steps:
             - name: Cancel Previous Runs
