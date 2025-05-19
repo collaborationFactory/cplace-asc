@@ -88,7 +88,7 @@ function updateExistingPackageJSONContent() {
 function cleanExistingPackageJSONDependencies(
     existingPackageJSONContent: PackageJson
 ) {
-    console.log('Cleaning dependencies');
+    console.log('Cleaning dependencies...');
     PACKAGES_TO_REMOVE.forEach((pkg) => {
         const dependencies = existingPackageJSONContent.dependencies;
         const devDependencies = existingPackageJSONContent.devDependencies;
