@@ -37,7 +37,7 @@ if (env === 'production') {
     tsc = `npx tsc --project ./tsconfig.prod.json`;
 }
 console.log(`Compiling with: ${tsc} `);
-console.log(execSync('npx tsc --version').toString());
+console.log('tsc ', execSync('npx tsc --version').toString());
 console.log(execSync(tsc).toString());
 console.log('Compiling DONE!');
 
