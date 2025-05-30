@@ -1,0 +1,15 @@
+{
+    "project_name": "cplace-asc",
+    "project_description": "Project created with ClaudeSync",
+    "includes": [
+        "**",
+        "package.json",
+        "tsconfig.json",
+        "tsconfig.prod.json",
+        ".nvmrc",
+        ".tool-versions"
+    ],
+    "excludes": [],
+    "use_ignore_files": true,
+    "push_roots": ["src", "tools", "test", ".github"]
+}

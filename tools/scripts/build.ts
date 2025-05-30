@@ -34,9 +34,11 @@ console.log('Cleaning DONE!');
 console.log('Compiling...');
 let tsc = tscBin;
 if (env === 'production') {
-    tsc = `${tscBin} --project ./tsconfig.prod.json`;
+    tsc = `npx tsc --project ./tsconfig.prod.json`;
 }
-console.log(`Compiling with: ${tsc} `, execSync(tsc).toString());
+console.log(`Compiling with: ${tsc} `);
+console.log('tsc ', execSync('npx tsc --version').toString());
+console.log(execSync(tsc).toString());
 console.log('Compiling DONE!');
 
 const newPackageJSON = Object.keys(rootPackageJSON).reduce((acc, key) => {
