@@ -5,6 +5,10 @@
     "repository": "https://github.com/collaborationFactory/cplace-asc",
     "homepage": "https://github.com/collaborationFactory/cplace-asc",
     "main": "./index.js",
+    "engines": {
+        "node": "18.18.2",
+        "npm": "9.8.1"
+    },
     "publishConfig": {
         "registry": "https://registry.npmjs.org/",
         "access": "public"
