@@ -6,13 +6,12 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as glob from 'glob';
 import { CplaceTSConfigGenerator } from './CplaceTSConfigGenerator';
-import { cerr, cgreen, debug, GREEN_CHECK } from '../utils';
+import { cerr, cgreen, cwarn, debug, GREEN_CHECK } from '../utils';
 import { CplaceTypescriptCompiler } from '../compiler/CplaceTypescriptCompiler';
 import { CompressCssCompiler } from '../compiler/CompressCssCompiler';
 import { NPMResolver } from './NPMResolver';
 import { PluginDescriptor } from './PluginDescriptor';
 import { getDescriptorParser } from './DescriptorParser';
-import { isFileTracked } from './utils';
 import { PluginPackageJsonGenerator } from './PluginPackageJsonGenerator';
 import { CombineJavascriptCompiler } from '../compiler/CombineJavascriptCompiler';
 
@@ -26,11 +25,6 @@ export interface ICplacePluginResolver {
 export default class CplacePlugin {
     public static readonly DESCRIPTOR_FILE_NAME = 'pluginDescriptor.json';
     public static readonly BUILD_GRADLE_FILE_NAME = 'build.gradle';
-
-    /**
-     * Name of the repository this plugin is contained in
-     */
-    public readonly repo: string;
 
     /**
      * Path to the plugin's `/assets` directory
@@ -54,15 +48,19 @@ export default class CplacePlugin {
     public readonly dependents: PluginDescriptor[];
 
     constructor(
+        public readonly repo: string,
         public readonly pluginName: string,
         public readonly pluginDir: string,
+        public readonly isArtifactPlugin: boolean,
         public readonly production: boolean
     ) {
         this.dependents = [];
         this.pluginDescriptor = this.parsePluginDescriptor(production);
 
-        this.repo = path.basename(path.dirname(path.resolve(pluginDir)));
-        this.assetsDir = CplacePlugin.getAssetsDir(this.pluginDir);
+        this.assetsDir = CplacePlugin.getAssetsDir(
+            this.pluginDir,
+            this.isArtifactPlugin
+        );
         this.hasAssetsFolder = fs.existsSync(path.resolve(this.assetsDir));
         this.hasTypeScriptAssets = fs.existsSync(
             path.resolve(this.assetsDir, 'ts', 'app.ts')
@@ -102,11 +100,17 @@ export default class CplacePlugin {
         );
     }
 
-    public static getAssetsDir(pluginDir: string): string {
+    public static getAssetsDir(
+        pluginDir: string,
+        isArtifactPlugin: boolean
+    ): string {
+        if (isArtifactPlugin) {
+            return pluginDir;
+        }
         return path.resolve(pluginDir, 'assets');
     }
 
-    public static getPluginPathRelativeToRepo(
+    private getPluginPathRelativeToRepo(
         sourceRepo: string,
         targetPluginName: string,
         targetRepo: string,
@@ -119,14 +123,29 @@ export default class CplacePlugin {
         }
     }
 
+    /**
+     * Returns the relative path of the plugin starting from the given source repository.
+     * For artifacts build, this would be in the node_modules of the repository.
+     */
     public getPluginPathRelativeFromRepo(
         sourceRepo: string,
-        localOnly: boolean
+        localOnly: boolean,
+        isArtifactsBuild: boolean
     ): string {
-        return CplacePlugin.getPluginPathRelativeToRepo(
+        // in an artifacts build, all plugins from otherrepos are taken from the node_modules
+        if (isArtifactsBuild && this.repo !== sourceRepo) {
+            return path.join(
+                'node_modules',
+                '@cplace-assets',
+                `${this.repo}_${this.pluginName
+                    .replaceAll('.', '-')
+                    .toLowerCase()}`
+            );
+        }
+        return this.getPluginPathRelativeToRepo(
             sourceRepo,
             this.pluginName,
-            this.repo,
+            this.repo == 'cplace' ? 'main' : this.repo,
             localOnly
         );
     }
@@ -146,13 +165,13 @@ export default class CplacePlugin {
             .map((pluginDescriptor) => {
                 const plugin = pluginResolver(pluginDescriptor.name);
                 if (!plugin) {
-                    throw Error(
-                        `[${this.pluginName}] could not resolve dependency ${this.pluginName}`
-                    );
+                    cwarn`Plugin ${pluginDescriptor.name} not found in node_modules. Ignoring...`;
                 }
                 return plugin;
             })
-            .filter((p) => p.hasTypeScriptAssets);
+            .filter(
+                (p) => p != undefined && p.hasTypeScriptAssets
+            ) as CplacePlugin[];
 
         const tsConfigGenerator = new CplaceTSConfigGenerator(
             this,
@@ -242,6 +261,17 @@ export default class CplacePlugin {
     public parsePluginDescriptor(
         excludeTestDependencies: boolean = false
     ): PluginDescriptor {
+        if (this.isArtifactPlugin) {
+            // no plugin descriptor for plugins in node_modules
+            return {
+                name: this.pluginName,
+                group: '',
+                repoName: this.repo,
+                dependencies: [],
+                dependenciesExtendedInfo: [],
+            };
+        }
+
         return getDescriptorParser(
             this.pluginDir,
             this.pluginName,

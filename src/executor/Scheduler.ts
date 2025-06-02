@@ -443,6 +443,11 @@ export class Scheduler {
     }
 
     private isInCompilationScope(plugin: CplacePlugin): boolean {
+        // do not compile plugins which are used from the npm artifacts
+        if (plugin.isArtifactPlugin) {
+            return false;
+        }
+
         return !this.noParents || plugin.repo === this.rootRepository;
     }
 
