@@ -17,5 +17,9 @@ console.log(execSync(`npx ts-node ${buildScriptPath} ${version}`).toString());
 console.log(`cplace-asc successfully built!`);
 process.chdir(CPLACE_ASC_DIST);
 console.log(`Publishing cplace-asc...`);
-execSync(`npm publish ${isSnapshot ? '--tag snapshot' : ''}`);
+execSync(
+    `npm publish --workspaces --include-workspace-root ${
+        isSnapshot ? '--tag snapshot' : ''
+    }`
+);
 console.log(`cplace-asc published!`);

@@ -1,6 +1,13 @@
 import { execSync } from 'child_process';
 import { resolve } from 'path';
-import { writeFileSync, rmSync, copyFileSync, mkdirSync } from 'fs';
+import {
+    writeFileSync,
+    rmSync,
+    copyFileSync,
+    mkdirSync,
+    readFileSync,
+    existsSync,
+} from 'fs';
 import * as rootPackageJSON from '../../package.json';
 import { CPLACE_ASC_DIST } from './shared';
 
@@ -49,12 +56,46 @@ const newPackageJSON = Object.keys(rootPackageJSON).reduce((acc, key) => {
     return acc;
 }, {});
 
+console.log(`Copying package.json files for each workspace`);
+const distWorskpaces: string[] = [];
+for (const workspace of rootPackageJSON.workspaces) {
+    // Remove the ./src prefix since the generated js files in the dist folder will be in the root, not in a src subfolder
+    const distWorskpace = workspace.replace('./src', '.');
+    distWorskpaces.push(distWorskpace);
+
+    const workspacePackageJson = resolve(workspace, 'package.json');
+    if (existsSync(workspacePackageJson)) {
+        console.log(`Copying ${workspacePackageJson} to ${distWorskpace}`);
+        const workspacePackageJsonContent = JSON.parse(
+            readFileSync(workspacePackageJson).toString()
+        );
+        const workspacePackageJsonDist = resolve(
+            CPLACE_ASC_DIST,
+            distWorskpace,
+            'package.json'
+        );
+        writeFileSync(
+            workspacePackageJsonDist,
+            JSON.stringify({ ...workspacePackageJsonContent, version: version })
+        );
+    }
+}
+
 console.log(`Creating package.json for version ${version}...`);
 writeFileSync(
     PACKAGE_JSON_DIST,
-    JSON.stringify({ ...newPackageJSON, version: version })
+    JSON.stringify({
+        ...newPackageJSON,
+        version: version,
+        workspaces: distWorskpaces,
+        dependencies: {
+            ...newPackageJSON['dependencies'],
+            '@cplace/global-registry-initializer': version,
+        },
+    })
 );
 console.log('package.json CREATED!');
+
 copyFileSync(
     `${OPENAPI_TOOLS}/${OPENAPI_TOOLS_JSON}`,
     resolve(CPLACE_ASC_DIST, OPENAPI_TOOLS_JSON)

@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as tmp from 'tmp';
 import * as child_process from 'child_process';
-import { RegistryInitializer } from '../src/model/RegistryInitializer';
+import { RegistryInitializer } from '@cplace/global-registry-initializer';
 import * as os from 'os';
 import { cred } from '../src/utils';
 import {
@@ -147,7 +147,6 @@ describe('configuring jfrog credentials', () => {
         registryInitializerPrototype.initRegistry();
         expect(console.error).toBeCalledTimes(1);
         expect(console.error).toHaveBeenLastCalledWith(
-            cred`✗`,
             `gradle.properties at location ${gradlePropertiesPath} do not exist!`,
             'You can ignore this for cplace versions before 5.16.'
         );
