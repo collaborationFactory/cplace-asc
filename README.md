@@ -1,13 +1,13 @@
 # Document Control / Repository Information
 
-| Item         | Value                                                      |
-| ------------ | ---------------------------------------------------------- |
-| Owner        | Stefan Stadler, Slaven Kopic, Jan Dittmar                  |
-| Team         | none yet                                                   |
-| Project      | none                                                       |
-| Parent       | none                                                       |
-| Developed by | collaboration Factory AG                                   |
-| Description  | Unser Kommandozeilen-Werkzeug um Frontend Assets zu bauen. |
+| Item         | Value                                               |
+| ------------ | --------------------------------------------------- |
+| Owner        | Alekhya Jammalamadaka, Senthanal Sirpi Manohar      |
+| Team         | Frontend Core                                       |
+| Project      | none                                                |
+| Parent       | none                                                |
+| Developed by | collaboration Factory AG                            |
+| Description  | Our command line tool for building frontend assets. |
 
 # @cplace/asc-local
 
