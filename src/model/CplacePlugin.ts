@@ -199,7 +199,7 @@ export default class CplacePlugin {
     }
 
     /**
-     * Generate a less file named 'cplace-pluging.less' if the plugin has less files.
+     * Generate a less file named 'cplace-plugins.less' if the plugin has less files.
      * This file will contain a variable for each dependency plugin, pointing to the path to that plugin.
      * Based on the use case (local build or artifact build) the path to the dependency plugin will be different.
      * Any other less file can then reference a file from a dependency plugin through these variables
