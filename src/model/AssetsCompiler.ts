@@ -337,6 +337,7 @@ export class AssetsCompiler {
                 this.collectProjectsToLink(project, projects, projectsToLink);
             });
         }
+        this.linkProjectIntoDependentProjects(projectsToLink);
 
         projects.forEach((project) => {
             if (!this.isInCompilationScope(project)) {
@@ -357,7 +358,6 @@ export class AssetsCompiler {
             }
         });
 
-        this.linkProjectIntoDependentProjects(projectsToLink);
         this.projects = projects;
     }
 
