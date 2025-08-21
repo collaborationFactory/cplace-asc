@@ -1,0 +1,82 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    # Only run on specific file changes
+    paths:
+      - "src/**/*.ts"
+      - "tools/**/*.ts"
+      - "test/**/*.ts"
+      - "*.json"
+      - ".github/workflows/*.yml"
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code Review
+        id: claude-review
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+
+          # Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4.1)
+          # model: "claude-opus-4-1-20250805"
+
+          # Direct prompt for automated review (no @claude mention needed)
+          direct_prompt: |
+            Please review this pull request for the cplace assets compiler toolchain and provide feedback on:
+            
+            **Code Quality & Architecture:**
+            - TypeScript best practices and type safety
+            - Webpack configuration and bundling logic
+            - Plugin system architecture and patterns
+            - Abstract base class implementations
+            
+            **Asset Compilation Specific:**
+            - Compiler implementations (TypeScript, LESS, Vendor, CSS compression)
+            - Job scheduling and parallel execution logic
+            - Plugin discovery and dependency resolution
+            - Configuration generation (tsconfig.json, package.json)
+            
+            **Performance & Security:**
+            - Memory usage in parallel compilation
+            - File system operations and watch mode
+            - Input validation for plugin configurations
+            - Security of dependency resolution
+            
+            **Testing & Build:**
+            - Jest test coverage and quality
+            - Build script correctness
+            - CLI interface usability
+            
+            **Project Standards:**
+            - Prettier formatting (tabWidth: 4, singleQuote: true)
+            - Expected plugin structure compliance
+            - Output directory structure (generated_js/, generated_css/)
+            
+            Be constructive and focus on maintainability, performance, and alignment with the existing architecture patterns.
+
+          # Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
+          use_sticky_comment: true
+          
+          # Add specific tools for running tests or linting
+          allowed_tools: "Bash(npm run test),Bash(npm run prettier-check),Bash(npm run test-build)"
+          
+          # Optional: Skip review for certain conditions
+          # if: |
+          #   !contains(github.event.pull_request.title, '[skip-review]') &&
+          #   !contains(github.event.pull_request.title, '[WIP]')
+
