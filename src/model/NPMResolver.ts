@@ -8,7 +8,7 @@ import * as fs from 'fs';
 import * as spawn from 'cross-spawn';
 import * as crypto from 'crypto';
 import { cgreen, cwarn, debug, isDebugEnabled } from '../utils';
-import { RegistryInitializer } from '@cplace/global-registry-initializer';
+import { RegistryInitializer } from '@cplace/registry-initializer';
 
 export class NPMResolver {
     private static readonly PACKAGE_JSON = 'package.json';

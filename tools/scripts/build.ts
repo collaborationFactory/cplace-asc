@@ -43,7 +43,7 @@ let tsc = tscBin;
 if (env === 'production') {
     tsc = `${tscBin} --project ./tsconfig.prod.json`;
 }
-console.log(`Compiling with: ${tsc} `, execSync(tsc).toString());
+console.log(`Compiling with: ${tsc} `, execSync(tsc, { encoding: 'utf-8' }).toString());
 console.log('Compiling DONE!');
 
 const newPackageJSON = Object.keys(rootPackageJSON).reduce((acc, key) => {
@@ -88,7 +88,7 @@ writeFileSync(
         workspaces: distWorskpaces,
         dependencies: {
             ...newPackageJSON['dependencies'],
-            '@cplace/global-registry-initializer': version,
+            '@cplace/registry-initializer': version,
         },
     })
 );

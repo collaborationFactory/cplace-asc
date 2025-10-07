@@ -1,5 +1,5 @@
 {
-    "name": "@cplace/global-registry-initializer",
+    "name": "@cplace/registry-initializer",
     "version": "0.0.0",
     "description": "",
     "main": "index.js",
