@@ -3,6 +3,7 @@ on:
     push:
         tags:
             - 'v*.*.*'
+            - 'v*.*.*-rc.*'
             - 'v0.0.0-*'
 
 env:
@@ -46,4 +47,7 @@ jobs:
               run: npx ts-node tools/scripts/publish.ts
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+                  ARTIFACTORY_PUBLISH_REGISTRY: ${{ vars.ARTIFACTORY_PUBLISH_REGISTRY }}
+                  ARTIFACTORY_PUBLISH_ACTOR: ${{ secrets.ENV_CPLACE_ARTIFACTORY_ACTOR }}
+                  ARTIFACTORY_PUBLISH_TOKEN: ${{ secrets.ENV_CPLACE_ARTIFACTORY_TOKEN
                   TAG: ${{ steps.tag.outputs.tag }}

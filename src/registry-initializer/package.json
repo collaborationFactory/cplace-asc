@@ -4,7 +4,7 @@
     "description": "",
     "main": "index.js",
     "bin": {
-        "cplace-reginit": "./index.js"
+        "registry-initializer": "./index.js"
     },
     "repository": "git+https://github.com/collaborationFactory/cplace-asc.git",
     "author": "",

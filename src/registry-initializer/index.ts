@@ -4,7 +4,7 @@ import { parseArgs } from 'util';
 import { RegistryInitializer } from './RegistryInitializer';
 
 const helpText = `
-cplace-reginit - Initialize cplace npm registry in a .npmrc file
+registry-initializer - Initialize cplace npm registry in a .npmrc file
 
 Description:
   A tool for initializing the cplace npm registry in a .npmrc file. The tool can
@@ -13,7 +13,7 @@ Description:
   using the --scoped parameter, it will generate a configuration for all npm
   scopes to which the user has read access.
 
-Usage: cplace-reginit [options]
+Usage: registry-initializer [options]
 
 Options:
   -d, --destination <path>  Destination path for the .npmrc file (optional)
@@ -23,10 +23,10 @@ Options:
   -h, --help                Display this help message
 
 Examples:
-  cplace-reginit
-  cplace-reginit --destination /path/to/.npmrc
-  cplace-reginit -d /path/to/.npmrc --scoped
-  cplace-reginit -s
+  registry-initializer
+  registry-initializer --destination /path/to/.npmrc
+  registry-initializer -d /path/to/.npmrc --scoped
+  registry-initializer -s
 `;
 
 try {

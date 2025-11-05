@@ -1,6 +1,6 @@
 {
     "name": "@cplace/asc-local",
-    "version": "3.0.1",
+    "version": "3.0.1-rc.1",
     "description": "cplace assets compiler",
     "repository": "https://github.com/collaborationFactory/cplace-asc",
     "homepage": "https://github.com/collaborationFactory/cplace-asc",
@@ -77,6 +77,6 @@
         "ts-node": "10.9.1"
     },
     "workspaces": [
-        "./src/packages/registry-initializer"
+        "./src/registry-initializer"
     ]
 }
