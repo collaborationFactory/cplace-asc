@@ -1,3 +1,11 @@
+interface ArtifactoryRepositoryResponse {
+    key: string,
+    description: string
+    type: string,
+    url: string,
+    packageType: string
+}
+
 export class RegistryResolver {
     private static readonly API_LOCAL_REGISTRIES_ENDPOINT = 'repositories';
     private static readonly API_LOCAL_REGISTRIES_QUERY_PARAMS = '?type=local&packageType=npm';
@@ -18,7 +26,7 @@ export class RegistryResolver {
      * @param npmBasicAuthToken Basic auth token for npm (Base64 encoded 'username:token')
      * @returns A promise that resolves to an array of local npm registry URLs.
      */
-    public async getAllLocalNpmRegistries(npmBasicAuthToken): Promise<string[]> {
+    public async getAllLocalNpmRegistries(npmBasicAuthToken: string): Promise<string[]> {
         const url = `${this.artifactoryBaseUrl}${RegistryResolver.API_LOCAL_REGISTRIES_ENDPOINT}${RegistryResolver.API_LOCAL_REGISTRIES_QUERY_PARAMS}`;
 
         const authHeader = 'Basic ' + npmBasicAuthToken;
@@ -39,7 +47,7 @@ export class RegistryResolver {
             const repositories = await response.json();
 
             // Extract repository keys (names) from the response
-            return repositories.map((repo: any) => repo.key);
+            return repositories.map((repo: ArtifactoryRepositoryResponse) => repo.key);
         } catch (error: any) {
             throw new Error(
                 `Error fetching local npm registries: ${error.message}`

@@ -19,7 +19,7 @@ Options:
   -d, --destination <path>  Destination path for the .npmrc file (optional)
                             If not specified, uses the global .npmrc location
   -s, --scoped              Use scoped registry configuration (optional, default: false)
-                            Generates configuration for all accessible npm scopes
+                            Generates configuration for all accessible private npm scopes
   -h, --help                Display this help message
 
 Examples:
@@ -29,7 +29,19 @@ Examples:
   registry-initializer -s
 `;
 
-try {
+interface CliOptions {
+    destination?: string;
+    scoped: boolean;
+    help: boolean;
+}
+
+/**
+ * Parse and validate command line arguments.
+ *
+ * @returns Parsed CLI options
+ * @throws Error if arguments are invalid
+ */
+function parseCliArguments(): CliOptions {
     const { values } = parseArgs({
         options: {
             destination: {
@@ -50,29 +62,65 @@ try {
         strict: true,
     });
 
-    if (values.help) {
-        console.log(helpText);
-        process.exit(0);
-    }
-
     const destination = values.destination;
     const scoped = values.scoped ?? false;
+    const help = values.help ?? false;
 
     // Validate destination if provided
     if (destination !== undefined && destination.trim() === '') {
-        console.error('Error: --destination cannot be empty');
-        process.exit(1);
+        throw new Error('--destination cannot be empty');
     }
 
-    const registryInitializer = new RegistryInitializer();
-    registryInitializer.initRegistry(destination, scoped);
-} catch (error: any) {
-    if (error.code === 'ERR_PARSE_ARGS_UNKNOWN_OPTION') {
-        console.error(`Error: ${error.message}`);
-        console.log(helpText);
-        process.exit(1);
-    }
-    throw error;
+    return {
+        destination,
+        scoped,
+        help,
+    };
 }
 
-export { RegistryInitializer };
+/**
+ * Execute the registry initialization with the provided options.
+ *
+ * @param options CLI options for registry initialization
+ */
+async function executeRegistryInitialization(options: CliOptions): Promise<void> {
+    const registryInitializer = new RegistryInitializer();
+    await registryInitializer.initRegistry(options.destination, options.scoped);
+}
+
+/**
+ * Main CLI entry point.
+ */
+async function main(): Promise<void> {
+    try {
+        const options = parseCliArguments();
+
+        if (options.help) {
+            console.log(helpText);
+            process.exit(0);
+        }
+
+        await executeRegistryInitialization(options);
+    } catch (error: any) {
+        if (error.code === 'ERR_PARSE_ARGS_UNKNOWN_OPTION') {
+            console.error(`Error: ${error.message}`);
+            console.log(helpText);
+            process.exit(1);
+        }
+
+        // Re-throw validation errors with proper formatting
+        if (error.message.includes('--destination')) {
+            console.error(`Error: ${error.message}`);
+            process.exit(1);
+        }
+
+        throw error;
+    }
+}
+
+// Execute main function only when run as a script
+if (require.main === module) {
+    main();
+}
+
+export { RegistryInitializer, parseCliArguments, executeRegistryInitialization };

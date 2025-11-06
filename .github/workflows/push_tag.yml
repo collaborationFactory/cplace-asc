@@ -49,5 +49,5 @@ jobs:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
                   ARTIFACTORY_PUBLISH_REGISTRY: ${{ vars.ARTIFACTORY_PUBLISH_REGISTRY }}
                   ARTIFACTORY_PUBLISH_ACTOR: ${{ secrets.ENV_CPLACE_ARTIFACTORY_ACTOR }}
-                  ARTIFACTORY_PUBLISH_TOKEN: ${{ secrets.ENV_CPLACE_ARTIFACTORY_TOKEN
+                  ARTIFACTORY_PUBLISH_TOKEN: ${{ secrets.ENV_CPLACE_ARTIFACTORY_TOKEN }}
                   TAG: ${{ steps.tag.outputs.tag }}
