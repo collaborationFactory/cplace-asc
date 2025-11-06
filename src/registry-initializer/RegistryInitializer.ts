@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import { existsSync } from 'fs';
-import { JFrogCredentials } from './JFrogCredentials';
+import { RegistryCredentials } from './RegistryCredentials';
 import { RegistryResolver } from './RegistryResolver';
 
 export class RegistryInitializer {
@@ -102,7 +102,7 @@ export class RegistryInitializer {
             ).toString('base64');
             this.npmrcUser = process.env.ENV_CPLACE_ARTIFACTORY_ACTOR;
 
-            JFrogCredentials.setCredentials(
+            RegistryCredentials.setCredentials(
                 process.env.ENV_CPLACE_ARTIFACTORY_ACTOR,
                 process.env.ENV_CPLACE_ARTIFACTORY_TOKEN
             );
@@ -353,7 +353,7 @@ export class RegistryInitializer {
                 `${this.npmrcUser}:${cleanToken}`
             ).toString('base64');
 
-            JFrogCredentials.setCredentials(this.npmrcUser, cleanToken);
+            RegistryCredentials.setCredentials(this.npmrcUser, cleanToken);
         } else {
             throw Error(
                 'jfrog credentials for Gradle not found or configured correctly. See the KnowledgeBase for help:\nhttps://docs.cplace.io/dev-docs/cplace-architecture/platform-component/build-system/java-artifact-based-builds/#creating-an-api-token-on-cplacejfrogio'

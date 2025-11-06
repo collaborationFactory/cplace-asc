@@ -2,6 +2,7 @@
 
 import { parseArgs } from 'util';
 import { RegistryInitializer } from './RegistryInitializer';
+import { RegistryCredentials } from "./RegistryCredentials";
 
 const helpText = `
 registry-initializer - Initialize cplace npm registry in a .npmrc file
@@ -123,4 +124,4 @@ if (require.main === module) {
     main();
 }
 
-export { RegistryInitializer, parseCliArguments, executeRegistryInitialization };
+export { RegistryInitializer, RegistryCredentials, parseCliArguments, executeRegistryInitialization };

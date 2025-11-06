@@ -9,8 +9,8 @@ import * as spawn from 'cross-spawn';
 import * as crypto from 'crypto';
 import { cgreen, cwarn, debug, isDebugEnabled } from '../utils';
 import { RegistryInitializer } from '@cplace/registry-initializer';
+import { RegistryCredentials } from '@cplace/registry-initializer';
 import axios, { AxiosInstance } from 'axios';
-import { JFrogCredentials } from './JFrogCredentials';
 
 export class NPMResolver {
     private static readonly PACKAGE_JSON = 'package.json';
@@ -290,8 +290,8 @@ export class NPMResolver {
         registryInitializer.initRegistry();
         NPMResolver.jFrogAxioxInstance = NPMResolver.getJfrogAxiosInstance(
             NPMResolver.JFROG_BASE_URL,
-            JFrogCredentials.getCredentials().username,
-            JFrogCredentials.getCredentials().token
+            RegistryCredentials.getCredentials().username,
+            RegistryCredentials.getCredentials().token
         );
     }
 }
