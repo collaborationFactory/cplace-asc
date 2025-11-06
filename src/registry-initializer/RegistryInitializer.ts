@@ -1,17 +1,19 @@
 import { execSync } from 'child_process';
 import * as path from 'path';
-import { cgreen, cred, debug } from '../utils';
 import * as fs from 'fs';
 import * as os from 'os';
 import { existsSync } from 'fs';
+import { RegistryResolver } from './RegistryResolver';
 
 export class RegistryInitializer {
     public static readonly JFROG_CPLACE_NPM_REGISTRY = 'cplace-npm';
     public static readonly JFROG_CPLACE_NPM_LOCAL_REGISTRY = 'cplace-npm-local';
     public static readonly JFROG_CPLACE_ASSETS_NPM_REGISTRY =
         'cplace-assets-npm';
+    public static readonly JFROG_API_URL =
+        'https://cplace.jfrog.io/artifactory/api/';
     public static readonly JFROG_REGISTRY_URL =
-        '//cplace.jfrog.io/artifactory/api/npm/';
+        `//cplace.jfrog.io/artifactory/api/npm/`;
     public static readonly PUBLIC_NPM_REGISTRY = 'registry.npmjs.org';
     public static readonly GRADLE_HOME = '.gradle';
     public static readonly GRADLE_PROPERTIES = 'gradle.properties';
@@ -28,19 +30,48 @@ export class RegistryInitializer {
     private npmrcBasicAuthToken: string = '';
     private npmrcPath: string = '';
     private npmRegistry: string = RegistryInitializer.JFROG_CPLACE_NPM_REGISTRY;
+    private DEBUG_ENABLED: boolean = false;
+
+    private managedScopes: string[] = ["@fortawesome"];
+
+    private registryResolver: RegistryResolver = new RegistryResolver(
+        RegistryInitializer.JFROG_API_URL
+    );
 
     constructor() {}
 
-    public initRegistry(): void {
+    private debug(content: any): void {
+        if (this.DEBUG_ENABLED) {
+            if (typeof content === 'string') {
+                console.debug(`\x1b[37m✹ ${content}\x1b[0m`);
+            } else {
+                console.debug(content);
+            }
+        }
+    }
+
+    public enableDebug(debugEnabled = true): void {
+        this.DEBUG_ENABLED = debugEnabled;
+    }
+
+    public async initRegistry(destination?: string, scoped?: boolean): Promise<void> {
         console.info('⟲ Initialising cplace jfrog registry for NPM');
 
         try {
-            this.setNpmrcPath();
+            this.setNpmrcPath(destination);
 
             if (!this.extractTokenFromEnvironment()) {
                 this.extractTokenFromGradleProps();
             }
             this.extractNpmRegistryFromEnvironment();
+
+            if (scoped) {
+                console.info('⟲ Using scoped registry configuration');
+                const localRegistries = await this.registryResolver.getAllLocalNpmRegistries(this.npmrcBasicAuthToken);
+                const fetchedScopes = await this.registryResolver.getManagedScopes(localRegistries, this.npmrcBasicAuthToken);
+                this.managedScopes.push(...Array.from(fetchedScopes));
+                console.info(`⟲ Found managed scopes: ${this.managedScopes.join(', ')}`);
+            }
 
             if (!existsSync(this.npmrcPath)) {
                 RegistryInitializer.createEmptyNmprc(this.npmrcPath);
@@ -48,10 +79,9 @@ export class RegistryInitializer {
 
             this.setCurrentNpmrcConfig();
             this.removeAllRegistryCredentials();
-            this.addDefaultRegistryCredentialsToNpmrc();
+            this.addDefaultRegistryCredentialsToNpmrc(scoped);
         } catch (e: any) {
             console.error(
-                cred`✗`,
                 e.message,
                 'You can ignore this for cplace versions before 5.16.'
             );
@@ -89,9 +119,9 @@ export class RegistryInitializer {
         }
     }
 
-    private static getGradlePropsPath(): string {
+    private getGradlePropsPath(): string {
         const gradleHome = RegistryInitializer.getGradleHome();
-        debug(`.gradle location: ${gradleHome}`);
+        this.debug(`.gradle location: ${gradleHome}`);
         if (!fs.existsSync(gradleHome)) {
             throw Error(
                 `.gradle at location ${gradleHome} does not exist. Please use the default (${os.homedir()}/${
@@ -104,7 +134,7 @@ export class RegistryInitializer {
             RegistryInitializer.GRADLE_PROPERTIES
         );
 
-        debug(`gradle.properties location: ${gradleProperties}`);
+        this.debug(`gradle.properties location: ${gradleProperties}`);
         if (!fs.existsSync(gradleProperties)) {
             throw Error(
                 `gradle.properties at location ${gradleProperties} do not exist!`
@@ -122,10 +152,7 @@ export class RegistryInitializer {
 
     private static createEmptyNmprc(npmrcPath: string) {
         fs.writeFileSync(npmrcPath, '');
-        console.info(
-            cgreen`✓`,
-            `Created empty .npmrc at location ${npmrcPath}`
-        );
+        console.info(`Created empty .npmrc at location ${npmrcPath}`);
     }
 
     private setCurrentNpmrcConfig() {
@@ -134,9 +161,22 @@ export class RegistryInitializer {
             .toString();
     }
 
-    private setNpmrcPath() {
+    private setNpmrcPath(destination?: string) {
+        if (destination) {
+            const resolvedPath = path.resolve(destination);
+
+            // Check if destination is a directory
+            if (fs.existsSync(resolvedPath) && fs.statSync(resolvedPath).isDirectory()) {
+                this.npmrcPath = path.join(resolvedPath, '.npmrc');
+                this.debug(`Destination is a directory, using: ${this.npmrcPath}`);
+            } else {
+                throw Error('Error: --destination must be a valid directory path');
+            }
+            return;
+        }
+
         const npmConfig: string = execSync('npm config ls -l').toString();
-        debug(`Found user config ${npmConfig}`);
+        this.debug(`Found user config ${npmConfig}`);
 
         const npmrcPath: string | undefined = (npmConfig.match(
             /userconfig *= *".*"/gi
@@ -157,18 +197,61 @@ export class RegistryInitializer {
     }
 
     private removeAllRegistryCredentials() {
-        debug(`Cleaning registries jFrog credentials`);
+        this.debug(`Cleaning registries jFrog credentials`);
         if (!this.currentNpmrcConfig) {
             return;
         }
+
+        this.removeCplaceRegistryConfigurationBlock();
 
         RegistryInitializer.REGISTRY_LIST.forEach((registry) => {
             this.removeSingleRegistryCredentials(registry);
         });
     }
 
+    private removeCplaceRegistryConfigurationBlock() {
+        const lines = this.currentNpmrcConfig.split('\n');
+        const rangeToRemove: [number, number][] = [];
+        const cplaceBlocksStartIndexes: number[] = [];
+
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].includes('start cplace registry configuration')) {
+                cplaceBlocksStartIndexes.push(i);
+            }
+            if (lines[i].includes('end cplace registry configuration')) {
+                let startIndex = 0;
+                if (cplaceBlocksStartIndexes.length > 0) {
+                    startIndex = cplaceBlocksStartIndexes.pop()!;
+                }
+                rangeToRemove.push([startIndex, i]);
+            }
+        }
+        if (cplaceBlocksStartIndexes.length > 0) {
+            // If there are start indexes without end indexes, remove until the end of the file
+            rangeToRemove.push([cplaceBlocksStartIndexes[0], lines.length - 1]);
+        }
+
+        // for each line of the flie check if it is in one of the ranges to remove
+        const linesToRemove: string[] = [];
+        lines.forEach((line, index) => {
+            rangeToRemove.forEach((range) => {
+                if (index >= range[0] && index <= range[1]) {
+                    linesToRemove.push(line);
+                }
+            });
+        });
+
+        // save the new file without the lines to remove
+        fs.writeFileSync(
+            this.npmrcPath,
+            this.getCleanedNpmrcConfig(linesToRemove),
+            { encoding: 'utf-8' },
+        );
+        this.setCurrentNpmrcConfig();
+    }
+
     private removeSingleRegistryCredentials(registry: string): void {
-        debug(`Cleaning ${registry} registry jFrog credentials`);
+        this.debug(`Cleaning ${registry} registry jFrog credentials`);
         const linesToRemove = this.currentNpmrcConfig
             .split('\n')
             .filter((configLine) => configLine.includes(registry));
@@ -203,7 +286,15 @@ export class RegistryInitializer {
         return `${registryUrl}${registryName}/`;
     }
 
-    private getRegistryInfo(registryUrl: string, registryName: string) {
+    private getRegistryInfo(registryUrl: string, registryName: string, scoped?: boolean) {
+        if (scoped && this.managedScopes.length > 0) {
+            // Generate scoped registry configuration for each managed scope
+            return this.managedScopes
+                .map(scope => `${scope}:registry=https:${this.getFullRegistryPath(registryUrl, registryName)}`)
+                .join('\n');
+        }
+
+        // Default non-scoped registry configuration
         return `registry=https:${this.getFullRegistryPath(
             registryUrl,
             registryName
@@ -236,7 +327,7 @@ export class RegistryInitializer {
         console.info(
             '⟲ Configuring npm jfrog registry via the gradle properties'
         );
-        const gradleProps = RegistryInitializer.getGradlePropsPath();
+        const gradleProps = this.getGradlePropsPath();
 
         const token: string | undefined = (gradleProps.match(
             /repo\.cplace\.apiToken *= *([a-z0-9]+)/gi
@@ -263,11 +354,12 @@ export class RegistryInitializer {
         }
     }
 
-    private getDefaultRegistryConfigItems(): string[] {
+    private getDefaultRegistryConfigItems(scoped?: boolean): string[] {
         return [
             this.getRegistryInfo(
                 RegistryInitializer.JFROG_REGISTRY_URL,
-                this.npmRegistry
+                this.npmRegistry,
+                scoped
             ),
             this.getAuthInfo(
                 RegistryInitializer.JFROG_REGISTRY_URL,
@@ -284,15 +376,19 @@ export class RegistryInitializer {
         ];
     }
 
-    private addDefaultRegistryCredentialsToNpmrc() {
+    private addDefaultRegistryCredentialsToNpmrc(scoped?: boolean) {
         const defaultRegistryConfigurationItems =
-            this.getDefaultRegistryConfigItems();
-        let npmrc = this.currentNpmrcConfig
-            .concat(`\n${defaultRegistryConfigurationItems[0]}\n`)
-            .concat(`${defaultRegistryConfigurationItems[1]}\n`)
-            .concat(`${defaultRegistryConfigurationItems[2]}\n`)
-            .concat(`${defaultRegistryConfigurationItems[3]}\n`);
+            this.getDefaultRegistryConfigItems(scoped);
+
+        let npmrc = this.currentNpmrcConfig;
+
+        npmrc = npmrc.concat('\n# start cplace registry configuration. Do not remove this line\n');
+        defaultRegistryConfigurationItems.forEach(item => {
+            npmrc = npmrc.concat(`${item}\n`);
+        });
+        npmrc = npmrc.concat('# end cplace registry configuration. Do not remove this line\n');
+
         fs.writeFileSync(this.npmrcPath, npmrc, { encoding: 'utf-8' });
-        console.log(cgreen`✓`, 'Updated config in: ', this.npmrcPath);
+        console.log('Updated config in: ', this.npmrcPath);
     }
 }

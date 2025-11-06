@@ -128,6 +128,7 @@ jobs:
               working-directory: ./main
               timeout-minutes: 20
               run: |
+                  npm i ../dist/cplace-registry-initializer-0.0.0-SNAPSHOT.tgz -D
                   npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT.tgz -D
                   chmod 777 node_modules/.bin/cplace-asc
                   node_modules/.bin/cplace-asc --production --clean
@@ -136,6 +137,7 @@ jobs:
               working-directory: ./cplace-paw
               timeout-minutes: 20
               run: |
+                  npm i ../dist/cplace-registry-initializer-0.0.0-SNAPSHOT.tgz -D
                   npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT.tgz -D
                   chmod 777 node_modules/.bin/cplace-asc
                   node_modules/.bin/cplace-asc --production --clean
@@ -144,6 +146,7 @@ jobs:
               working-directory: ./cplace-project-planning
               timeout-minutes: 20
               run: |
+                  npm i ../dist/cplace-registry-initializer-0.0.0-SNAPSHOT.tgz -D
                   npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT.tgz -D
                   chmod 777 node_modules/.bin/cplace-asc
                   node_modules/.bin/cplace-asc --production --clean
