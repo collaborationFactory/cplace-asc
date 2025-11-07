@@ -610,7 +610,8 @@ export class AssetsCompiler {
         );
         if (!fs.existsSync(pathToRepoInNodeModules)) {
             throw Error(
-                `[${pluginDescriptor.repoName}] npm package for the repository should exist in node_modules, but it's missing. \nMake sure the package.json file is generated in the "build" folder of the repository and then run "npm install".`
+                `[${pluginDescriptor.repoName}] npm package for the repository should exist in node_modules, but it's missing. \nMake sure the package.json file is generated in the "build" folder of the repository and then run "npm install".\n
+                If not, run "./gradlew generateRootPackageJson" to generate the package.json file in the "build" folder.`
             );
         }
 
@@ -638,7 +639,8 @@ export class AssetsCompiler {
             !fs.existsSync(expectedPathToPluginInNodeModules)
         ) {
             throw Error(
-                `[${pluginDescriptor.name}] npm package for the plugin should exist in node_modules, but it's missing. \nMake sure the package.json file is generated in the "build" folder of the repository and then run "npm install".`
+                `[${pluginDescriptor.name}] npm package for the plugin should exist in node_modules, but it's missing. \nMake sure the package.json file is generated in the "build" folder of the repository and then run "npm install".\n
+                If not, run "./gradlew generateRootPackageJson" to generate the package.json file in the "build" folder.`
             );
         }
     }

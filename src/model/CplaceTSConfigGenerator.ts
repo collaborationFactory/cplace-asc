@@ -7,8 +7,8 @@ import * as fs from 'fs';
 import * as process from 'process';
 import CplacePlugin from './CplacePlugin';
 import { AbstractTSConfigGenerator } from './AbstractTSConfigGenerator';
-import { debug } from 'console';
 import { AssetsCompiler } from './AssetsCompiler';
+import { debug } from '../utils';
 
 export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
     constructor(
