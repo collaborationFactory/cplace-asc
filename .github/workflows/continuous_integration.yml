@@ -131,6 +131,7 @@ jobs:
                   npm i ../dist/cplace-asc-local-0.0.0-SNAPSHOT.tgz -D
                   chmod 777 node_modules/.bin/cplace-asc
                   node_modules/.bin/cplace-asc --production --clean
+                  npm test -- test/e2e/assets-compiler.e2e.test.ts
 
             - name: cplace-asc cplace-paw
               working-directory: ./cplace-paw
