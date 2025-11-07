@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 export function installAssetsCompiler(){
-  const distPath = resolve(__dirname, 'dist');
+  const distPath = resolve(__dirname, '../../', 'dist');
   const output = spawnSync('npm install -g .', {
     cwd: distPath,
     stdio: 'pipe',
