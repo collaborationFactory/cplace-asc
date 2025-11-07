@@ -16,7 +16,7 @@ describe('Assets Compiler E2E Tests', () => {
 
   describe('TC1: Verify assets compiler basic functionality', () => {
     it('should verify assets compiler basic functionality with -c flag', async () => {
-      const args = ['-c']
+      const args = ['-c'];
       const output = spawnSync('cplace-asc', args, {
         cwd: cplaceMainRepoPath,
         shell: true,
