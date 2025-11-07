@@ -1,5 +1,6 @@
 import * as path from 'node:path';
 import { spawnSync } from 'child_process';
+import { installAssetsCompiler } from './utils';
 
 const cplaceMainRepoPath = path.resolve('../main');
 
@@ -9,6 +10,8 @@ describe('Assets Compiler E2E Tests', () => {
   beforeAll(() => {
     // Set longer timeout for all tests in this suite
     jest.setTimeout(timeout);
+    // Install assets compiler
+    installAssetsCompiler();
   });
 
   describe('TC1: Verify assets compiler basic functionality', () => {
