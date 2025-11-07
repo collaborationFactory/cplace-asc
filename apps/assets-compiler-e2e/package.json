@@ -1,0 +1,26 @@
+{
+  "name": "assets-compiler-e2e",
+  "version": "1.0.0",
+  "description": "E2E tests for cplace Assets compiler",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^18.15.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "cplace",
+    "assets-compiler",
+    "e2e",
+    "testing"
+  ],
+  "author": "Frontend Core Squad",
+  "license": "ISC"
+}
