@@ -738,15 +738,6 @@ export class AssetsCompiler {
         );
     }
 
-    /**
-     * Check if the given parent repository is used as a local repository.
-     * If the repository is in the list of known dependencies, it is used as a local parent repository.
-     * Otherwise, the plugins from this repository will be looked up in the node_modules.
-     */
-    public static isLocalParentRepo(repoName: string): boolean {
-        return AssetsCompiler.knownRepoDependencies.includes(repoName);
-    }
-
     public static findPluginPath(
         repositoryDir: string,
         pluginName: string,
