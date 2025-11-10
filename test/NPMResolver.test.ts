@@ -60,6 +60,6 @@ describe('resolve npm credentials', () => {
         jest.spyOn(child_process, 'execSync').mockReturnValueOnce(
             Buffer.from('userconfig = "' + npmrcPath + '"')
         );
-        return new NPMResolver('');
+        return new NPMResolver();
     }
 });

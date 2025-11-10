@@ -118,12 +118,18 @@ export class VendorCompiler implements ICompiler {
         if (!fs.existsSync(index)) {
             return false;
         }
-        const res = spawn.sync(tsc, [
+        const args = [
             path.join(this.assetsPath, 'index.ts'),
             `--skipLibCheck`,
             `--outDir`,
             path.resolve(this.assetsPath, CplaceTypescriptCompiler.DEST_DIR),
-        ]);
+        ];
+        debug(
+            `(VendorCompiler) [${this.pluginName}] running ${tsc} ${args.join(
+                ' '
+            )}`
+        );
+        const res = spawn.sync(tsc, args);
         if (res.status !== 0) {
             let output = '';
             if (res.output) {
