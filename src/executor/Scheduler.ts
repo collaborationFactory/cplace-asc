@@ -12,7 +12,6 @@ import { cerr, csucc, debug, isDebugEnabled } from '../utils';
 import { CompilationResult, ICompileRequest } from '../compiler/interfaces';
 import Timeout = NodeJS.Timeout;
 import { PluginDescriptor } from '../model/PluginDescriptor';
-import { isArtifactsOnlyBuild } from '../model/utils';
 
 interface ISchedulingResult {
     scheduledPlugin?: string | null | undefined;
@@ -115,15 +114,15 @@ export class Scheduler {
         }
         const nextVendorPlugin = vendorSchedulingResult.scheduledPlugin;
 
-        // const lessSchedulingResult = this.getAndScheduleNextJob(
-        //     this.lessJobs,
-        //     'less',
-        //     'less'
-        // );
-        // if (lessSchedulingResult.backoff) {
-        //     return;
-        // }
-        // const nextLessPlugin = lessSchedulingResult.scheduledPlugin;
+        const lessSchedulingResult = this.getAndScheduleNextJob(
+            this.lessJobs,
+            'less',
+            'less'
+        );
+        if (lessSchedulingResult.backoff) {
+            return;
+        }
+        const nextLessPlugin = lessSchedulingResult.scheduledPlugin;
 
         const openAPIYamlSchedulingResult = this.getAndScheduleNextJob(
             this.openAPIYamlJobs,
@@ -136,16 +135,16 @@ export class Scheduler {
         const nextOpenAPIYamlPlugin =
             openAPIYamlSchedulingResult.scheduledPlugin;
 
-        // const compressCssSchedulingResult = this.getAndScheduleNextJob(
-        //     this.compressCssJobs,
-        //     'compressCss',
-        //     'css'
-        // );
-        // if (compressCssSchedulingResult.backoff) {
-        //     return;
-        // }
-        // const nextCompressCssPlugin =
-        //     compressCssSchedulingResult.scheduledPlugin;
+        const compressCssSchedulingResult = this.getAndScheduleNextJob(
+            this.compressCssJobs,
+            'compressCss',
+            'css'
+        );
+        if (compressCssSchedulingResult.backoff) {
+            return;
+        }
+        const nextCompressCssPlugin =
+            compressCssSchedulingResult.scheduledPlugin;
 
         const tsSchedulingResult = this.getAndScheduleNextJob(
             this.tsJobs,
@@ -173,8 +172,8 @@ export class Scheduler {
 
         if (
             nextTsPlugin === null &&
-            // nextLessPlugin === null &&
-            // nextCompressCssPlugin === null &&
+            nextLessPlugin === null &&
+            nextCompressCssPlugin === null &&
             nextOpenAPIYamlPlugin === null &&
             nextVendorPlugin === null &&
             nextCombineJsPlugin === null
@@ -189,8 +188,8 @@ export class Scheduler {
             }
         } else if (
             nextTsPlugin ||
-            // nextLessPlugin ||
-            // nextCompressCssPlugin ||
+            nextLessPlugin ||
+            nextCompressCssPlugin ||
             nextOpenAPIYamlPlugin ||
             nextVendorPlugin ||
             nextCombineJsPlugin
