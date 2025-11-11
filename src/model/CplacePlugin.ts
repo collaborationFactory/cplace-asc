@@ -44,7 +44,7 @@ export default class CplacePlugin {
     public pluginNameKebabCase: string;
     public pluginDescriptor: PluginDescriptor;
 
-    protected readonly relRepoRootPrefix = '../../..';
+    public static RELATIVE_PATH_TO_REPOSITORY_ROOT = '../../..';
 
     /**
      * Plugins that depend on this plugin (set explicitly afterwards), i.e. incoming dependencies

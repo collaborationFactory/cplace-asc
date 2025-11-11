@@ -79,7 +79,7 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
         }
 
         if (this.plugin.pluginName === cplacePlugin.pluginName) {
-            return path.join(this.relRepoRootPrefix, cplacePlugin.pluginName);
+            return path.join(CplacePlugin.RELATIVE_PATH_TO_REPOSITORY_ROOT, cplacePlugin.pluginName);
         }
 
         const pluginPathRelativeFromRepo =
@@ -88,7 +88,7 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
                 this.localOnly,
                 AssetsCompiler.isArtifactsBuild()
             );
-        return path.join(this.relRepoRootPrefix, pluginPathRelativeFromRepo);
+        return path.join(CplacePlugin.RELATIVE_PATH_TO_REPOSITORY_ROOT, pluginPathRelativeFromRepo);
     }
 
     public getRelativePathToPluginAssets(

@@ -14,8 +14,6 @@ import { AssetsCompiler } from './AssetsCompiler';
  */
 export class CplacePluginLessGenerator {
 
-    private readonly RELATIVE_PATH_TO_REPOSITORY_ROOT = '../../..';
-
     /**
      * Generate a less file named 'cplace-plugins.less' if the plugin has less files.
      * This file will contain a variable for each dependency plugin, pointing to the path to that plugin.
@@ -60,7 +58,7 @@ export class CplacePluginLessGenerator {
         const lessFileContent: string[] = [];
         dependenciesWithLess.forEach((dependencyPlugin) => {
             let lessPath = path.join(
-                this.RELATIVE_PATH_TO_REPOSITORY_ROOT,
+                CplacePlugin.RELATIVE_PATH_TO_REPOSITORY_ROOT,
                 dependencyPlugin.getPluginPathRelativeFromRepo(
                     plugin.repo,
                     localOnly,
