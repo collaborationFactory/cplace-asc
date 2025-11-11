@@ -102,7 +102,6 @@ export class NPMResolver {
             throw Error(
                 `[${pluginName}] (NPM) installing dependencies failed! \n\n${res.stderr}`
             );
-            process.exit(1);
         }
         console.log(
             cgreen`✓`,

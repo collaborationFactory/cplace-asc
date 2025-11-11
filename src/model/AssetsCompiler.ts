@@ -136,7 +136,7 @@ export class AssetsCompiler {
     /**
      * NPMResolver to manage node_modules
      */
-    private npmResolver: NPMResolver | null = null;
+    private readonly npmResolver: NPMResolver | null = null;
 
     /**
      * Configuration parameters provided by the caller.
@@ -181,9 +181,7 @@ export class AssetsCompiler {
         );
         if (mainRepoPath === null) {
             debug(`(AssetsCompiler) Main repo cannot be found...`);
-            return new Promise<void>((resolve, reject) =>
-                reject('Main repo cannot be found...')
-            );
+            return Promise.reject('Main repo cannot be found...');
         }
 
         const start = new Date().getTime();
@@ -549,7 +547,7 @@ export class AssetsCompiler {
         }
 
         if (!project.pluginDescriptor.dependencies) {
-            throw `No dependencies found for plugin ${pluginName} in ${pluginPath}`;
+            throw new Error(`No dependencies found for plugin ${pluginName} in ${pluginPath}`);
         }
 
         project.pluginDescriptor.dependencies.forEach((pluginDescriptor) => {
@@ -643,8 +641,7 @@ export class AssetsCompiler {
         );
 
         if (
-            packageJson.dependencies &&
-            packageJson.dependencies[expectedPluginPackageName] &&
+            packageJson.dependencies?.[expectedPluginPackageName] &&
             !fs.existsSync(expectedPathToPluginInNodeModules)
         ) {
             throw Error(
@@ -687,7 +684,7 @@ export class AssetsCompiler {
                 const parentRepo: ParentRepo = parentRepos[repoName];
                 if (
                     !parentRepo.commit &&
-                    (parentRepo.branch.match(/release\/\d+\.\d+/) ||
+                    (/release\/\d+\.\d+/.exec(parentRepo.branch) ||
                         parentRepo.branch === 'main' ||
                         parentRepo.branch === 'master')
                 ) {

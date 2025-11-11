@@ -13,6 +13,9 @@ import { AssetsCompiler } from './AssetsCompiler';
  * This file contains variables for each dependency plugin, pointing to the path to that plugin.
  */
 export class CplacePluginLessGenerator {
+
+    private readonly RELATIVE_PATH_TO_REPOSITORY_ROOT = '../../..';
+
     /**
      * Generate a less file named 'cplace-plugins.less' if the plugin has less files.
      * This file will contain a variable for each dependency plugin, pointing to the path to that plugin.
@@ -57,7 +60,7 @@ export class CplacePluginLessGenerator {
         const lessFileContent: string[] = [];
         dependenciesWithLess.forEach((dependencyPlugin) => {
             let lessPath = path.join(
-                this.getRelRepoRootPrefix(),
+                this.RELATIVE_PATH_TO_REPOSITORY_ROOT,
                 dependencyPlugin.getPluginPathRelativeFromRepo(
                     plugin.repo,
                     localOnly,
@@ -77,24 +80,20 @@ export class CplacePluginLessGenerator {
             );
         });
         if (lessFileContent.length !== 0) {
-            fs.writeFileSync(cplacePluginsLessPath, lessFileContent.join('\n'));
-
-            if (!fs.existsSync(cplacePluginsLessPath)) {
+            try {
+                fs.writeFileSync(cplacePluginsLessPath, lessFileContent.join('\n'));
+            } catch (error) {
                 console.error(
-                    cerr`[${plugin.pluginName}] Could not generate cplace-plugins.less file...`
+                    cerr`[${plugin.pluginName}] Could not write cplace-plugins.less file: ${error}`
                 );
                 throw Error(
                     `[${plugin.pluginName}] cplace-plugins.less generation failed`
                 );
-            } else {
-                console.log(
-                    `${GREEN_CHECK} [${plugin.pluginName}] wrote cplace-plugins.less...`
-                );
             }
-        }
-    }
 
-    private getRelRepoRootPrefix(): string {
-        return '../../..';
+            console.log(
+                `${GREEN_CHECK} [${plugin.pluginName}] wrote cplace-plugins.less...`
+            );
+        }
     }
 }
