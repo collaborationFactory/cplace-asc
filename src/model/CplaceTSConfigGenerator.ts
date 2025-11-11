@@ -181,27 +181,9 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
 
     /**
      * Get the path to the tsconfig.base.json file.
-     * From cplace 25.2, the file is located in the platform assets folder, otherwise it should be taken from the main folder.
+     * From cplace 25.2, the file is located in the platform assets folder.
      */
     public getTsConfigBasePath(): string {
-        const pathInPlatform = path.join(
-            this.relPathToPlatformAssets,
-            'tsconfig.base.json'
-        );
-        if (
-            fs.existsSync(
-                path.join(
-                    this.plugin.assetsDir,
-                    this.srcFolderName,
-                    this.getRelativePathToPluginAssets(this.platformPlugin),
-                    'tsconfig.base.json'
-                )
-            )
-        ) {
-            return pathInPlatform;
-        } else {
-            return path.join(this.relPathToPlatformAssets, 'tsconfig.base.json');
-        }
         return path.join(this.relPathToPlatformAssets, 'tsconfig.base.json');
     }
 }

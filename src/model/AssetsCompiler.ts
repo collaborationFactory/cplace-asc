@@ -13,6 +13,8 @@ import { ImlParser } from './ImlParser';
 import { CplaceVersion } from './CplaceVersion';
 import { PluginDescriptor } from './PluginDescriptor';
 import { error } from 'console';
+import { CplacePluginLessGenerator } from './CplacePluginLessGenerator';
+import { pluginNameToKebabCase } from './utils';
 
 export interface IAssetsCompilerConfiguration {
     /**
@@ -339,6 +341,7 @@ export class AssetsCompiler {
         }
         this.linkProjectIntoDependentProjects(projectsToLink);
 
+        const lessGenerator = new CplacePluginLessGenerator();
         projects.forEach((project) => {
             if (!this.isInCompilationScope(project)) {
                 return;
@@ -358,7 +361,8 @@ export class AssetsCompiler {
             }
 
             if (project.hasLessAssets) {
-                project.generateCplacePluginsLess(
+                lessGenerator.generate(
+                    project,
                     (p) => projects.get(p),
                     this.runConfig.localOnly
                 );
@@ -586,9 +590,7 @@ export class AssetsCompiler {
                     repositoryDir,
                     'node_modules',
                     '@cplace-assets',
-                    `${pluginDescriptor.repoName}_${pluginDescriptor.name
-                        .replace(/\./gi, '-')
-                        .toLowerCase()}`
+                    `${pluginDescriptor.repoName}_${pluginNameToKebabCase(pluginDescriptor.name)}`
                 );
 
                 this.addProjectDependenciesRecursively(
