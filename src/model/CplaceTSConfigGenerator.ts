@@ -79,7 +79,7 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
         }
 
         if (this.plugin.pluginName === cplacePlugin.pluginName) {
-            return path.join(this.relRepoRootPrefix, cplacePlugin.pluginName);
+            return path.join(CplacePlugin.RELATIVE_PATH_TO_REPOSITORY_ROOT, cplacePlugin.pluginName);
         }
 
         const pluginPathRelativeFromRepo =
@@ -88,7 +88,7 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
                 this.localOnly,
                 AssetsCompiler.isArtifactsBuild()
             );
-        return path.join(this.relRepoRootPrefix, pluginPathRelativeFromRepo);
+        return path.join(CplacePlugin.RELATIVE_PATH_TO_REPOSITORY_ROOT, pluginPathRelativeFromRepo);
     }
 
     public getRelativePathToPluginAssets(
@@ -181,26 +181,9 @@ export class CplaceTSConfigGenerator extends AbstractTSConfigGenerator {
 
     /**
      * Get the path to the tsconfig.base.json file.
-     * From cplace 25.2, the file is located in the platform assets folder, otherwise it should be taken from the main folder.
+     * From cplace 25.2, the file is located in the platform assets folder.
      */
     public getTsConfigBasePath(): string {
-        const pathInPlatform = path.join(
-            this.relPathToPlatformAssets,
-            'tsconfig.base.json'
-        );
-        if (
-            fs.existsSync(
-                path.join(
-                    this.plugin.assetsDir,
-                    this.srcFolderName,
-                    this.getRelativePathToPluginAssets(this.platformPlugin),
-                    'tsconfig.base.json'
-                )
-            )
-        ) {
-            return pathInPlatform;
-        } else {
-            return path.join(this.pathToMain, 'tsconfig.base.json');
-        }
+        return path.join(this.relPathToPlatformAssets, 'tsconfig.base.json');
     }
 }

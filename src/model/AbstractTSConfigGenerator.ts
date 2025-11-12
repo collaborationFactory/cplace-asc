@@ -16,7 +16,6 @@ export abstract class AbstractTSConfigGenerator {
     protected mainFolderName = '';
     protected readonly destDir = 'generated_js';
 
-    protected readonly relRepoRootPrefix = '../../..';
     protected readonly pathToMain: string;
     protected readonly relPathToPlatform: string;
     protected readonly relPathToPlatformAssets: string;
@@ -42,7 +41,7 @@ export abstract class AbstractTSConfigGenerator {
         this.pathToMain = this.getRelativePathToMain(
             this.localOnly,
             this.plugin.repo,
-            this.relRepoRootPrefix
+            CplacePlugin.RELATIVE_PATH_TO_REPOSITORY_ROOT
         );
         this.relPathToPlatform = this.getRelativePathToPlugin(
             this.platformPlugin
@@ -130,7 +129,7 @@ export abstract class AbstractTSConfigGenerator {
 
         // path to @types in the root of the repository
         typeRoots.push(
-            path.join(this.relRepoRootPrefix, 'node_modules', '@types')
+            path.join(CplacePlugin.RELATIVE_PATH_TO_REPOSITORY_ROOT, 'node_modules', '@types')
         );
 
         // path to @types in the plugin's assets

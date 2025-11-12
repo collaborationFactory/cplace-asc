@@ -11,7 +11,7 @@ export class RegistryResolver {
     private static readonly API_LOCAL_REGISTRIES_QUERY_PARAMS = '?type=local&packageType=npm';
     private static readonly API_STORAGE_ENDPOINT = 'storage';
 
-    private artifactoryBaseUrl: string;
+    private readonly artifactoryBaseUrl: string;
 
     constructor(artifactoryBaseUrl: string) {
         // Ensure the base URL ends with a slash

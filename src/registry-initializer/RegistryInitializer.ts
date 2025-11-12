@@ -33,9 +33,9 @@ export class RegistryInitializer {
     private npmRegistry: string = RegistryInitializer.JFROG_CPLACE_NPM_REGISTRY;
     private DEBUG_ENABLED: boolean = false;
 
-    private managedScopes: string[] = ["@fortawesome"];
+    private readonly managedScopes: string[] = ["@fortawesome"];
 
-    private registryResolver: RegistryResolver = new RegistryResolver(
+    private readonly registryResolver: RegistryResolver = new RegistryResolver(
         RegistryInitializer.JFROG_API_URL
     );
 

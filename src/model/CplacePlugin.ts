@@ -14,6 +14,7 @@ import { PluginDescriptor } from './PluginDescriptor';
 import { getDescriptorParser } from './DescriptorParser';
 import { PluginPackageJsonGenerator } from './PluginPackageJsonGenerator';
 import { CombineJavascriptCompiler } from '../compiler/CombineJavascriptCompiler';
+import { pluginNameToKebabCase } from './utils';
 
 export interface ICplacePluginResolver {
     (pluginName: string): CplacePlugin | undefined;
@@ -40,7 +41,10 @@ export default class CplacePlugin {
     public readonly hasVendors: boolean;
     public readonly hasCombineJs: boolean;
 
+    public pluginNameKebabCase: string;
     public pluginDescriptor: PluginDescriptor;
+
+    public static RELATIVE_PATH_TO_REPOSITORY_ROOT = '../../..';
 
     /**
      * Plugins that depend on this plugin (set explicitly afterwards), i.e. incoming dependencies
@@ -54,6 +58,7 @@ export default class CplacePlugin {
         public readonly isArtifactPlugin: boolean,
         public readonly production: boolean
     ) {
+        this.pluginNameKebabCase = pluginNameToKebabCase(this.pluginName);
         this.dependents = [];
         this.pluginDescriptor = this.parsePluginDescriptor(production);
 
@@ -137,9 +142,7 @@ export default class CplacePlugin {
             return path.join(
                 'node_modules',
                 '@cplace-assets',
-                `${this.repo}_${this.pluginName
-                    .replaceAll('.', '-')
-                    .toLowerCase()}`
+                `${this.repo}_${this.pluginNameKebabCase}`
             );
         }
         return this.getPluginPathRelativeToRepo(
