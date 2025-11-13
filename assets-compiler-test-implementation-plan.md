@@ -23,12 +23,15 @@ Implementation plan for mapping cplace Quality Assurance test cases to automated
 **Expected**: You are using node version:<Latest node version> number. And,"You are using a correct Node version" info should be displayed.
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC1: should verify assets compiler basic functionality', async () => {
-  const { stdout, stderr, exitCode } = await execAsync('node_modules/.bin/cplace-asc -c');
-  expect(exitCode).toBe(0);
-  expect(stdout).toContain('You are using a correct Node version');
-  expect(stdout).toMatch(/You are using node version:\d+\.\d+\.\d+/);
+    const { stdout, stderr, exitCode } = await execAsync(
+        'node_modules/.bin/cplace-asc -c'
+    );
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('You are using a correct Node version');
+    expect(stdout).toMatch(/You are using node version:\d+\.\d+\.\d+/);
 });
 ```
 
@@ -41,10 +44,11 @@ it('TC1: should verify assets compiler basic functionality', async () => {
 **Expected**: 'Compilation completed - watching files' info should be displayed.
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC2: should display compilation completed message', async () => {
-  const { stdout } = await execAsync('node_modules/.bin/cplace-asc -c');
-  expect(stdout).toContain('Compilation completed - watching files');
+    const { stdout } = await execAsync('node_modules/.bin/cplace-asc -c');
+    expect(stdout).toContain('Compilation completed - watching files');
 });
 ```
 
@@ -57,12 +61,15 @@ it('TC2: should display compilation completed message', async () => {
 **Expected**: You are using node version:<Latest node version> number. And,"You are using a correct Node version" info should be displayed.
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC3: should verify assets compiler with -p flag', async () => {
-  const { stdout, exitCode } = await execAsync('node_modules/.bin/cplace-asc -p');
-  expect(exitCode).toBe(0);
-  expect(stdout).toContain('You are using a correct Node version');
-  expect(stdout).toMatch(/You are using node version:\d+\.\d+\.\d+/);
+    const { stdout, exitCode } = await execAsync(
+        'node_modules/.bin/cplace-asc -p'
+    );
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('You are using a correct Node version');
+    expect(stdout).toMatch(/You are using node version:\d+\.\d+\.\d+/);
 });
 ```
 
@@ -75,10 +82,11 @@ it('TC3: should verify assets compiler with -p flag', async () => {
 **Expected**: 'Compilation completed - watching files' info should be displayed.
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC4: should display compilation completed message after preprocessing', async () => {
-  const { stdout } = await execAsync('node_modules/.bin/cplace-asc -p');
-  expect(stdout).toContain('Compilation completed - watching files');
+    const { stdout } = await execAsync('node_modules/.bin/cplace-asc -p');
+    expect(stdout).toContain('Compilation completed - watching files');
 });
 ```
 
@@ -91,12 +99,15 @@ it('TC4: should display compilation completed message after preprocessing', asyn
 **Expected**: You are using node version:<Latest node version> number. And,"You are using a correct Node version" info should be displayed.
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC5: should verify assets compiler with -t flag', async () => {
-  const { stdout, exitCode } = await execAsync('node_modules/.bin/cplace-asc -t');
-  expect(exitCode).toBe(0);
-  expect(stdout).toContain('You are using a correct Node version');
-  expect(stdout).toMatch(/You are using node version:\d+\.\d+\.\d+/);
+    const { stdout, exitCode } = await execAsync(
+        'node_modules/.bin/cplace-asc -t'
+    );
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('You are using a correct Node version');
+    expect(stdout).toMatch(/You are using node version:\d+\.\d+\.\d+/);
 });
 ```
 
@@ -109,10 +120,11 @@ it('TC5: should verify assets compiler with -t flag', async () => {
 **Expected**: 'Compilation completed - watching files' info should be displayed.
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC6: should display compilation completed message for -t flag', async () => {
-  const { stdout } = await execAsync('node_modules/.bin/cplace-asc -t');
-  expect(stdout).toContain('Compilation completed - watching files');
+    const { stdout } = await execAsync('node_modules/.bin/cplace-asc -t');
+    expect(stdout).toContain('Compilation completed - watching files');
 });
 ```
 
@@ -125,25 +137,26 @@ it('TC6: should display compilation completed message for -t flag', async () => 
 **Expected**: You are using node version:<Latest node version> number. And,"You are using a correct Node version" info should be displayed.
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC7: should verify assets compiler with -w flag', async () => {
-  const childProcess = spawn('node_modules/.bin/cplace-asc', ['-w']);
-  const output = await new Promise<string>((resolve) => {
-    let stdout = '';
-    childProcess.stdout.on('data', (data) => {
-      stdout += data.toString();
-      if (stdout.includes('You are using a correct Node version')) {
-        childProcess.kill();
-        resolve(stdout);
-      }
+    const childProcess = spawn('node_modules/.bin/cplace-asc', ['-w']);
+    const output = await new Promise<string>((resolve) => {
+        let stdout = '';
+        childProcess.stdout.on('data', (data) => {
+            stdout += data.toString();
+            if (stdout.includes('You are using a correct Node version')) {
+                childProcess.kill();
+                resolve(stdout);
+            }
+        });
+        setTimeout(() => {
+            childProcess.kill();
+            resolve(stdout);
+        }, 5000);
     });
-    setTimeout(() => {
-      childProcess.kill();
-      resolve(stdout);
-    }, 5000);
-  });
-  expect(output).toContain('You are using a correct Node version');
-  expect(output).toMatch(/You are using node version:\d+\.\d+\.\d+/);
+    expect(output).toContain('You are using a correct Node version');
+    expect(output).toMatch(/You are using node version:\d+\.\d+\.\d+/);
 });
 ```
 
@@ -156,24 +169,25 @@ it('TC7: should verify assets compiler with -w flag', async () => {
 **Expected**: 'Compilation completed - watching files' info should be displayed.
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC8: should display compilation completed message in watch mode', async () => {
-  const childProcess = spawn('node_modules/.bin/cplace-asc', ['-w']);
-  const output = await new Promise<string>((resolve) => {
-    let stdout = '';
-    childProcess.stdout.on('data', (data) => {
-      stdout += data.toString();
-      if (stdout.includes('Compilation completed - watching files')) {
-        childProcess.kill();
-        resolve(stdout);
-      }
+    const childProcess = spawn('node_modules/.bin/cplace-asc', ['-w']);
+    const output = await new Promise<string>((resolve) => {
+        let stdout = '';
+        childProcess.stdout.on('data', (data) => {
+            stdout += data.toString();
+            if (stdout.includes('Compilation completed - watching files')) {
+                childProcess.kill();
+                resolve(stdout);
+            }
+        });
+        setTimeout(() => {
+            childProcess.kill();
+            resolve(stdout);
+        }, 5000);
     });
-    setTimeout(() => {
-      childProcess.kill();
-      resolve(stdout);
-    }, 5000);
-  });
-  expect(output).toContain('Compilation completed - watching files');
+    expect(output).toContain('Compilation completed - watching files');
 });
 ```
 
@@ -186,12 +200,15 @@ it('TC8: should display compilation completed message in watch mode', async () =
 **Expected**: You are using node version:<Latest node version> number. And,"You are using a correct Node version" info should be displayed.
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC9: should display version information', async () => {
-  const { stdout, exitCode } = await execAsync('node_modules/.bin/cplace-asc -v');
-  expect(exitCode).toBe(0);
-  expect(stdout).toContain('You are using a correct Node version');
-  expect(stdout).toMatch(/You are using node version:\d+\.\d+\.\d+/);
+    const { stdout, exitCode } = await execAsync(
+        'node_modules/.bin/cplace-asc -v'
+    );
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('You are using a correct Node version');
+    expect(stdout).toMatch(/You are using node version:\d+\.\d+\.\d+/);
 });
 ```
 
@@ -204,10 +221,11 @@ it('TC9: should display version information', async () => {
 **Expected**: 'Compilation completed - watching files' info should be displayed.
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC10: should display compilation completed message after version check', async () => {
-  const { stdout } = await execAsync('node_modules/.bin/cplace-asc -v');
-  expect(stdout).toContain('Compilation completed - watching files');
+    const { stdout } = await execAsync('node_modules/.bin/cplace-asc -v');
+    expect(stdout).toContain('Compilation completed - watching files');
 });
 ```
 
@@ -220,12 +238,15 @@ it('TC10: should display compilation completed message after version check', asy
 **Expected**: You are using node version:<Latest node version> number. And,"You are using a correct Node version" info should be displayed.
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC11: should verify assets compiler with -o flag for only preprocessing', async () => {
-  const { stdout, exitCode } = await execAsync('node_modules/.bin/cplace-asc -o');
-  expect(exitCode).toBe(0);
-  expect(stdout).toContain('You are using a correct Node version');
-  expect(stdout).toMatch(/You are using node version:\d+\.\d+\.\d+/);
+    const { stdout, exitCode } = await execAsync(
+        'node_modules/.bin/cplace-asc -o'
+    );
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('You are using a correct Node version');
+    expect(stdout).toMatch(/You are using node version:\d+\.\d+\.\d+/);
 });
 ```
 
@@ -238,10 +259,11 @@ it('TC11: should verify assets compiler with -o flag for only preprocessing', as
 **Expected**: 'Preprocessing completed successfully' info should be displayed.
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC12: should display preprocessing completed message', async () => {
-  const { stdout } = await execAsync('node_modules/.bin/cplace-asc -o');
-  expect(stdout).toContain('Preprocessing completed successfully');
+    const { stdout } = await execAsync('node_modules/.bin/cplace-asc -o');
+    expect(stdout).toContain('Preprocessing completed successfully');
 });
 ```
 
@@ -254,12 +276,15 @@ it('TC12: should display preprocessing completed message', async () => {
 **Expected**: You are using node version:<Latest node version> number. And,"You are using a correct Node version" info should be displayed.
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC13: should verify assets compiler with -P flag', async () => {
-  const { stdout, exitCode } = await execAsync('node_modules/.bin/cplace-asc -P');
-  expect(exitCode).toBe(0);
-  expect(stdout).toContain('You are using a correct Node version');
-  expect(stdout).toMatch(/You are using node version:\d+\.\d+\.\d+/);
+    const { stdout, exitCode } = await execAsync(
+        'node_modules/.bin/cplace-asc -P'
+    );
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('You are using a correct Node version');
+    expect(stdout).toMatch(/You are using node version:\d+\.\d+\.\d+/);
 });
 ```
 
@@ -272,10 +297,11 @@ it('TC13: should verify assets compiler with -P flag', async () => {
 **Expected**: 'Assets compiled successfully' info should be displayed.
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC14: should display assets compiled successfully message', async () => {
-  const { stdout } = await execAsync('node_modules/.bin/cplace-asc -P');
-  expect(stdout).toContain('Assets compiled successfully');
+    const { stdout } = await execAsync('node_modules/.bin/cplace-asc -P');
+    expect(stdout).toContain('Assets compiled successfully');
 });
 ```
 
@@ -288,20 +314,23 @@ it('TC14: should display assets compiled successfully message', async () => {
 **Expected**: Error message displayed: 'Incorrect Node version detected'. Message should indicate minimum required Node version. Compilation should not proceed. Process should exit with non-zero exit code.
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC15: should handle incorrect Node.js version gracefully', async () => {
-  // Mock Node version or use Docker/nvm to test with different versions
-  const originalVersion = process.version;
-  Object.defineProperty(process, 'version', { value: 'v18.0.0' });
+    // Mock Node version or use Docker/nvm to test with different versions
+    const originalVersion = process.version;
+    Object.defineProperty(process, 'version', { value: 'v18.0.0' });
 
-  try {
-    const { stdout, stderr, exitCode } = await execAsync('node_modules/.bin/cplace-asc -c');
-    expect(exitCode).not.toBe(0);
-    expect(stderr || stdout).toContain('Incorrect Node version detected');
-    expect(stderr || stdout).toMatch(/minimum.*required.*Node.*version/i);
-  } finally {
-    Object.defineProperty(process, 'version', { value: originalVersion });
-  }
+    try {
+        const { stdout, stderr, exitCode } = await execAsync(
+            'node_modules/.bin/cplace-asc -c'
+        );
+        expect(exitCode).not.toBe(0);
+        expect(stderr || stdout).toContain('Incorrect Node version detected');
+        expect(stderr || stdout).toMatch(/minimum.*required.*Node.*version/i);
+    } finally {
+        Object.defineProperty(process, 'version', { value: originalVersion });
+    }
 });
 ```
 
@@ -314,19 +343,25 @@ it('TC15: should handle incorrect Node.js version gracefully', async () => {
 **Expected**: Error message displayed: 'npm not found' or similar. Clear indication that npm is required. Compilation should fail gracefully. Process should exit with non-zero exit code.
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC16: should handle missing npm gracefully', async () => {
-  const originalPath = process.env.PATH;
-  // Remove npm from PATH by filtering it out
-  process.env.PATH = process.env.PATH?.split(':').filter(p => !p.includes('npm')).join(':') || '';
+    const originalPath = process.env.PATH;
+    // Remove npm from PATH by filtering it out
+    process.env.PATH =
+        process.env.PATH?.split(':')
+            .filter((p) => !p.includes('npm'))
+            .join(':') || '';
 
-  try {
-    const { stdout, stderr, exitCode } = await execAsync('node_modules/.bin/cplace-asc -c');
-    expect(exitCode).not.toBe(0);
-    expect(stderr || stdout).toMatch(/npm.*not.*found|npm.*required/i);
-  } finally {
-    process.env.PATH = originalPath;
-  }
+    try {
+        const { stdout, stderr, exitCode } = await execAsync(
+            'node_modules/.bin/cplace-asc -c'
+        );
+        expect(exitCode).not.toBe(0);
+        expect(stderr || stdout).toMatch(/npm.*not.*found|npm.*required/i);
+    } finally {
+        process.env.PATH = originalPath;
+    }
 });
 ```
 
@@ -339,18 +374,23 @@ it('TC16: should handle missing npm gracefully', async () => {
 **Expected**: Error message indicating missing environment variable
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC17: should handle missing $LOCAL_ASC environment variable', async () => {
-  const originalLocalAsc = process.env.LOCAL_ASC;
-  delete process.env.LOCAL_ASC;
+    const originalLocalAsc = process.env.LOCAL_ASC;
+    delete process.env.LOCAL_ASC;
 
-  try {
-    const { stdout, stderr, exitCode } = await execAsync('node_modules/.bin/cplace-asc -c');
-    expect(exitCode).not.toBe(0);
-    expect(stderr || stdout).toMatch(/LOCAL_ASC.*not.*found|LOCAL_ASC.*required/i);
-  } finally {
-    if (originalLocalAsc) process.env.LOCAL_ASC = originalLocalAsc;
-  }
+    try {
+        const { stdout, stderr, exitCode } = await execAsync(
+            'node_modules/.bin/cplace-asc -c'
+        );
+        expect(exitCode).not.toBe(0);
+        expect(stderr || stdout).toMatch(
+            /LOCAL_ASC.*not.*found|LOCAL_ASC.*required/i
+        );
+    } finally {
+        if (originalLocalAsc) process.env.LOCAL_ASC = originalLocalAsc;
+    }
 });
 ```
 
@@ -363,16 +403,20 @@ it('TC17: should handle missing $LOCAL_ASC environment variable', async () => {
 **Expected**: Permission error message and graceful failure
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC18: should handle permission errors gracefully', async () => {
-  // This test may need to be adapted based on the actual file structure
-  const { stdout, stderr, exitCode } = await execAsync('node_modules/.bin/cplace-asc -c', {
-    env: { ...process.env, TEST_PERMISSION_ERROR: 'true' }
-  });
+    // This test may need to be adapted based on the actual file structure
+    const { stdout, stderr, exitCode } = await execAsync(
+        'node_modules/.bin/cplace-asc -c',
+        {
+            env: { ...process.env, TEST_PERMISSION_ERROR: 'true' },
+        }
+    );
 
-  if (exitCode !== 0) {
-    expect(stderr || stdout).toMatch(/permission.*denied|EACCES/i);
-  }
+    if (exitCode !== 0) {
+        expect(stderr || stdout).toMatch(/permission.*denied|EACCES/i);
+    }
 });
 ```
 
@@ -385,11 +429,16 @@ it('TC18: should handle permission errors gracefully', async () => {
 **Expected**: "--watch and --onlypre cannot be enabled simultaneously" error message
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC19: should handle conflicting flags appropriately', async () => {
-  const { stdout, stderr, exitCode } = await execAsync('node_modules/.bin/cplace-asc --watch --onlypre');
-  expect(exitCode).not.toBe(0);
-  expect(stderr || stdout).toContain('--watch and --onlypre cannot be enabled simultaneously');
+    const { stdout, stderr, exitCode } = await execAsync(
+        'node_modules/.bin/cplace-asc --watch --onlypre'
+    );
+    expect(exitCode).not.toBe(0);
+    expect(stderr || stdout).toContain(
+        '--watch and --onlypre cannot be enabled simultaneously'
+    );
 });
 ```
 
@@ -402,16 +451,22 @@ it('TC19: should handle conflicting flags appropriately', async () => {
 **Expected**: "TypeError: Cannot read properties of undefined" error
 
 **Jest Implementation Strategy**:
+
 ```typescript
 it('TC20: should handle undefined properties error', async () => {
-  // This test may need specific configuration to trigger the undefined error
-  const { stdout, stderr, exitCode } = await execAsync('node_modules/.bin/cplace-asc -P', {
-    env: { ...process.env, TEST_UNDEFINED_ERROR: 'true' }
-  });
+    // This test may need specific configuration to trigger the undefined error
+    const { stdout, stderr, exitCode } = await execAsync(
+        'node_modules/.bin/cplace-asc -P',
+        {
+            env: { ...process.env, TEST_UNDEFINED_ERROR: 'true' },
+        }
+    );
 
-  if (exitCode !== 0) {
-    expect(stderr || stdout).toMatch(/TypeError.*Cannot read properties of undefined/);
-  }
+    if (exitCode !== 0) {
+        expect(stderr || stdout).toMatch(
+            /TypeError.*Cannot read properties of undefined/
+        );
+    }
 });
 ```
 
@@ -425,75 +480,85 @@ None yet - all test cases are ready for implementation
 
 ### Pending Implementation 🔄
 
-- [ ] **TC1-5**: Basic functionality tests (compilation, preprocessing, test flags)
-- [ ] **TC6-10**: Message verification tests
-- [ ] **TC11-14**: Advanced flag tests and preprocessing
-- [ ] **TC15-20**: Error handling and edge cases
+-   [ ] **TC1-5**: Basic functionality tests (compilation, preprocessing, test flags)
+-   [ ] **TC6-10**: Message verification tests
+-   [ ] **TC11-14**: Advanced flag tests and preprocessing
+-   [ ] **TC15-20**: Error handling and edge cases
 
 ---
 
 ## Technical Notes
 
 ### Test Execution Strategy
-- Use Jest for unit and integration testing
-- Implement async/await pattern for command execution
-- Use child_process.spawn for long-running processes (watch mode)
-- Mock environment variables and system conditions for error scenarios
+
+-   Use Jest for unit and integration testing
+-   Implement async/await pattern for command execution
+-   Use child_process.spawn for long-running processes (watch mode)
+-   Mock environment variables and system conditions for error scenarios
 
 ### Dependencies and Setup Requirements
-- Node.js (version 22.15.0 or compatible)
-- npm installed and in PATH
-- cplace-asc binary available in node_modules/.bin/
-- Environment variable $LOCAL_ASC properly configured
+
+-   Node.js (version 22.15.0 or compatible)
+-   npm installed and in PATH
+-   cplace-asc binary available in node_modules/.bin/
+-   Environment variable $LOCAL_ASC properly configured
 
 ### Cross-platform Considerations
-- Handle different command invocations (Unix vs Windows)
-- Account for path separators and environment variable syntax
-- Test both assets-compiler.sh and assets-compiler.cmd
+
+-   Handle different command invocations (Unix vs Windows)
+-   Account for path separators and environment variable syntax
+-   Test both assets-compiler.sh and assets-compiler.cmd
 
 ### Performance Considerations
-- Set appropriate timeouts for compilation processes
-- Implement proper cleanup for spawned processes
-- Use mocking for environment setup to avoid side effects
+
+-   Set appropriate timeouts for compilation processes
+-   Implement proper cleanup for spawned processes
+-   Use mocking for environment setup to avoid side effects
 
 ### Error Testing Strategy
-- Use environment variable flags to trigger specific error conditions
-- Mock Node.js version and npm availability
-- Test permission scenarios where applicable
-- Validate error messages and exit codes
+
+-   Use environment variable flags to trigger specific error conditions
+-   Mock Node.js version and npm availability
+-   Test permission scenarios where applicable
+-   Validate error messages and exit codes
 
 ---
 
 ## Next Steps
 
 1. **Create Test Suite Structure**:
-   ```bash
-   mkdir -p test/e2e
-   touch test/e2e/assets-compiler.e2e.test.ts
-   ```
+
+    ```bash
+    mkdir -p test/e2e
+    touch test/e2e/assets-compiler.e2e.test.ts
+    ```
 
 2. **Implement Base Test Utilities**:
-   - Command execution helpers
-   - Environment mocking utilities
-   - Process cleanup functions
+
+    - Command execution helpers
+    - Environment mocking utilities
+    - Process cleanup functions
 
 3. **Implement Test Cases**:
-   - Start with basic functionality tests (TC1-5)
-   - Add message verification tests (TC6-10)
-   - Implement advanced flag tests (TC11-14)
-   - Complete error handling tests (TC15-20)
+
+    - Start with basic functionality tests (TC1-5)
+    - Add message verification tests (TC6-10)
+    - Implement advanced flag tests (TC11-14)
+    - Complete error handling tests (TC15-20)
 
 4. **Verify Test Execution**:
-   - Run test suite in CI/CD pipeline
-   - Validate cross-platform compatibility
-   - Ensure proper cleanup and isolation
+
+    - Run test suite in CI/CD pipeline
+    - Validate cross-platform compatibility
+    - Ensure proper cleanup and isolation
 
 5. **Update Documentation**:
-   - Add test execution instructions
-   - Document test environment requirements
-   - Update CI/CD configuration
+    - Add test execution instructions
+    - Document test environment requirements
+    - Update CI/CD configuration
 
 ### Recommended Implementation Order:
+
 1. TC1, TC3, TC5, TC9 (Basic flag tests)
 2. TC2, TC4, TC6, TC10 (Message verification)
 3. TC11-TC14 (Advanced preprocessing)
@@ -501,6 +566,7 @@ None yet - all test cases are ready for implementation
 5. TC15-TC20 (Error scenarios - most complex)
 
 ### Target File Location:
-- Primary: `test/e2e/assets-compiler.e2e.test.ts`
-- Utilities: `test/helpers/command-execution.ts`
-- Mocks: `test/mocks/environment.ts`
+
+-   Primary: `test/e2e/assets-compiler.e2e.test.ts`
+-   Utilities: `test/helpers/command-execution.ts`
+-   Mocks: `test/mocks/environment.ts`
