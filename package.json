@@ -11,6 +11,7 @@
     },
     "scripts": {
         "test": "jest",
+        "e2e": "jest test/e2e/assets-compiler.e2e.test.ts --detectOpenHandles",
         "test-build": "npx ts-node tools/scripts/build.ts 0.0.0-SNAPSHOT && npm pack ./dist --pack-destination ./dist",
         "prettier-check": "prettier --check .",
         "prettier-write": "prettier --write ."

@@ -16,42 +16,47 @@ model: claude-sonnet-4-20250514
 
 Read a test document page from the cplace Quality Assurance workspace and generate a comprehensive test implementation plan in markdown format. **Focus exclusively on test cases marked for automation** in the "To automate" field (checkboxes that are checked).
 
-- `$1` (test_document_name): Name or partial name of the test document page in cplace QA workspace
+-   `$1` (test_document_name): Name or partial name of the test document page in cplace QA workspace
 
 ## Step-by-Step Process
 
 1. **Find QA Workspace:**
-   - Use cplace_list_workspaces to find the Quality Assurance workspace
-   - Look for workspace names containing "QA", "Quality", "Assurance", or "Test"
+
+    - Use cplace_list_workspaces to find the Quality Assurance workspace
+    - Look for workspace names containing "QA", "Quality", "Assurance", or "Test"
 
 2. **Search Test Document:**
-   - Use cplace_search_pages_fulltext to find the test document by name
-   - Filter results to the QA workspace
-   - If multiple matches, select the most relevant one
+
+    - Use cplace_search_pages_fulltext to find the test document by name
+    - Filter results to the QA workspace
+    - If multiple matches, select the most relevant one
 
 3. **Read Test Document:**
-   - Use cplace_get_page_by_id to retrieve the full test document content
-   - Extract test cases, steps, expected results, and conditions
-   - Parse structured test information from the page content
+
+    - Use cplace_get_page_by_id to retrieve the full test document content
+    - Extract test cases, steps, expected results, and conditions
+    - Parse structured test information from the page content
 
 4. **Analyze Test Structure:**
-   - **Focus on "To automate" field**: Extract only test cases marked for automation (checkboxes checked in "To automate" column)
-   - Identify individual test cases and their numbers
-   - Extract test conditions, actions, and expected results for automatable cases only
-   - Determine test type (E2E, unit, integration, etc.) based on automatable cases
-   - Identify target application or component from automatable test cases
+
+    - **Focus on "To automate" field**: Extract only test cases marked for automation (checkboxes checked in "To automate" column)
+    - Identify individual test cases and their numbers
+    - Extract test conditions, actions, and expected results for automatable cases only
+    - Determine test type (E2E, unit, integration, etc.) based on automatable cases
+    - Identify target application or component from automatable test cases
 
 5. **Generate Implementation Plan:**
-   - Create markdown file with structured implementation plan
-   - Map each QA test case to Jest/Cypress test implementation
-   - Include code examples and strategies for each test case
-   - Add technical notes, dependencies, and execution instructions
-   - Mark implementation status for tracking progress
+
+    - Create markdown file with structured implementation plan
+    - Map each QA test case to Jest/Cypress test implementation
+    - Include code examples and strategies for each test case
+    - Add technical notes, dependencies, and execution instructions
+    - Mark implementation status for tracking progress
 
 6. **Save Implementation Plan:**
-   - Generate filename based on test document name
-   - Save in appropriate directory (apps/[project]-e2e/ or similar)
-   - Follow naming convention: `[component]-test-implementation-plan.md`
+    - Generate filename based on test document name
+    - Save in appropriate directory (apps/[project]-e2e/ or similar)
+    - Follow naming convention: `[component]-test-implementation-plan.md`
 
 ## Implementation Plan Template Structure
 
@@ -84,7 +89,7 @@ Implementation plan for mapping cplace Quality Assurance test cases to automated
 
 ```typescript
 it('TC[N]: should [description]', () => {
-  // Implementation code example
+    // Implementation code example
 });
 ```
 ````
@@ -95,20 +100,20 @@ it('TC[N]: should [description]', () => {
 
 ### Completed ✅
 
-- [ ] **TC[N]**: [Description]
+-   [ ] **TC[N]**: [Description]
 
 ### Pending Implementation 🔄
 
-- [ ] **TC[N]**: [Description]
+-   [ ] **TC[N]**: [Description]
 
 ---
 
 ## Technical Notes
 
-- Test execution strategy
-- Dependencies and setup requirements
-- Cross-platform considerations
-- Performance considerations
+-   Test execution strategy
+-   Dependencies and setup requirements
+-   Cross-platform considerations
+-   Performance considerations
 
 ---
 
