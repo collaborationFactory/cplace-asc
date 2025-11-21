@@ -492,40 +492,6 @@ describe('Assets Compiler E2E Tests', () => {
         );
     });
 
-    describe.skip('TC15: Verify error handling for incorrect Node.js version', () => {
-        it(
-            'should handle incorrect Node.js version gracefully',
-            () => {
-                const originalVersion = process.version;
-                Object.defineProperty(process, 'version', { value: 'v18.0.0' });
-
-                try {
-                    const args = ['-c'];
-                    const output = spawnSync('cplace-asc', args, {
-                        cwd: cplaceMainRepoPath,
-                        shell: true,
-                        stdio: 'pipe',
-                    });
-
-                    expect(output.status).not.toBe(1);
-                    const errorOutput =
-                        output.stderr.toString() || output.stdout.toString();
-                    expect(errorOutput).toContain(
-                        'You are using an incorrect major Node version'
-                    );
-                    expect(errorOutput).toMatch(
-                        'Currently supported Node version'
-                    );
-                } finally {
-                    Object.defineProperty(process, 'version', {
-                        value: originalVersion,
-                    });
-                }
-            },
-            timeout
-        );
-    });
-
     describe('TC19: Verify flag conflict error handling', () => {
         it(
             'should handle conflicting flags appropriately',
@@ -548,7 +514,7 @@ describe('Assets Compiler E2E Tests', () => {
         );
     });
 
-    describe.skip('TC20: Verify undefined properties error handling', () => {
+    describe('TC20: Verify undefined properties error handling', () => {
         it(
             'should handle undefined properties error',
             () => {
