@@ -127,6 +127,9 @@ jobs:
             - name: E2E test cplace-asc main
               timeout-minutes: 20
               run: |
+                  cd ./main
+                  npm install --legacy-peer-deps
+                  cd ..
                   npm run e2e
 
             - name: cplace-asc main
