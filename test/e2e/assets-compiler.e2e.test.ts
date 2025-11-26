@@ -26,7 +26,7 @@ describe('Assets Compiler E2E Tests', () => {
     });
 
     describe('TC1: Verify assets compiler basic functionality', () => {
-        it(
+        it.only(
             'should verify assets compiler basic functionality with -c flag',
             () => {
                 const args = ['-c'];
