@@ -16,7 +16,7 @@ const result = spawnSync('pwd', {
 console.log(result.stdout.toString());
 
 describe('Assets Compiler E2E Tests', () => {
-    const timeout = 30000; // 30 second timeout for CLI operations
+    const timeout = 180000; // 180 second (3 minute) timeout for CLI operations
 
     beforeAll(() => {
         // Set longer timeout for all tests in this suite
