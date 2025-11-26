@@ -6,6 +6,15 @@ const cplaceMainRepoPath = process.env.CI
     ? path.resolve('./main')
     : path.resolve('../main');
 
+console.log(`cplace main repo path ${cplaceMainRepoPath}`);
+
+const result = spawnSync('pwd', {
+    cwd: cplaceMainRepoPath,
+    stdio: 'pipe',
+    shell: true,
+});
+console.log(result.stdout.toString());
+
 describe('Assets Compiler E2E Tests', () => {
     const timeout = 30000; // 30 second timeout for CLI operations
 
