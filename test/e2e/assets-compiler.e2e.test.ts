@@ -162,7 +162,7 @@ describe('Assets Compiler E2E Tests', () => {
                     cwd: cplaceMainRepoPath,
                     shell: true,
                     stdio: 'pipe',
-                    detached: false,
+                    detached: process.platform !== 'win32', // Detached on Unix to allow killing process group
                 });
 
                 try {
@@ -199,7 +199,16 @@ describe('Assets Compiler E2E Tests', () => {
                                         }
                                     );
                                 } else {
-                                    childProcess.kill('SIGKILL');
+                                    // On Unix, kill the entire process group
+                                    try {
+                                        process.kill(
+                                            -childProcess.pid!,
+                                            'SIGKILL'
+                                        );
+                                    } catch (e) {
+                                        // Fallback to killing just the process
+                                        childProcess.kill('SIGKILL');
+                                    }
                                 }
 
                                 resolve(result);
@@ -253,7 +262,13 @@ describe('Assets Compiler E2E Tests', () => {
                                 }
                             );
                         } else {
-                            childProcess.kill('SIGKILL');
+                            // On Unix, kill the entire process group
+                            try {
+                                process.kill(-childProcess.pid, 'SIGKILL');
+                            } catch (e) {
+                                // Fallback to killing just the process
+                                childProcess.kill('SIGKILL');
+                            }
                         }
                     }
                 }
@@ -270,7 +285,7 @@ describe('Assets Compiler E2E Tests', () => {
                     cwd: cplaceMainRepoPath,
                     shell: true,
                     stdio: 'pipe',
-                    detached: false,
+                    detached: process.platform !== 'win32', // Detached on Unix to allow killing process group
                 });
 
                 try {
@@ -307,7 +322,16 @@ describe('Assets Compiler E2E Tests', () => {
                                         }
                                     );
                                 } else {
-                                    childProcess.kill('SIGKILL');
+                                    // On Unix, kill the entire process group
+                                    try {
+                                        process.kill(
+                                            -childProcess.pid!,
+                                            'SIGKILL'
+                                        );
+                                    } catch (e) {
+                                        // Fallback to killing just the process
+                                        childProcess.kill('SIGKILL');
+                                    }
                                 }
 
                                 resolve(result);
@@ -363,7 +387,13 @@ describe('Assets Compiler E2E Tests', () => {
                                 }
                             );
                         } else {
-                            childProcess.kill('SIGKILL');
+                            // On Unix, kill the entire process group
+                            try {
+                                process.kill(-childProcess.pid, 'SIGKILL');
+                            } catch (e) {
+                                // Fallback to killing just the process
+                                childProcess.kill('SIGKILL');
+                            }
                         }
                     }
                 }
