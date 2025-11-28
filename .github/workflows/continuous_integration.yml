@@ -37,7 +37,7 @@ jobs:
               run: npm run prettier-check
 
             - name: Run Jest
-              run: node_modules/.bin/jest --verbose
+              run: node_modules/.bin/jest --verbose --testPathIgnorePatterns='test/e2e/assets-compiler.e2e.test.ts'
 
     compile:
         env:
@@ -123,6 +123,14 @@ jobs:
 
             - name: Build
               run: npm run test-build
+
+            - name: E2E test cplace-asc main
+              timeout-minutes: 20
+              run: |
+                  cd ./main
+                  npm install --legacy-peer-deps
+                  cd ..
+                  npm run e2e
 
             - name: cplace-asc main
               working-directory: ./main
