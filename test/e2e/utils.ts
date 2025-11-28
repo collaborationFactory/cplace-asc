@@ -3,17 +3,24 @@ import { spawnSync } from 'node:child_process';
 
 export function installAssetsCompiler() {
     const distPath = resolve(__dirname, '../../', 'dist');
-    const output = spawnSync('npm install -g .', {
+
+    // Use npx for local execution instead of global install
+    console.log('Setting up assets compiler for testing...');
+
+    // First verify the package exists and is built
+    const testOutput = spawnSync('npm', ['pack', '--dry-run'], {
         cwd: distPath,
         stdio: 'pipe',
         shell: true,
     });
-    if (output.status === 0) {
-        console.log('cplace assets compiler successfully installed!');
-        showVersion(distPath);
-    } else {
-        console.error('Failed to install assets compiler');
+
+    if (testOutput.status !== 0) {
+        console.error('Failed to verify package build');
+        return;
     }
+
+    console.log('Assets compiler package verified!');
+    showVersion(distPath);
 }
 
 function showVersion(distPath: string) {

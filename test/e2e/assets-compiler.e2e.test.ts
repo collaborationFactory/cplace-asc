@@ -25,11 +25,16 @@ const runCompilerCommand = (
     args: string[],
     expectations: CompilerTestExpectations = {}
 ): SpawnSyncReturns<Buffer> => {
-    const output = spawnSync('cplace-asc', args, {
-        cwd: cplaceMainRepoPath,
-        shell: true,
-        stdio: 'pipe',
-    });
+    const distPath = path.resolve(__dirname, '../../', 'dist');
+    const output = spawnSync(
+        'npx',
+        ['--package', distPath, 'cplace-asc', ...args],
+        {
+            cwd: cplaceMainRepoPath,
+            shell: true,
+            stdio: 'pipe',
+        }
+    );
 
     const {
         expectedMessages = [],
@@ -77,7 +82,13 @@ const verifyPreprocessingSuccess = (args: string[]): void => {
     });
 };
 
-const killProcess = (childProcess: any): void => {
+interface ProcessLike {
+    pid?: number;
+    killed?: boolean;
+    kill(signal?: NodeJS.Signals | number): boolean;
+}
+
+const killProcess = (childProcess: ProcessLike): void => {
     if (!childProcess.pid || childProcess.killed) return;
 
     if (process.platform === 'win32') {
@@ -95,14 +106,25 @@ const killProcess = (childProcess: any): void => {
 
 const runWatchModeTest = async (
     expectedMessage: string,
-    timeoutMs: number = 10000
+    timeoutMs: number = 10000,
+    processTracker?: Set<ProcessLike>
 ): Promise<void> => {
-    const childProcess = spawn('cplace-asc', ['-w'], {
-        cwd: cplaceMainRepoPath,
-        shell: true,
-        stdio: 'pipe',
-        detached: process.platform !== 'win32',
-    });
+    const distPath = path.resolve(__dirname, '../../', 'dist');
+    const childProcess = spawn(
+        'npx',
+        ['--package', distPath, 'cplace-asc', '-w'],
+        {
+            cwd: cplaceMainRepoPath,
+            shell: true,
+            stdio: 'pipe',
+            detached: process.platform !== 'win32',
+        }
+    );
+
+    // Register process for cleanup tracking
+    if (processTracker) {
+        processTracker.add(childProcess);
+    }
 
     try {
         const output = await new Promise<string>((resolve, reject) => {
@@ -119,6 +141,11 @@ const runWatchModeTest = async (
                 childProcess.stderr?.removeAllListeners();
                 childProcess.removeAllListeners();
                 killProcess(childProcess);
+
+                // Remove from process tracker
+                if (processTracker) {
+                    processTracker.delete(childProcess);
+                }
 
                 if (isTimeout && !result.includes(expectedMessage)) {
                     reject(
@@ -158,17 +185,49 @@ const runWatchModeTest = async (
         }
     } finally {
         killProcess(childProcess);
+        // Remove from process tracker
+        if (processTracker) {
+            processTracker.delete(childProcess);
+        }
     }
 };
 
 describe('Assets Compiler E2E Tests', () => {
     const timeout = 180000; // 180 second (3 minute) timeout for CLI operations
+    const runningProcesses: Set<ProcessLike> = new Set();
 
     beforeAll(() => {
         // Set longer timeout for all tests in this suite
         jest.setTimeout(timeout);
         // Install assets compiler
         installAssetsCompiler();
+    });
+
+    afterEach(() => {
+        // Clean up any processes that might still be running
+        runningProcesses.forEach((process) => {
+            try {
+                killProcess(process);
+            } catch (error) {
+                console.warn('Failed to kill process during cleanup:', error);
+            }
+        });
+        runningProcesses.clear();
+    });
+
+    afterAll(() => {
+        // Final cleanup - kill any remaining processes
+        runningProcesses.forEach((process) => {
+            try {
+                killProcess(process);
+            } catch (error) {
+                console.warn(
+                    'Failed to kill process during final cleanup:',
+                    error
+                );
+            }
+        });
+        runningProcesses.clear();
     });
 
     describe('TC1: Verify assets compiler basic functionality', () => {
@@ -235,7 +294,11 @@ describe('Assets Compiler E2E Tests', () => {
         it(
             'should verify assets compiler with -w flag',
             async () => {
-                await runWatchModeTest('You are using a correct Node version');
+                await runWatchModeTest(
+                    'You are using a correct Node version',
+                    10000,
+                    runningProcesses
+                );
             },
             timeout
         );
@@ -245,7 +308,11 @@ describe('Assets Compiler E2E Tests', () => {
         it(
             'should display compilation started message in watch mode',
             async () => {
-                await runWatchModeTest('Starting the main process with pid');
+                await runWatchModeTest(
+                    'Starting the main process with pid',
+                    10000,
+                    runningProcesses
+                );
             },
             timeout
         );
@@ -330,12 +397,17 @@ describe('Assets Compiler E2E Tests', () => {
         it(
             'should handle undefined properties error',
             () => {
-                const output = spawnSync('cplace-asc', ['-P'], {
-                    cwd: cplaceMainRepoPath,
-                    shell: true,
-                    stdio: 'pipe',
-                    env: { ...process.env, TEST_UNDEFINED_ERROR: 'true' },
-                });
+                const distPath = path.resolve(__dirname, '../../', 'dist');
+                const output = spawnSync(
+                    'npx',
+                    ['--package', distPath, 'cplace-asc', '-P'],
+                    {
+                        cwd: cplaceMainRepoPath,
+                        shell: true,
+                        stdio: 'pipe',
+                        env: { ...process.env, TEST_UNDEFINED_ERROR: 'true' },
+                    }
+                );
 
                 if (output.status !== 0) {
                     const errorOutput =
