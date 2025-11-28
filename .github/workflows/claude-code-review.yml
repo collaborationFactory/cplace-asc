@@ -19,7 +19,7 @@ jobs:
       pull-requests: read
       issues: read
       id-token: write
-
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -63,6 +63,7 @@ jobs:
             - CLI interface usability
             
             **Project Standards:**
+            - Prettier formatting (tabWidth: 4, singleQuote: true)
             - Expected plugin structure compliance
             - Output directory structure (generated_js/, generated_css/)
             
@@ -70,12 +71,11 @@ jobs:
 
           # Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
           use_sticky_comment: true
-
+          
           # Add specific tools for running tests or linting
-          allowed_tools: "Bash(npm run test),Bash(npm run test-build)"
-
+          allowed_tools: "Bash(npm run test),Bash(npm run prettier-check),Bash(npm run test-build)"
+          
           # Optional: Skip review for certain conditions
           # if: |
           #   !contains(github.event.pull_request.title, '[skip-review]') &&
           #   !contains(github.event.pull_request.title, '[WIP]')
-
