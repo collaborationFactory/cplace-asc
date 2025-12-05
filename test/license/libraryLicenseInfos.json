@@ -44,9 +44,7 @@
         "libraryFileNames": [
             "/3rdParty/modified/daisydiff/js/tooltip/wz_tooltip.js"
         ],
-        "sourcesForDownload": [
-            "/3rdParty/modified/daisydiff/js/tooltip/wz_tooltip.js"
-        ]
+        "sourcesForDownload": [ "/3rdParty/modified/daisydiff/js/tooltip/wz_tooltip.js" ]
     },
     {
         "product": "Lightbox",
