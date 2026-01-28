@@ -22,7 +22,11 @@ console.log(execSync(`npx ts-node ${buildScriptPath} ${version}`).toString());
 console.log(`cplace-asc successfully built!`);
 
 console.log(`Packing cplace-asc...`);
-const packOutput = execSync(`npm pack ${CPLACE_ASC_DIST} --pack-destination ${CPLACE_ASC_DIST}`).toString().trim();
+const packOutput = execSync(
+    `npm pack ${CPLACE_ASC_DIST} --pack-destination ${CPLACE_ASC_DIST}`
+)
+    .toString()
+    .trim();
 console.log(`Pack output: ${packOutput}`);
 
 // The pack output is the filename of the created tgz
