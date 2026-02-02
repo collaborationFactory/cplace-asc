@@ -1,4 +1,5 @@
 import { execSync } from 'child_process';
+import { appendFileSync } from 'fs';
 import { CPLACE_ASC_DIST } from './shared';
 import { resolve } from 'path';
 
@@ -34,8 +35,13 @@ const tgzFilename = packOutput.split('\n').pop()?.trim();
 console.log(`Created package: ${tgzFilename}`);
 
 // Output information for the next job
-console.log(`::set-output name=tgz_filename::${tgzFilename}`);
-console.log(`::set-output name=is_snapshot::${isSnapshot}`);
-console.log(`::set-output name=version::${version}`);
+
+const githubOutput = process.env.GITHUB_OUTPUT;
+
+if (githubOutput) {
+  appendFileSync(githubOutput, `tgz_filename=${tgzFilename}\n`);
+  appendFileSync(githubOutput, `is_snapshot=${isSnapshot}\n`);
+  appendFileSync(githubOutput, `version=${version}\n`);
+}
 
 console.log(`cplace-asc packed successfully!`);
