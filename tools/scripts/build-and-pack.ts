@@ -39,9 +39,9 @@ console.log(`Created package: ${tgzFilename}`);
 const githubOutput = process.env.GITHUB_OUTPUT;
 
 if (githubOutput) {
-  appendFileSync(githubOutput, `tgz_filename=${tgzFilename}\n`);
-  appendFileSync(githubOutput, `is_snapshot=${isSnapshot}\n`);
-  appendFileSync(githubOutput, `version=${version}\n`);
+    appendFileSync(githubOutput, `tgz_filename=${tgzFilename}\n`);
+    appendFileSync(githubOutput, `is_snapshot=${isSnapshot}\n`);
+    appendFileSync(githubOutput, `version=${version}\n`);
 }
 
 console.log(`cplace-asc packed successfully!`);
