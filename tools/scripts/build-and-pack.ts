@@ -3,7 +3,7 @@ import { appendFileSync } from 'fs';
 import { CPLACE_ASC_DIST } from './shared';
 import { resolve } from 'path';
 
-const packageName = execSync('npm pkg get name')
+const packageName = execSync('npm pkg get name');
 const tag = process.env.TAG;
 
 if (!tag) {
