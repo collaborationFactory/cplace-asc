@@ -9,8 +9,11 @@ env:
     NODE_ENV: 'production'
 
 jobs:
-    publish:
+    build:
         runs-on: ubuntu-latest
+        outputs:
+            tgz_filename: ${{ steps.pack.outputs.tgz_filename }}
+            is_snapshot: ${{ steps.pack.outputs.is_snapshot }}
         steps:
             - name: Cancel Previous Runs
               uses: styfle/cancel-workflow-action@0.9.1
@@ -29,7 +32,6 @@ jobs:
             - uses: actions/setup-node@v4
               with:
                   node-version: '18.18.2'
-                  registry-url: 'https://registry.npmjs.org'
 
             - name: Cache Node Modules
               id: npm-cache
@@ -42,8 +44,46 @@ jobs:
               if: steps.npm-cache.outputs.cache-hit != 'true'
               run: npm ci
 
-            - name: Publish
-              run: npx ts-node tools/scripts/publish.ts
+            - name: Build and Pack
+              id: pack
+              run: |
+                  npx ts-node tools/scripts/build-and-pack.ts
               env:
-                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
                   TAG: ${{ steps.tag.outputs.tag }}
+
+            - name: Upload package artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: npm-package
+                  path: dist/${{ steps.pack.outputs.tgz_filename }}
+                  retention-days: 1
+
+    publish:
+        name: Trusted Publish to NPM
+        runs-on: ubuntu-latest
+        needs: build
+        permissions:
+            contents: read
+            id-token: write
+        steps:
+            - name: Download package artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: npm-package
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: '24'
+                  registry-url: 'https://registry.npmjs.org'
+
+            - name: Publish to npm
+              run: |
+                  TGZ_FILE="${{ needs.build.outputs.tgz_filename }}"
+                  IS_SNAPSHOT="${{ needs.build.outputs.is_snapshot }}"
+                  echo "Publishing ${TGZ_FILE}..."
+                  echo "Is snapshot: ${IS_SNAPSHOT}"
+                  if [ "${IS_SNAPSHOT}" = "true" ]; then
+                      npm publish "${TGZ_FILE}" --tag snapshot
+                  else
+                      npm publish "${TGZ_FILE}"
+                  fi
