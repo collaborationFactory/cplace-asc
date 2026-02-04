@@ -1,4 +1,4 @@
-import { exec, execSync } from 'child_process';
+import { execSync } from 'child_process';
 import { appendFileSync } from 'fs';
 import { CPLACE_ASC_DIST } from './shared';
 import { resolve } from 'path';
