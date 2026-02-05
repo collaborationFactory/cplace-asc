@@ -89,7 +89,7 @@ jobs:
                   if [ "${IS_SNAPSHOT}" = "true" ]; then
                       TAG="snapshot"
                   elif npx semver "$VERSION" -r "<=$LATEST"; then
-                      TAG="v$(echo "$VERSION" | cut -d. -f1,2).x"
+                      TAG="release-$(echo "$VERSION" | cut -d. -f1,2)"
                   else
                       TAG="latest"
                   fi
