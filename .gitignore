@@ -6,3 +6,9 @@ dist/
 *.log
 
 CHANGELOG.md
+
+#claudesync
+.claudesync/*.project_id.json
+.claudesync/active_project.json
+.venv
+.github
