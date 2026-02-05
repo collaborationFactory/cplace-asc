@@ -3,6 +3,7 @@ import { appendFileSync } from 'fs';
 import { CPLACE_ASC_DIST } from './shared';
 import { resolve } from 'path';
 
+const packageName = execSync('npm pkg get name');
 const tag = process.env.TAG;
 
 if (!tag) {
@@ -39,6 +40,7 @@ console.log(`Created package: ${tgzFilename}`);
 const githubOutput = process.env.GITHUB_OUTPUT;
 
 if (githubOutput) {
+    appendFileSync(githubOutput, `package_name=${packageName}\n`);
     appendFileSync(githubOutput, `tgz_filename=${tgzFilename}\n`);
     appendFileSync(githubOutput, `is_snapshot=${isSnapshot}\n`);
     appendFileSync(githubOutput, `version=${version}\n`);
