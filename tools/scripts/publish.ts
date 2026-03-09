@@ -18,10 +18,12 @@ async function publishToArtifactory() {
     const url = `https://cplace.jfrog.io/artifactory/api/npm/${registry}/auth/cplace`;
 
     const res = await fetch(url, {
-        headers: { Authorization: `Basic ${basicAuth}` }
+        headers: { Authorization: `Basic ${basicAuth}` },
     });
     if (!res.ok) {
-        throw new Error(`Failed fetching npm auth info: ${res.status} ${res.statusText}`);
+        throw new Error(
+            `Failed fetching npm auth info: ${res.status} ${res.statusText}`
+        );
     }
     const npmrcContent = await res.text();
 
@@ -46,7 +48,9 @@ async function doPublish() {
 
     console.log(`Building cplace-asc...`);
     const buildScriptPath = resolve(__dirname, 'build.ts');
-    console.log(execSync(`npx ts-node ${buildScriptPath} ${version}`).toString());
+    console.log(
+        execSync(`npx ts-node ${buildScriptPath} ${version}`).toString()
+    );
     console.log(`cplace-asc successfully built!`);
     process.chdir(CPLACE_ASC_DIST);
     console.log(`Publishing cplace-asc...`);
@@ -55,14 +59,10 @@ async function doPublish() {
         await publishToArtifactory();
     } else {
         console.log(`Publishing cplace-asc to npmjs.org`);
-        execSync(
-            `npm publish --workspaces --include-workspace-root ${
-                isSnapshot ? '--tag snapshot' : ''
-            }`
-        );
+        execSync(`npm publish ${isSnapshot ? '--tag snapshot' : ''}`);
         console.log(`cplace-asc published to npmjs.org!`);
     }
     console.log(`cplace-asc published!`);
 }
 
-doPublish()
+doPublish();

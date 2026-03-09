@@ -547,7 +547,9 @@ export class AssetsCompiler {
         }
 
         if (!project.pluginDescriptor.dependencies) {
-            throw new Error(`No dependencies found for plugin ${pluginName} in ${pluginPath}`);
+            throw new Error(
+                `No dependencies found for plugin ${pluginName} in ${pluginPath}`
+            );
         }
 
         project.pluginDescriptor.dependencies.forEach((pluginDescriptor) => {
@@ -588,7 +590,9 @@ export class AssetsCompiler {
                     repositoryDir,
                     'node_modules',
                     '@cplace-assets',
-                    `${pluginDescriptor.repoName}_${pluginNameToKebabCase(pluginDescriptor.name)}`
+                    `${pluginDescriptor.repoName}_${pluginNameToKebabCase(
+                        pluginDescriptor.name
+                    )}`
                 );
 
                 this.addProjectDependenciesRecursively(

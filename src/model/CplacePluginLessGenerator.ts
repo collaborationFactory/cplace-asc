@@ -13,7 +13,6 @@ import { AssetsCompiler } from './AssetsCompiler';
  * This file contains variables for each dependency plugin, pointing to the path to that plugin.
  */
 export class CplacePluginLessGenerator {
-
     /**
      * Generate a less file named 'cplace-plugins.less' if the plugin has less files.
      * This file will contain a variable for each dependency plugin, pointing to the path to that plugin.
@@ -79,7 +78,10 @@ export class CplacePluginLessGenerator {
         });
         if (lessFileContent.length !== 0) {
             try {
-                fs.writeFileSync(cplacePluginsLessPath, lessFileContent.join('\n'));
+                fs.writeFileSync(
+                    cplacePluginsLessPath,
+                    lessFileContent.join('\n')
+                );
             } catch (error) {
                 console.error(
                     cerr`[${plugin.pluginName}] Could not write cplace-plugins.less file: ${error}`

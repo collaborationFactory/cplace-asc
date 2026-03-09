@@ -129,7 +129,11 @@ export abstract class AbstractTSConfigGenerator {
 
         // path to @types in the root of the repository
         typeRoots.push(
-            path.join(CplacePlugin.RELATIVE_PATH_TO_REPOSITORY_ROOT, 'node_modules', '@types')
+            path.join(
+                CplacePlugin.RELATIVE_PATH_TO_REPOSITORY_ROOT,
+                'node_modules',
+                '@types'
+            )
         );
 
         // path to @types in the plugin's assets

@@ -87,7 +87,5 @@ export function isArtifactsOnlyBuild(): boolean {
 }
 
 export function pluginNameToKebabCase(str: string): string {
-  return str
-    .replace(/\./gi, '-')
-    .toLowerCase();
+    return str.replace(/\./gi, '-').toLowerCase();
 }
