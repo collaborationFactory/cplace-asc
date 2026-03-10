@@ -34,7 +34,7 @@
     "author": "collaboration Factory AG",
     "license": "ISC",
     "dependencies": {
-        "@cplace/registry-initializer": "1.0.22",
+        "@cplace/registry-initializer": "1.0.23",
         "@openapitools/openapi-generator-cli": "2.5.2",
         "axios": "^1.3.6",
         "chokidar": "3.5.3",
