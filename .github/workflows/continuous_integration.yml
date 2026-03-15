@@ -16,7 +16,7 @@ jobs:
                   access_token: ${{ github.token }}
 
             - name: Checkout cplace-asc
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
 
             - uses: actions/setup-node@v4
               with:
@@ -60,10 +60,10 @@ jobs:
                   access_token: ${{ github.token }}
 
             - name: Checkout cplace-asc
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
 
             - name: Checkout cplace
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
               with:
                   repository: collaborationFactory/cplace
                   ref: 'master'
@@ -71,7 +71,7 @@ jobs:
                   token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
             - name: Checkout cplace-project-planning
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
               with:
                   repository: collaborationFactory/cplace-project-planning
                   ref: 'master'
@@ -79,7 +79,7 @@ jobs:
                   token: ${{ secrets.CPLACE_GITHUB_TOKEN }}
 
             - name: Checkout cplace-paw
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
               with:
                   repository: collaborationFactory/cplace-paw
                   ref: 'master'
