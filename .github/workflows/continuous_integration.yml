@@ -1,9 +1,5 @@
 name: Continuous Integration
-on:
-    pull_request:
-        branches:
-            - '**'
-            - '!2.3.x'
+on: [pull_request]
 
 jobs:
     test:
