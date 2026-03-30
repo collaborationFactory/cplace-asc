@@ -48,25 +48,6 @@
         "sourcesForDownload": ["/3rdParty/modified/ckeditor/ckeditor.js"]
     },
     {
-        "product": "JavaScript, DHTML Tooltips",
-        "component": "wz-tooltip",
-        "version": "4.12",
-        "copyright": "Copyright (C) 2002-2008 Walter Zorn",
-        "projectUrl": "http://www.walterzorn.de/tooltip/tooltip.htm",
-        "repoUrl": "",
-        "license": "LGPL-2.1",
-        "additionalLicenses": [],
-        "licenseUrl": "file://software/cf.cplace.platform/assets/3rdParty/modified/daisydiff/js/tooltip/wz_tooltip.js",
-        "licenseFile": "license/wz_tooltip.license.txt",
-        "modified": true,
-        "libraryFileNames": [
-            "/3rdParty/modified/daisydiff/js/tooltip/wz_tooltip.js"
-        ],
-        "sourcesForDownload": [
-            "/3rdParty/modified/daisydiff/js/tooltip/wz_tooltip.js"
-        ]
-    },
-    {
         "product": "Lightbox",
         "component": "lightbox",
         "version": "2.7.1",
