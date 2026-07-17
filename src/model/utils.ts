@@ -82,10 +82,6 @@ export function getProjectNodeModulesBinPath(): string {
     return resolve(getProjectNodeModulesPath(), '.bin');
 }
 
-export function isArtifactsOnlyBuild(): boolean {
-    return process.env.CPLACE_BUILD_WITHOUT_PARENT_REPOS === 'true';
-}
-
 export function pluginNameToKebabCase(str: string): string {
     return str.replace(/\./gi, '-').toLowerCase();
 }
