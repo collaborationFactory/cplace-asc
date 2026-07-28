@@ -436,9 +436,7 @@ export class VendorCompiler implements ICompiler {
         const cssImportsPath = path.join(cssFolder, VendorCompiler.CSS_IMPORTS);
         const pathToInclude = `@import url("../${VendorCompiler.DEST_CSS_DIR}/${VendorCompiler.VENDOR_CSS_FILE}");`;
 
-        if (!fs.existsSync(cssFolder)) {
-            fs.mkdirSync(cssFolder);
-        }
+        fs.mkdirSync(cssFolder, { recursive: true });
 
         debug(
             `(VendorCompiler) [${this.pluginName}] cleaning CSS vendor imports...`

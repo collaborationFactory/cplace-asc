@@ -52,9 +52,7 @@ export class CompressCssCompiler implements ICompiler {
                 return resolve(CompilationResult.CHANGED);
             }
 
-            if (!fs.existsSync(generatedCssDir)) {
-                fs.mkdirSync(generatedCssDir);
-            }
+            fs.mkdirSync(generatedCssDir, { recursive: true });
 
             const start = new Date().getTime();
             console.log(`⟲ [${this.pluginName}] starting CSS compression...`);
