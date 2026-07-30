@@ -96,9 +96,7 @@ export class LessCompiler implements ICompiler {
                         )})`
                     );
 
-                    if (!fs.existsSync(lessOutputDir)) {
-                        fs.mkdirSync(lessOutputDir);
-                    }
+                    fs.mkdirSync(lessOutputDir, { recursive: true });
 
                     let sourceMaps = output.map;
 

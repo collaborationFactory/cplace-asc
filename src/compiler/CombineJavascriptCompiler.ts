@@ -53,9 +53,7 @@ export class CombineJavascriptCompiler implements ICompiler {
                 return resolve(CompilationResult.CHANGED);
             }
 
-            if (!fs.existsSync(generatedDir)) {
-                fs.mkdirSync(generatedDir);
-            }
+            fs.mkdirSync(generatedDir, { recursive: true });
 
             const start = new Date().getTime();
             console.log(
