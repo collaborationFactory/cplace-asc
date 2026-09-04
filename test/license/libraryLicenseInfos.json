@@ -1,20 +1,5 @@
 [
     {
-        "product": "Angular Digest HUD",
-        "component": "digest-hud",
-        "version": "0.1.14",
-        "copyright": "Copyright (c) 2015 Piotr Kaminski",
-        "projectUrl": "https://github.com/pixiddesign/angular-digest-hud",
-        "repoUrl": "https://github.com/pixiddesign/angular-digest-hud",
-        "license": "MIT",
-        "additionalLicenses": [],
-        "licenseUrl": "https://github.com/pixiddesign/angular-digest-hud/blob/0.1.14/LICENSE",
-        "licenseFile": "license/digest-hud.license.txt",
-        "modified": false,
-        "libraryFileNames": ["angular/digest-hud.js"],
-        "sourcesForDownload": []
-    },
-    {
         "product": "AngularJS",
         "component": "angular-js",
         "version": "1.8.2",
