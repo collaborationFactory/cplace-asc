@@ -1,5 +1,9 @@
 name: Continuous Integration
-on: [pull_request]
+on:
+    pull_request:
+        branches:
+            - '**'
+            - '!2.4.x'
 
 jobs:
     test:
@@ -16,7 +20,7 @@ jobs:
 
             - uses: actions/setup-node@v4
               with:
-                  node-version: 22.15.0
+                  node-version: 24.20.0
 
             - name: Cache Node Modules
               id: npm-cache
@@ -47,7 +51,7 @@ jobs:
                     - macos-latest
                     - windows-latest
                 node_version:
-                    - 22.15.0
+                    - 24.20.0
         name: Node ${{ matrix.node_version }} - ${{ matrix.architecture }} on ${{ matrix.os }}
         steps:
             - name: Cancel Previous Runs

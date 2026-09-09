@@ -1,7 +1,7 @@
 import { AbstractNodeVersion } from './AbstractNodeVersion';
 
 export class SupportedNodeVersion extends AbstractNodeVersion {
-    private static readonly SUPPORTED_NODE_VERSION = '22.15.0';
+    private static readonly SUPPORTED_NODE_VERSION = '24.20.0';
 
     constructor() {
         super();
