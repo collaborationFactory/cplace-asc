@@ -286,7 +286,14 @@ export class NPMResolver {
     public init(): void {
         const registryInitializer = new RegistryInitializer();
         registryInitializer.enableDebug(isDebugEnabled());
-        registryInitializer.initRegistry();
+        // Registry configuration is optional (e.g. no jfrog credentials available), so a failure must not crash the process.
+        // initRegistry() already logs the cause; without this handler the rejection would be unhandled and terminate Node.
+        registryInitializer.initRegistry().catch(() => {
+            console.warn(
+                cwarn`⚠`,
+                'Continuing without cplace npm registry configuration.'
+            );
+        });
         NPMResolver.jFrogAxioxInstance = NPMResolver.getJfrogAxiosInstance(
             NPMResolver.JFROG_BASE_URL,
             RegistryCredentials.getCredentials().username,

@@ -56,6 +56,32 @@ describe('resolve npm credentials', () => {
         expect((npmrcContent.match(/cplace.jfrog.io/g) || []).length).toBe(4);
     });
 
+    test('cplace-asc does not crash when no jfrog credentials can be found', async () => {
+        delete process.env.ENV_CPLACE_ARTIFACTORY_ACTOR;
+        delete process.env.ENV_CPLACE_ARTIFACTORY_TOKEN;
+        const originalGradleUserHome = process.env.GRADLE_USER_HOME;
+        process.env.GRADLE_USER_HOME = path.join(basePath, 'missing-gradle');
+        const warnSpy = jest.spyOn(console, 'warn');
+        try {
+            const resolver = setupNPMResolverMock();
+            fs.writeFileSync(npmrcPath, npmrc_not_configured);
+            expect(() => resolver.init()).not.toThrow();
+            // let the rejected initRegistry() promise settle
+            await new Promise((resolve) => setImmediate(resolve));
+            expect(warnSpy).toHaveBeenCalledWith(
+                expect.anything(),
+                'Continuing without cplace npm registry configuration.'
+            );
+        } finally {
+            warnSpy.mockRestore();
+            if (originalGradleUserHome === undefined) {
+                delete process.env.GRADLE_USER_HOME;
+            } else {
+                process.env.GRADLE_USER_HOME = originalGradleUserHome;
+            }
+        }
+    });
+
     function setupNPMResolverMock() {
         jest.spyOn(child_process, 'execSync').mockReturnValueOnce(
             Buffer.from('userconfig = "' + npmrcPath + '"')
