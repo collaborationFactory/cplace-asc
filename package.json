@@ -1,13 +1,13 @@
 {
     "name": "@cplace/asc-local",
-    "version": "3.0.2",
+    "version": "3.0.3",
     "description": "cplace assets compiler",
     "repository": "https://github.com/collaborationFactory/cplace-asc",
     "homepage": "https://github.com/collaborationFactory/cplace-asc",
     "main": "./index.js",
     "engines": {
-        "node": "24.20.0",
-        "npm": "11.19.0"
+        "node": "24.22.1",
+        "npm": "11.19.1"
     },
     "publishConfig": {
         "registry": "https://registry.npmjs.org/",
