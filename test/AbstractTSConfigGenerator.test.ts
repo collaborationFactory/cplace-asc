@@ -1,3 +1,7 @@
+// CplacePlugin must be loaded first: AbstractTSConfigGenerator -> CplacePlugin -> CplaceTSConfigGenerator is a
+// circular import, and loading AbstractTSConfigGenerator first leaves it undefined when CplaceTSConfigGenerator extends it.
+// The side-effect import is needed because the typed import below is only used as a type and gets elided.
+import '../src/model/CplacePlugin';
 import { AbstractTSConfigGenerator } from '../src/model/AbstractTSConfigGenerator';
 import CplacePlugin from '../src/model/CplacePlugin';
 import * as path from 'path';
