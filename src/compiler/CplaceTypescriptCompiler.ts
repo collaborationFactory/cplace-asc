@@ -206,8 +206,12 @@ export class CplaceTypescriptCompiler extends AbstractTypescriptCompiler {
             },
             plugins: [
                 new webpack.IgnorePlugin({
-                    resourceRegExp: /(index\.js|vendor\.js)$/,
-                    contextRegExp: new RegExp(`\.*(${this.pluginName}).*`),
+                    // Skips the plugin's own index.js and vendor.js, which are loaded separately. Imports from libraries
+                    // under node_modules are kept: they can need files with the same names, such as ECharts' util/vendor.js.
+                    checkResource: (resource: string, context: string) =>
+                        /(index\.js|vendor\.js)$/.test(resource) &&
+                        new RegExp(this.pluginName).test(context) &&
+                        !/[\\/]node_modules[\\/]/.test(context),
                 }),
             ],
             resolve: {
